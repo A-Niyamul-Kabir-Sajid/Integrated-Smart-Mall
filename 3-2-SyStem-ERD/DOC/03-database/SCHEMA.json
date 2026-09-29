@@ -1,0 +1,5676 @@
+{
+  "project": "3 2 SyStem",
+  "version": "1.0",
+  "status": "Proposed logical design",
+  "modules": {
+    "01-accounts-access": [
+      "Accounts and Access",
+      "Users, scoped roles, memberships, and login sessions."
+    ],
+    "02-mall-shop-directory": [
+      "Mall and Shop Directory",
+      "Malls, floors, shop locations, facilities, and opening hours."
+    ],
+    "03-products-catalogue": [
+      "Products and Catalogue",
+      "Shared products and variants, shop listings, images, and optional inventory."
+    ],
+    "04-maps-navigation": [
+      "Maps and Navigation",
+      "Versioned floor maps, routing graphs, QR anchors, vertical connectors, and AR references."
+    ],
+    "05-purchase-verification": [
+      "Purchase Verification",
+      "Recorded purchases and single-use purchase evidence for product reviews."
+    ],
+    "06-reviews-moderation": [
+      "Reviews and Moderation",
+      "Normal and purchase-verified reviews, replies, reports, and moderation history."
+    ],
+    "07-favourites-preferences": [
+      "Favourites and Preferences",
+      "Saved shops, saved listings, and user interface/navigation preferences."
+    ],
+    "08-chatbot-rag": [
+      "Chatbot and RAG",
+      "Conversations, versioned knowledge, retrieval citations, and product recommendations."
+    ],
+    "09-analytics-reports": [
+      "Analytics and Reports",
+      "Defined metrics, reproducible snapshots, monthly reports, and optional forecasts."
+    ]
+  },
+  "tables": {
+    "APP_USER": {
+      "module": "01-accounts-access",
+      "name": "APP_USER",
+      "description": "One account across all customer, shop, and mall interfaces.",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Generated account identifier."
+        },
+        {
+          "name": "display_name",
+          "type": "varchar(120)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Public display name."
+        },
+        {
+          "name": "email",
+          "type": "varchar(254)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": true,
+          "ref": null,
+          "description": "Normalized email; unique when present."
+        },
+        {
+          "name": "phone",
+          "type": "varchar(24)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": true,
+          "ref": null,
+          "description": "Normalized phone number; unique when present."
+        },
+        {
+          "name": "password_hash",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Password hash from the authentication library, never plaintext."
+        },
+        {
+          "name": "status",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active, suspended, or anonymized."
+        },
+        {
+          "name": "email_verified_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Successful email verification time."
+        },
+        {
+          "name": "phone_verified_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Successful phone verification time."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Account creation time."
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Last profile or status update."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "At least one of email or phone is present for an active account.",
+        "Anonymized accounts retain their ID for history; remove personal fields and disable authentication.",
+        "Guest browsing creates no APP_USER row. Email/phone login is the proposed initial authentication model."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "ROLE": {
+      "module": "01-accounts-access",
+      "name": "ROLE",
+      "description": "Role catalogue with an explicit authorization scope.",
+      "columns": [
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Role identifier."
+        },
+        {
+          "name": "code",
+          "type": "varchar(50)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Example customer, platform_admin, mall_admin, shop_owner, shop_staff."
+        },
+        {
+          "name": "scope_type",
+          "type": "varchar(12)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "platform, mall, or shop."
+        },
+        {
+          "name": "name",
+          "type": "varchar(80)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Human-readable role name."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Role scope is immutable after assignments exist.",
+        "A role name alone never grants access to every mall or shop."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "USER_ROLE": {
+      "module": "01-accounts-access",
+      "name": "USER_ROLE",
+      "description": "Platform-wide account role assignment.",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Assigned account."
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "ROLE.role_id",
+          "description": "Assigned platform-scoped role."
+        },
+        {
+          "name": "assigned_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Assignment time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Composite primary key (user_id, role_id). ROLE.scope_type must be platform."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "MALL_MEMBERSHIP": {
+      "module": "01-accounts-access",
+      "name": "MALL_MEMBERSHIP",
+      "description": "A user with one particular role within one mall.",
+      "columns": [
+        {
+          "name": "mall_membership_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Membership identifier."
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Member account."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Authorized mall."
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "ROLE.role_id",
+          "description": "Mall-scoped role."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active or revoked."
+        },
+        {
+          "name": "assigned_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Assignment time."
+        }
+      ],
+      "uniques": [
+        [
+          "user_id",
+          "mall_id",
+          "role_id"
+        ]
+      ],
+      "checks": [
+        "ROLE.scope_type must be mall."
+      ],
+      "indexes": [
+        [
+          "mall_id",
+          "status"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "SHOP_MEMBERSHIP": {
+      "module": "01-accounts-access",
+      "name": "SHOP_MEMBERSHIP",
+      "description": "A user with one particular role within one shop.",
+      "columns": [
+        {
+          "name": "shop_membership_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Membership identifier."
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Member account."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Authorized shop."
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "ROLE.role_id",
+          "description": "Shop-scoped role."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active or revoked."
+        },
+        {
+          "name": "assigned_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Assignment time."
+        }
+      ],
+      "uniques": [
+        [
+          "user_id",
+          "shop_id",
+          "role_id"
+        ]
+      ],
+      "checks": [
+        "ROLE.scope_type must be shop."
+      ],
+      "indexes": [
+        [
+          "shop_id",
+          "status"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "AUTH_SESSION": {
+      "module": "01-accounts-access",
+      "name": "AUTH_SESSION",
+      "description": "Revocable login sessions; not route sessions.",
+      "columns": [
+        {
+          "name": "session_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Authentication session identifier."
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Authenticated account."
+        },
+        {
+          "name": "refresh_token_hash",
+          "type": "varchar(128)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Digest of a high-entropy refresh credential."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Session start."
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Session expiry."
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Explicit revocation time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "expires_at > created_at. Never save a raw refresh token."
+      ],
+      "indexes": [
+        [
+          "user_id",
+          "expires_at"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "MALL": {
+      "module": "02-mall-shop-directory",
+      "name": "MALL",
+      "description": "A mall boundary used for directory, map, and permission ownership.",
+      "columns": [
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Mall identifier."
+        },
+        {
+          "name": "slug",
+          "type": "varchar(100)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Stable public URL slug."
+        },
+        {
+          "name": "name",
+          "type": "varchar(160)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Mall name."
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Street address."
+        },
+        {
+          "name": "city",
+          "type": "varchar(100)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "City."
+        },
+        {
+          "name": "timezone",
+          "type": "varchar(60)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "IANA zone, for example Asia/Dhaka."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "draft, active, or archived."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Record creation time."
+        }
+      ],
+      "uniques": [],
+      "checks": [],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "FLOOR": {
+      "module": "02-mall-shop-directory",
+      "name": "FLOOR",
+      "description": "Physical level of a mall, independent of any map version.",
+      "columns": [
+        {
+          "name": "floor_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Floor identifier."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Owning mall."
+        },
+        {
+          "name": "code",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Stable code such as B1 or F2."
+        },
+        {
+          "name": "name",
+          "type": "varchar(80)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Display name."
+        },
+        {
+          "name": "sort_order",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Display order, not a routing cost."
+        },
+        {
+          "name": "elevation_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Elevation relative to the mall origin, in metres."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active or archived."
+        }
+      ],
+      "uniques": [
+        [
+          "mall_id",
+          "code"
+        ]
+      ],
+      "checks": [],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "SHOP_CATEGORY": {
+      "module": "02-mall-shop-directory",
+      "name": "SHOP_CATEGORY",
+      "description": "Shop classification such as food, clothing, or electronics.",
+      "columns": [
+        {
+          "name": "shop_category_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Category identifier."
+        },
+        {
+          "name": "parent_category_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "SHOP_CATEGORY.shop_category_id",
+          "description": "Optional parent category."
+        },
+        {
+          "name": "slug",
+          "type": "varchar(80)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Unique category slug."
+        },
+        {
+          "name": "name",
+          "type": "varchar(100)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Category display name."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "The parent hierarchy must be acyclic; a category cannot be its own parent."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "SHOP": {
+      "module": "02-mall-shop-directory",
+      "name": "SHOP",
+      "description": "One shop business in one mall; locations are represented separately.",
+      "columns": [
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Shop identifier."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Owning mall."
+        },
+        {
+          "name": "shop_category_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP_CATEGORY.shop_category_id",
+          "description": "Main shop category."
+        },
+        {
+          "name": "slug",
+          "type": "varchar(100)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "URL slug unique within its mall."
+        },
+        {
+          "name": "name",
+          "type": "varchar(160)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Shop name."
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Public description."
+        },
+        {
+          "name": "contact_phone",
+          "type": "varchar(24)",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Public business contact."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "draft, active, closed, or archived."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Record creation time."
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Last directory update."
+        }
+      ],
+      "uniques": [
+        [
+          "mall_id",
+          "slug"
+        ]
+      ],
+      "checks": [],
+      "indexes": [
+        [
+          "mall_id",
+          "status",
+          "shop_category_id"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "SHOP_UNIT": {
+      "module": "02-mall-shop-directory",
+      "name": "SHOP_UNIT",
+      "description": "A physical unit occupied by a shop; a shop can occupy several floors.",
+      "columns": [
+        {
+          "name": "shop_unit_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Location identifier."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Occupying shop."
+        },
+        {
+          "name": "floor_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FLOOR.floor_id",
+          "description": "Physical floor."
+        },
+        {
+          "name": "unit_code",
+          "type": "varchar(40)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Physical unit code, unique on its floor."
+        },
+        {
+          "name": "area_sq_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Optional area in square metres."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "open, temporarily_closed, or archived."
+        }
+      ],
+      "uniques": [
+        [
+          "floor_id",
+          "unit_code"
+        ]
+      ],
+      "checks": [
+        "SHOP.mall_id must equal FLOOR.mall_id.",
+        "area_sq_m is positive when present. This baseline stores current occupancy; tenant history needs a separate lease model."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "SHOP_OPENING_HOUR": {
+      "module": "02-mall-shop-directory",
+      "name": "SHOP_OPENING_HOUR",
+      "description": "Weekly opening intervals, including split opening periods.",
+      "columns": [
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Shop whose hours are recorded."
+        },
+        {
+          "name": "weekday",
+          "type": "smallint",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "ISO weekday: Monday 1 through Sunday 7."
+        },
+        {
+          "name": "interval_no",
+          "type": "smallint",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Interval sequence within the weekday."
+        },
+        {
+          "name": "opens_at",
+          "type": "time",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Opening time in the mall timezone."
+        },
+        {
+          "name": "closes_at",
+          "type": "time",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Closing time in the mall timezone."
+        },
+        {
+          "name": "closes_next_day",
+          "type": "boolean",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "True for an overnight interval."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Composite primary key (shop_id, weekday, interval_no). weekday between 1 and 7; interval_no > 0.",
+        "Intervals cannot overlap; no intervals on a day means closed. A 24-hour interval uses equal times and closes_next_day=true.",
+        "Holiday exceptions are outside this baseline and must not be inferred from weekly hours."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "FACILITY": {
+      "module": "02-mall-shop-directory",
+      "name": "FACILITY",
+      "description": "Public destinations such as toilets, information desks, or prayer rooms.",
+      "columns": [
+        {
+          "name": "facility_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Facility identifier."
+        },
+        {
+          "name": "floor_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FLOOR.floor_id",
+          "description": "Physical floor."
+        },
+        {
+          "name": "name",
+          "type": "varchar(120)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Public name."
+        },
+        {
+          "name": "facility_type",
+          "type": "varchar(32)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "toilet, prayer_room, information, exit, or other."
+        },
+        {
+          "name": "is_accessible",
+          "type": "boolean",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Whether the destination itself is accessible."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "open, temporarily_closed, or archived."
+        }
+      ],
+      "uniques": [],
+      "checks": [],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "PRODUCT_CATEGORY": {
+      "module": "03-products-catalogue",
+      "name": "PRODUCT_CATEGORY",
+      "description": "Searchable product taxonomy; distinct from shop categories.",
+      "columns": [
+        {
+          "name": "product_category_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Product category identifier."
+        },
+        {
+          "name": "parent_category_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "PRODUCT_CATEGORY.product_category_id",
+          "description": "Optional parent category."
+        },
+        {
+          "name": "slug",
+          "type": "varchar(80)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Unique category slug."
+        },
+        {
+          "name": "name",
+          "type": "varchar(100)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Category name, such as Drinks."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Parent links form an acyclic hierarchy."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "PRODUCT": {
+      "module": "03-products-catalogue",
+      "name": "PRODUCT",
+      "description": "Shared product definition that can be sold by multiple shops.",
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Shared product identifier."
+        },
+        {
+          "name": "product_category_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "PRODUCT_CATEGORY.product_category_id",
+          "description": "Primary category."
+        },
+        {
+          "name": "name",
+          "type": "varchar(160)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Product name."
+        },
+        {
+          "name": "brand",
+          "type": "varchar(100)",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Brand when known."
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Product description."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active or archived."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Creation time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Brand/name are not assumed globally unique. Establish who may create or merge shared products."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "PRODUCT_VARIANT": {
+      "module": "03-products-catalogue",
+      "name": "PRODUCT_VARIANT",
+      "description": "A purchasable version such as size, volume, or colour.",
+      "columns": [
+        {
+          "name": "variant_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Variant identifier."
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "PRODUCT.product_id",
+          "description": "Parent product."
+        },
+        {
+          "name": "variant_code",
+          "type": "varchar(60)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Code unique within the product; use default when no variants exist."
+        },
+        {
+          "name": "label",
+          "type": "varchar(120)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Example 500 ml bottle."
+        },
+        {
+          "name": "attributes_json",
+          "type": "json",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Display attributes; important searchable fields may later be normalized."
+        },
+        {
+          "name": "barcode",
+          "type": "varchar(80)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": true,
+          "ref": null,
+          "description": "Optional verified global barcode."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active or archived."
+        }
+      ],
+      "uniques": [
+        [
+          "product_id",
+          "variant_code"
+        ]
+      ],
+      "checks": [],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "SHOP_PRODUCT": {
+      "module": "03-products-catalogue",
+      "name": "SHOP_PRODUCT",
+      "description": "A shop-specific listing and price for one product variant.",
+      "columns": [
+        {
+          "name": "shop_product_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Listing identifier used by reviews and favourites."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Selling shop."
+        },
+        {
+          "name": "variant_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "PRODUCT_VARIANT.variant_id",
+          "description": "Listed variant."
+        },
+        {
+          "name": "seller_sku",
+          "type": "varchar(80)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Shop-assigned SKU."
+        },
+        {
+          "name": "price_amount",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Current advertised unit price."
+        },
+        {
+          "name": "currency",
+          "type": "char(3)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "ISO currency code; initial proposal BDT."
+        },
+        {
+          "name": "availability_status",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "available, unavailable, or unknown."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active or archived."
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Last listing update."
+        }
+      ],
+      "uniques": [
+        [
+          "shop_id",
+          "variant_id"
+        ],
+        [
+          "shop_id",
+          "seller_sku"
+        ],
+        [
+          "shop_product_id",
+          "shop_id"
+        ]
+      ],
+      "checks": [
+        "price_amount >= 0. Use a fixed decimal representation for money.",
+        "Availability is owner-maintained unless the optional inventory workflow is implemented."
+      ],
+      "indexes": [
+        [
+          "shop_id",
+          "status"
+        ],
+        [
+          "variant_id",
+          "status"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "PRODUCT_IMAGE": {
+      "module": "03-products-catalogue",
+      "name": "PRODUCT_IMAGE",
+      "description": "Shared product images ordered for presentation.",
+      "columns": [
+        {
+          "name": "product_image_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Image record identifier."
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "PRODUCT.product_id",
+          "description": "Product depicted."
+        },
+        {
+          "name": "object_key",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Managed image storage location, not an expiring signed URL."
+        },
+        {
+          "name": "alt_text",
+          "type": "varchar(200)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Accessible description."
+        },
+        {
+          "name": "sort_order",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Display position."
+        }
+      ],
+      "uniques": [
+        [
+          "product_id",
+          "sort_order"
+        ]
+      ],
+      "checks": [],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "INVENTORY_BALANCE": {
+      "module": "03-products-catalogue",
+      "name": "INVENTORY_BALANCE",
+      "description": "Optional latest inventory snapshot for a listing.",
+      "columns": [
+        {
+          "name": "shop_product_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP_PRODUCT.shop_product_id",
+          "description": "Listing whose balance is tracked."
+        },
+        {
+          "name": "quantity_on_hand",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Observed units in stock."
+        },
+        {
+          "name": "quantity_reserved",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Units unavailable due to reservations."
+        },
+        {
+          "name": "observed_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Time of the stock observation."
+        },
+        {
+          "name": "source",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "manual, imported, or ledger."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "0 <= quantity_reserved <= quantity_on_hand.",
+        "This snapshot is not a stock movement ledger. Do not claim transaction-safe inventory without a separate stock/reservation workflow."
+      ],
+      "indexes": [],
+      "phase": "Optional"
+    },
+    "MAP_VERSION": {
+      "module": "04-maps-navigation",
+      "name": "MAP_VERSION",
+      "description": "One immutable published routing/map dataset covering a mall.",
+      "columns": [
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Dataset identifier."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Mapped mall."
+        },
+        {
+          "name": "version_no",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Monotonic version within the mall."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "draft, published, or retired."
+        },
+        {
+          "name": "coordinate_frame",
+          "type": "varchar(80)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Declared mall-local frame name and convention."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Draft creation time."
+        },
+        {
+          "name": "published_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Publication time after validation."
+        }
+      ],
+      "uniques": [
+        [
+          "mall_id",
+          "version_no"
+        ]
+      ],
+      "checks": [
+        "At most one published version per mall, using a conditional unique index.",
+        "All node coordinates use metres: x and y horizontal, z up. The mall origin and axis alignment are documented before mapping.",
+        "Published versions are immutable. Publish a replacement atomically; keep retired data for active sessions/history."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "FLOOR_MAP": {
+      "module": "04-maps-navigation",
+      "name": "FLOOR_MAP",
+      "description": "Visual map assets and image-to-world transform for a floor/version.",
+      "columns": [
+        {
+          "name": "floor_map_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Floor map asset identifier."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Owning dataset."
+        },
+        {
+          "name": "floor_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FLOOR.floor_id",
+          "description": "Physical floor represented."
+        },
+        {
+          "name": "plan_2d_key",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Floor plan image or vector storage key."
+        },
+        {
+          "name": "model_3d_key",
+          "type": "text",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Optional GLB/GLTF storage key."
+        },
+        {
+          "name": "pixel_origin_x",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Image pixel x corresponding to transform origin."
+        },
+        {
+          "name": "pixel_origin_y",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Image pixel y corresponding to transform origin."
+        },
+        {
+          "name": "metres_per_pixel",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Uniform scale for the 2D image."
+        },
+        {
+          "name": "rotation_deg",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Counterclockwise image-to-world rotation after y-axis flip."
+        },
+        {
+          "name": "world_origin_x_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "World x of the image transform origin."
+        },
+        {
+          "name": "world_origin_y_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "World y of the image transform origin."
+        }
+      ],
+      "uniques": [
+        [
+          "map_version_id",
+          "floor_id"
+        ]
+      ],
+      "checks": [
+        "metres_per_pixel > 0. FLOOR.mall_id must equal MAP_VERSION.mall_id.",
+        "This affine transform assumes uniform scale and no skew; rectification is a map preparation task."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "NAVIGATION_NODE": {
+      "module": "04-maps-navigation",
+      "name": "NAVIGATION_NODE",
+      "description": "Graph vertex at a shop entrance, corridor junction, checkpoint, or connector.",
+      "columns": [
+        {
+          "name": "node_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Version-specific node identifier."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Owning dataset."
+        },
+        {
+          "name": "floor_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FLOOR.floor_id",
+          "description": "Physical floor."
+        },
+        {
+          "name": "node_code",
+          "type": "varchar(50)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Human-readable code unique in the version."
+        },
+        {
+          "name": "node_type",
+          "type": "varchar(24)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "junction, entrance, checkpoint, connector, or facility."
+        },
+        {
+          "name": "x_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Mall-local x in metres."
+        },
+        {
+          "name": "y_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Mall-local y in metres."
+        },
+        {
+          "name": "z_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Mall-local elevation in metres."
+        },
+        {
+          "name": "is_accessible",
+          "type": "boolean",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Whether accessible routing can use this node."
+        }
+      ],
+      "uniques": [
+        [
+          "map_version_id",
+          "node_code"
+        ],
+        [
+          "node_id",
+          "map_version_id"
+        ],
+        [
+          "node_id",
+          "map_version_id",
+          "floor_id"
+        ]
+      ],
+      "checks": [
+        "Require a FLOOR_MAP for this (map_version_id, floor_id) using a composite FK."
+      ],
+      "indexes": [
+        [
+          "map_version_id",
+          "floor_id"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "VERTICAL_CONNECTOR": {
+      "module": "04-maps-navigation",
+      "name": "VERTICAL_CONNECTOR",
+      "description": "Physical staircase, lift, or escalator shared across map versions.",
+      "columns": [
+        {
+          "name": "connector_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Physical connector identifier."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Owning mall."
+        },
+        {
+          "name": "name",
+          "type": "varchar(100)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Example East Lift A."
+        },
+        {
+          "name": "connector_type",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "stairs, elevator, or escalator."
+        },
+        {
+          "name": "is_accessible",
+          "type": "boolean",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Wheelchair accessibility of this connector."
+        }
+      ],
+      "uniques": [],
+      "checks": [],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "CONNECTOR_STOP": {
+      "module": "04-maps-navigation",
+      "name": "CONNECTOR_STOP",
+      "description": "Graph location where a vertical connector serves a floor in one version.",
+      "columns": [
+        {
+          "name": "connector_stop_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Stop identifier."
+        },
+        {
+          "name": "connector_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "VERTICAL_CONNECTOR.connector_id",
+          "description": "Physical connector."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Version of its graph node."
+        },
+        {
+          "name": "floor_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FLOOR.floor_id",
+          "description": "Served floor."
+        },
+        {
+          "name": "node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Connector node on that floor."
+        }
+      ],
+      "uniques": [
+        [
+          "connector_id",
+          "map_version_id",
+          "floor_id"
+        ]
+      ],
+      "checks": [
+        "Node version and floor must match the stop; connector, floor, and map must belong to the same mall."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "NAVIGATION_EDGE": {
+      "module": "04-maps-navigation",
+      "name": "NAVIGATION_EDGE",
+      "description": "A directed traversable connection; reverse travel needs a second edge.",
+      "columns": [
+        {
+          "name": "edge_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Directed edge identifier."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Owning graph dataset."
+        },
+        {
+          "name": "from_node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Starting node."
+        },
+        {
+          "name": "to_node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Ending node."
+        },
+        {
+          "name": "connector_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "VERTICAL_CONNECTOR.connector_id",
+          "description": "Required for a cross-floor connector edge."
+        },
+        {
+          "name": "length_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Traversable physical length in metres."
+        },
+        {
+          "name": "expected_seconds",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Estimated traversal time, including configured connector delay."
+        },
+        {
+          "name": "is_accessible",
+          "type": "boolean",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Eligibility for an accessible route."
+        },
+        {
+          "name": "status",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "open or temporarily_closed."
+        }
+      ],
+      "uniques": [
+        [
+          "map_version_id",
+          "from_node_id",
+          "to_node_id"
+        ],
+        [
+          "edge_id",
+          "map_version_id"
+        ]
+      ],
+      "checks": [
+        "from_node_id != to_node_id; length_m > 0; expected_seconds > 0.",
+        "Both endpoint nodes belong to this map version; enforce composite endpoint FKs.",
+        "For a cross-floor edge, both endpoints must be stops of connector_id in this version.",
+        "Choose distance or time as one consistent route cost. An A* heuristic must be a lower bound in that same unit; use h=0 if no defensible bound exists.",
+        "Published geometry/costs are immutable. Temporary status changes are operational exceptions and trigger rerouting."
+      ],
+      "indexes": [
+        [
+          "map_version_id",
+          "from_node_id",
+          "status"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "QR_CHECKPOINT": {
+      "module": "04-maps-navigation",
+      "name": "QR_CHECKPOINT",
+      "description": "Stable printed QR destination, surviving map republishing.",
+      "columns": [
+        {
+          "name": "checkpoint_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Physical checkpoint identifier."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Owning mall."
+        },
+        {
+          "name": "checkpoint_code",
+          "type": "varchar(50)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Visible label such as F1-C03."
+        },
+        {
+          "name": "public_slug",
+          "type": "varchar(120)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Unpredictable or descriptive public URL identifier; not a credential."
+        },
+        {
+          "name": "label",
+          "type": "varchar(120)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Human-readable location."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active or retired."
+        }
+      ],
+      "uniques": [
+        [
+          "mall_id",
+          "checkpoint_code"
+        ]
+      ],
+      "checks": [
+        "Resolve the QR to an anchor in the currently published map. Never embed a version-specific node ID as the only permanent QR reference."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "CHECKPOINT_ANCHOR": {
+      "module": "04-maps-navigation",
+      "name": "CHECKPOINT_ANCHOR",
+      "description": "Version-specific pose and node attached to a stable QR checkpoint.",
+      "columns": [
+        {
+          "name": "checkpoint_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "QR_CHECKPOINT.checkpoint_id",
+          "description": "Physical checkpoint."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Map version."
+        },
+        {
+          "name": "node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Routing start node."
+        },
+        {
+          "name": "yaw_deg",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Heading about the world z axis, using documented convention."
+        },
+        {
+          "name": "marker_height_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Physical QR centre height above the floor when used for visual alignment."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Composite primary key (checkpoint_id, map_version_id). Node version and checkpoint mall must match.",
+        "Scanning a URL supplies checkpoint identity. Camera pose recovery requires a supported visual anchor/alignment workflow; this row alone does not provide continuous tracking."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "SHOP_ENTRANCE": {
+      "module": "04-maps-navigation",
+      "name": "SHOP_ENTRANCE",
+      "description": "Connects a physical shop unit to a version-specific entrance node.",
+      "columns": [
+        {
+          "name": "shop_entrance_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Entrance binding identifier."
+        },
+        {
+          "name": "shop_unit_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP_UNIT.shop_unit_id",
+          "description": "Physical destination unit."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Map version."
+        },
+        {
+          "name": "node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Entrance graph node."
+        },
+        {
+          "name": "is_primary",
+          "type": "boolean",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Default entrance for this unit in this version."
+        }
+      ],
+      "uniques": [
+        [
+          "shop_unit_id",
+          "map_version_id",
+          "node_id"
+        ]
+      ],
+      "checks": [
+        "At most one primary entrance per (shop_unit_id, map_version_id), using a conditional unique index.",
+        "Unit floor equals node floor; node version and mall must match."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "FACILITY_ANCHOR": {
+      "module": "04-maps-navigation",
+      "name": "FACILITY_ANCHOR",
+      "description": "Connects a facility destination to a version-specific graph node.",
+      "columns": [
+        {
+          "name": "facility_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FACILITY.facility_id",
+          "description": "Physical facility."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Map version."
+        },
+        {
+          "name": "node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Destination node."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Composite primary key (facility_id, map_version_id); node floor/version/mall must match the facility."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "AR_REFERENCE_ANCHOR": {
+      "module": "04-maps-navigation",
+      "name": "AR_REFERENCE_ANCHOR",
+      "description": "Optional visual target or VPS reference aligned to the local map.",
+      "columns": [
+        {
+          "name": "ar_anchor_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "AR reference identifier."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Aligned map version."
+        },
+        {
+          "name": "node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Nearby routing node; pose below is the exact reference pose."
+        },
+        {
+          "name": "reference_type",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "image_target, fiducial, or vps_reference."
+        },
+        {
+          "name": "reference_key",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Target asset key or provider reference identifier."
+        },
+        {
+          "name": "x_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Anchor origin x in map coordinates."
+        },
+        {
+          "name": "y_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Anchor origin y in map coordinates."
+        },
+        {
+          "name": "z_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Anchor origin z in map coordinates."
+        },
+        {
+          "name": "yaw_deg",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Rotation about z."
+        },
+        {
+          "name": "pitch_deg",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Rotation about y."
+        },
+        {
+          "name": "roll_deg",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Rotation about x."
+        },
+        {
+          "name": "physical_width_m",
+          "type": "decimal",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Measured target width, required for metric visual target alignment."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "draft, validated, or retired."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Node belongs to map_version_id. Euler convention is intrinsic Z-Y-X; the runtime must convert from its own coordinate frame explicitly.",
+        "Physical width is positive for image/fiducial targets; provider calibration is separately required for a VPS reference.",
+        "An AR SDK/browser/device integration must be tested independently. LiDAR assets do not automatically provide browser localization."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "ROUTE_SESSION": {
+      "module": "04-maps-navigation",
+      "name": "ROUTE_SESSION",
+      "description": "Optional saved route request for troubleshooting or opt-in analytics.",
+      "columns": [
+        {
+          "name": "route_session_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Saved route request identifier."
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "APP_USER.user_id",
+          "description": "Optional signed-in user; avoid saving guest identity."
+        },
+        {
+          "name": "map_version_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MAP_VERSION.map_version_id",
+          "description": "Pinned graph version."
+        },
+        {
+          "name": "start_node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Resolved start node."
+        },
+        {
+          "name": "destination_node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Resolved final node."
+        },
+        {
+          "name": "route_mode",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "shortest_distance, fastest, or accessible_distance."
+        },
+        {
+          "name": "algorithm",
+          "type": "varchar(12)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "astar or dijkstra."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "computed, unreachable, cancelled, or completed."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Request time."
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Retention expiry."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Both nodes belong to the pinned map version.",
+        "Route computation may be stateless; do not persist ROUTE_SESSION/ROUTE_STEP unless this optional feature is enabled."
+      ],
+      "indexes": [],
+      "phase": "Optional"
+    },
+    "ROUTE_STEP": {
+      "module": "04-maps-navigation",
+      "name": "ROUTE_STEP",
+      "description": "Ordered graph path in a saved route session.",
+      "columns": [
+        {
+          "name": "route_session_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "ROUTE_SESSION.route_session_id",
+          "description": "Owning saved route."
+        },
+        {
+          "name": "step_no",
+          "type": "integer",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Zero-based path sequence."
+        },
+        {
+          "name": "node_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "NAVIGATION_NODE.node_id",
+          "description": "Node at this step."
+        },
+        {
+          "name": "incoming_edge_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "NAVIGATION_EDGE.edge_id",
+          "description": "Edge from the previous step; null only at step zero."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Composite primary key (route_session_id, step_no). Steps are contiguous from zero.",
+        "First/last node match the session endpoints. Each incoming edge connects the preceding node to this node in the pinned version."
+      ],
+      "indexes": [],
+      "phase": "Optional"
+    },
+    "PURCHASE": {
+      "module": "05-purchase-verification",
+      "name": "PURCHASE",
+      "description": "Recorded sale used as evidence; not a complete checkout/payment system.",
+      "columns": [
+        {
+          "name": "purchase_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Purchase identifier."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Shop that recorded the sale."
+        },
+        {
+          "name": "buyer_user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "APP_USER.user_id",
+          "description": "Known buyer or null for a walk-in purchase."
+        },
+        {
+          "name": "external_receipt_ref",
+          "type": "varchar(120)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Shop receipt reference for idempotent import/entry."
+        },
+        {
+          "name": "status",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "draft, completed, voided, or refunded."
+        },
+        {
+          "name": "currency",
+          "type": "char(3)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Sale currency."
+        },
+        {
+          "name": "total_amount",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Final sale amount after line discounts; proposed baseline excludes separate tax/shipping."
+        },
+        {
+          "name": "purchased_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Sale time."
+        },
+        {
+          "name": "recorded_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Database entry time."
+        }
+      ],
+      "uniques": [
+        [
+          "shop_id",
+          "external_receipt_ref"
+        ]
+      ],
+      "checks": [
+        "total_amount >= 0. A completed sale contains at least one item and total_amount equals its sum of line_total_amount.",
+        "Only authorized shop staff or a trusted import may record or complete a sale. This is a trust boundary, not bank/payment proof.",
+        "Partial refunds, payments, delivery, and checkout are outside this baseline."
+      ],
+      "indexes": [
+        [
+          "shop_id",
+          "purchased_at"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "PURCHASE_ITEM": {
+      "module": "05-purchase-verification",
+      "name": "PURCHASE_ITEM",
+      "description": "Immutable record of the product listing and amount bought.",
+      "columns": [
+        {
+          "name": "purchase_item_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Line identifier."
+        },
+        {
+          "name": "purchase_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "PURCHASE.purchase_id",
+          "description": "Owning sale."
+        },
+        {
+          "name": "line_no",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Receipt line sequence."
+        },
+        {
+          "name": "shop_product_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP_PRODUCT.shop_product_id",
+          "description": "Purchased listing."
+        },
+        {
+          "name": "product_label_snapshot",
+          "type": "varchar(200)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Name/variant at purchase time."
+        },
+        {
+          "name": "quantity",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Purchased units."
+        },
+        {
+          "name": "unit_price_amount",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Unit price at purchase time."
+        },
+        {
+          "name": "line_discount_amount",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Total discount applied to this line."
+        },
+        {
+          "name": "line_total_amount",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "quantity times unit price minus line discount."
+        }
+      ],
+      "uniques": [
+        [
+          "purchase_id",
+          "line_no"
+        ]
+      ],
+      "checks": [
+        "quantity > 0; unit_price_amount >= 0; 0 <= line_discount_amount <= quantity * unit_price_amount.",
+        "line_total_amount = quantity * unit_price_amount - line_discount_amount. Listing shop and currency must equal purchase shop and currency.",
+        "After completion, keep snapshots immutable; later catalogue price/name edits do not rewrite history."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "VERIFICATION_TOKEN": {
+      "module": "05-purchase-verification",
+      "name": "VERIFICATION_TOKEN",
+      "description": "One rotatable opaque review credential per purchase line.",
+      "columns": [
+        {
+          "name": "verification_token_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Credential record identifier."
+        },
+        {
+          "name": "purchase_item_id",
+          "type": "uuid",
+          "keys": [
+            "FK",
+            "UK"
+          ],
+          "nullable": false,
+          "ref": "PURCHASE_ITEM.purchase_item_id",
+          "description": "Line eligible for one verified product review."
+        },
+        {
+          "name": "token_digest",
+          "type": "varchar(128)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Digest of a cryptographically random secret; never the raw token."
+        },
+        {
+          "name": "issued_by_user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Authorized shop issuer."
+        },
+        {
+          "name": "issued_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Current token issuance time."
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Token claim deadline."
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Explicit invalidation time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "expires_at > issued_at. Issue only for a completed purchase.",
+        "Token issuance confirms issuer membership in the purchase shop. A token is not a public navigation QR.",
+        "Reissue by rotating the digest before redemption; old secrets immediately stop working. No rotation after redemption.",
+        "Do not generate predictable tokens from product ID plus a fixed mall key. The random secret is tied to purchase, listing, shop, and mall through database relationships."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "TOKEN_REDEMPTION": {
+      "module": "05-purchase-verification",
+      "name": "TOKEN_REDEMPTION",
+      "description": "Atomic, single successful claim of a purchase token by a user.",
+      "columns": [
+        {
+          "name": "verification_token_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "VERIFICATION_TOKEN.verification_token_id",
+          "description": "Claimed token; primary key prevents second redemption."
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Account that claimed purchase evidence."
+        },
+        {
+          "name": "redeemed_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Successful claim time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "In one transaction, lock the token, verify digest, expiry/revocation and completed purchase, then insert the redemption.",
+        "If the purchase has buyer_user_id, it must equal the claimant. For an unbound walk-in purchase, the first valid holder claims it.",
+        "Possession of a leaked unbound token is a risk; keep secrets out of logs and URLs where practical."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "REVIEW": {
+      "module": "06-reviews-moderation",
+      "name": "REVIEW",
+      "description": "Shared review content with a concrete shop target and optional listing target.",
+      "columns": [
+        {
+          "name": "review_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Review identifier."
+        },
+        {
+          "name": "author_user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Review author."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Reviewed shop, including the seller of a reviewed product."
+        },
+        {
+          "name": "shop_product_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "SHOP_PRODUCT.shop_product_id",
+          "description": "Null for shop review; present for product-listing review."
+        },
+        {
+          "name": "rating",
+          "type": "smallint",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Integer rating from 1 through 5."
+        },
+        {
+          "name": "title",
+          "type": "varchar(160)",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Optional summary title."
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Review text."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "pending, published, hidden, or withdrawn."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Creation time."
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Last content/status update."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "1 <= rating <= 5. Listing, when supplied, belongs to shop_id; enforce a composite FK (shop_product_id, shop_id).",
+        "Unique (author_user_id, shop_id) where shop_product_id IS NULL. Unique (author_user_id, shop_product_id) where shop_product_id IS NOT NULL.",
+        "One persistent review per user/target; edits and withdrawals update the same review. Target and author are immutable.",
+        "Normal/verified is derived from REVIEW_VERIFICATION validity, not a user-editable boolean. Product reviews are shop-listing specific, not automatically global product scores."
+      ],
+      "indexes": [
+        [
+          "shop_id",
+          "status",
+          "created_at"
+        ],
+        [
+          "shop_product_id",
+          "status"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "REVIEW_VERIFICATION": {
+      "module": "06-reviews-moderation",
+      "name": "REVIEW_VERIFICATION",
+      "description": "Optional, unique binding between a product review and claimed purchase evidence.",
+      "columns": [
+        {
+          "name": "review_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "REVIEW.review_id",
+          "description": "Verified review; at most one evidence binding."
+        },
+        {
+          "name": "verification_token_id",
+          "type": "uuid",
+          "keys": [
+            "FK",
+            "UK"
+          ],
+          "nullable": false,
+          "ref": "TOKEN_REDEMPTION.verification_token_id",
+          "description": "Claimed token; cannot verify multiple reviews."
+        },
+        {
+          "name": "verified_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Binding time."
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Verification withdrawn after refund/fraud or correction."
+        },
+        {
+          "name": "revocation_reason",
+          "type": "text",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Why evidence is no longer valid."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Review must target a product listing. Review author equals TOKEN_REDEMPTION.user_id; purchased listing equals reviewed listing.",
+        "The baseline verifies product reviews only. A normal shop review has no REVIEW_VERIFICATION row.",
+        "Create/update review plus evidence binding transactionally. Binding is retained after withdrawal to prevent token reuse.",
+        "A refund/void/revocation removes eligibility for a current verified badge; preserve the historical evidence record."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "REVIEW_REPLY": {
+      "module": "06-reviews-moderation",
+      "name": "REVIEW_REPLY",
+      "description": "Public replies by authorized staff of the reviewed shop.",
+      "columns": [
+        {
+          "name": "review_reply_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Reply identifier."
+        },
+        {
+          "name": "review_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "REVIEW.review_id",
+          "description": "Review being answered."
+        },
+        {
+          "name": "author_user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Authorized shop account."
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Reply text."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "published or hidden."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Reply time."
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Last edit."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Check active shop membership at write time; former membership does not erase historical authorship."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "REVIEW_REPORT": {
+      "module": "06-reviews-moderation",
+      "name": "REVIEW_REPORT",
+      "description": "A user report about one review.",
+      "columns": [
+        {
+          "name": "review_report_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Report identifier."
+        },
+        {
+          "name": "review_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "REVIEW.review_id",
+          "description": "Reported review."
+        },
+        {
+          "name": "reporter_user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Reporting account."
+        },
+        {
+          "name": "reason_code",
+          "type": "varchar(30)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "spam, abuse, conflict_of_interest, or other."
+        },
+        {
+          "name": "details",
+          "type": "text",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Optional explanation."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "open, resolved, or dismissed."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Submission time."
+        },
+        {
+          "name": "resolved_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Resolution time."
+        }
+      ],
+      "uniques": [
+        [
+          "review_id",
+          "reporter_user_id"
+        ]
+      ],
+      "checks": [],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "MODERATION_ACTION": {
+      "module": "06-reviews-moderation",
+      "name": "MODERATION_ACTION",
+      "description": "Append-only review moderation history.",
+      "columns": [
+        {
+          "name": "moderation_action_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Action identifier."
+        },
+        {
+          "name": "review_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "REVIEW.review_id",
+          "description": "Moderated review."
+        },
+        {
+          "name": "review_report_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "REVIEW_REPORT.review_report_id",
+          "description": "Optional triggering report."
+        },
+        {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Authorized moderator."
+        },
+        {
+          "name": "action",
+          "type": "varchar(24)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "publish, hide, restore, dismiss_report, or revoke_verification."
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Reason for the action."
+        },
+        {
+          "name": "previous_status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Review status before action."
+        },
+        {
+          "name": "resulting_status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Review status after action."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Action time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Report, when supplied, references this same review.",
+        "Moderator must have permission for the reviewed shop mall. Record the action and update review/report state in one transaction."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "USER_PREFERENCE": {
+      "module": "07-favourites-preferences",
+      "name": "USER_PREFERENCE",
+      "description": "Optional one-to-one user settings record.",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Account whose preferences are stored."
+        },
+        {
+          "name": "default_mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "MALL.mall_id",
+          "description": "Preferred mall."
+        },
+        {
+          "name": "locale",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Language tag, such as en or bn."
+        },
+        {
+          "name": "route_mode",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "shortest_distance, fastest, or accessible_distance."
+        },
+        {
+          "name": "ar_preferred",
+          "type": "boolean",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Preferred UI mode, subject to capability and consent."
+        },
+        {
+          "name": "personalization_opt_in",
+          "type": "boolean",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Whether preference/history-based suggestions are allowed."
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Last change time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Missing row means application defaults. Guest preferences can remain local to the device."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "FAVOURITE_SHOP": {
+      "module": "07-favourites-preferences",
+      "name": "FAVOURITE_SHOP",
+      "description": "A shop saved by a user.",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Saving account."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Saved shop."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Save time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Composite primary key (user_id, shop_id) prevents duplicates."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "FAVOURITE_PRODUCT": {
+      "module": "07-favourites-preferences",
+      "name": "FAVOURITE_PRODUCT",
+      "description": "A shop listing saved by a user, preserving seller context.",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "APP_USER.user_id",
+          "description": "Saving account."
+        },
+        {
+          "name": "shop_product_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP_PRODUCT.shop_product_id",
+          "description": "Saved listing."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Save time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Composite primary key (user_id, shop_product_id) prevents duplicates."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "CONVERSATION": {
+      "module": "08-chatbot-rag",
+      "name": "CONVERSATION",
+      "description": "A customer or administrator conversation in one mall context.",
+      "columns": [
+        {
+          "name": "conversation_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Conversation identifier."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Current mall context."
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "APP_USER.user_id",
+          "description": "Signed-in owner, or null for an anonymous session."
+        },
+        {
+          "name": "access_scope",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "public or mall_admin."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Start time."
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Retention expiry."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "An admin conversation requires an authenticated mall-authorized user. An anonymous conversation is public only.",
+        "Read access to anonymous conversations requires a server-issued session credential outside this logical content schema. IDs alone are not authorization."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "CHAT_MESSAGE": {
+      "module": "08-chatbot-rag",
+      "name": "CHAT_MESSAGE",
+      "description": "Ordered message in a conversation.",
+      "columns": [
+        {
+          "name": "message_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Message identifier."
+        },
+        {
+          "name": "conversation_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "CONVERSATION.conversation_id",
+          "description": "Parent conversation."
+        },
+        {
+          "name": "sequence_no",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Message order within the conversation."
+        },
+        {
+          "name": "role",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "user, assistant, or system."
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Message body."
+        },
+        {
+          "name": "model_label",
+          "type": "varchar(120)",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Model/version used for generated output."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Message time."
+        }
+      ],
+      "uniques": [
+        [
+          "conversation_id",
+          "sequence_no"
+        ]
+      ],
+      "checks": [
+        "sequence_no >= 0. Do not expose hidden system instructions or secrets through user-facing history."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "KNOWLEDGE_DOCUMENT": {
+      "module": "08-chatbot-rag",
+      "name": "KNOWLEDGE_DOCUMENT",
+      "description": "Controlled retrieval source with explicit mall and optional shop/listing scope.",
+      "columns": [
+        {
+          "name": "document_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Source document identifier."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Owning mall."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "SHOP.shop_id",
+          "description": "Optional shop source."
+        },
+        {
+          "name": "shop_product_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "SHOP_PRODUCT.shop_product_id",
+          "description": "Optional specific product listing source."
+        },
+        {
+          "name": "source_kind",
+          "type": "varchar(24)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "mall_guide, shop_profile, product_listing, faq, or admin_report."
+        },
+        {
+          "name": "title",
+          "type": "varchar(200)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Source title."
+        },
+        {
+          "name": "source_locator",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Controlled source URL or internal locator."
+        },
+        {
+          "name": "access_scope",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "public or mall_admin."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "active or withdrawn."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "If listing is present, shop_id is present and matches the listing; shop mall matches mall_id.",
+        "mall_guide/faq use neither shop nor listing; shop_profile uses shop only; product_listing uses both. admin_report is mall-scoped in this baseline.",
+        "Retrieval must filter by mall and access scope before sending context to a model."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "DOCUMENT_REVISION": {
+      "module": "08-chatbot-rag",
+      "name": "DOCUMENT_REVISION",
+      "description": "Immutable source content snapshot used to reproduce citations.",
+      "columns": [
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Revision identifier."
+        },
+        {
+          "name": "document_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "KNOWLEDGE_DOCUMENT.document_id",
+          "description": "Source document."
+        },
+        {
+          "name": "revision_no",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Source revision sequence."
+        },
+        {
+          "name": "content_hash",
+          "type": "varchar(64)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "SHA-256 of captured text."
+        },
+        {
+          "name": "content_text",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Captured trusted content."
+        },
+        {
+          "name": "source_updated_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Timestamp of the underlying source revision."
+        },
+        {
+          "name": "captured_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Ingestion time."
+        }
+      ],
+      "uniques": [
+        [
+          "document_id",
+          "revision_no"
+        ]
+      ],
+      "checks": [],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "KNOWLEDGE_CHUNK": {
+      "module": "08-chatbot-rag",
+      "name": "KNOWLEDGE_CHUNK",
+      "description": "A retrieval-sized text segment from an immutable document revision.",
+      "columns": [
+        {
+          "name": "chunk_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Chunk identifier."
+        },
+        {
+          "name": "revision_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "DOCUMENT_REVISION.revision_id",
+          "description": "Source revision."
+        },
+        {
+          "name": "chunk_no",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Order within revision."
+        },
+        {
+          "name": "chunk_text",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Text used for retrieval."
+        }
+      ],
+      "uniques": [
+        [
+          "revision_id",
+          "chunk_no"
+        ]
+      ],
+      "checks": [],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "CHUNK_EMBEDDING": {
+      "module": "08-chatbot-rag",
+      "name": "CHUNK_EMBEDDING",
+      "description": "Optional external vector-index record for a chunk and embedding model.",
+      "columns": [
+        {
+          "name": "chunk_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "KNOWLEDGE_CHUNK.chunk_id",
+          "description": "Embedded chunk."
+        },
+        {
+          "name": "model_key",
+          "type": "varchar(120)",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Embedding model and version."
+        },
+        {
+          "name": "dimensions",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Vector dimensionality."
+        },
+        {
+          "name": "index_record_key",
+          "type": "varchar(200)",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "External index namespace/key; vector bytes live in that index."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Indexing time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Composite primary key (chunk_id, model_key). dimensions > 0.",
+        "A search-only prototype can omit this table. A relational vector extension is an alternative physical implementation, not a second required store."
+      ],
+      "indexes": [],
+      "phase": "Optional"
+    },
+    "MESSAGE_CITATION": {
+      "module": "08-chatbot-rag",
+      "name": "MESSAGE_CITATION",
+      "description": "Evidence chunks attached to an assistant answer.",
+      "columns": [
+        {
+          "name": "message_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "CHAT_MESSAGE.message_id",
+          "description": "Answer containing the citation."
+        },
+        {
+          "name": "chunk_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "KNOWLEDGE_CHUNK.chunk_id",
+          "description": "Retrieved supporting chunk."
+        },
+        {
+          "name": "citation_no",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Citation position in the answer."
+        },
+        {
+          "name": "retrieval_score",
+          "type": "decimal",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Score whose interpretation depends on the retriever."
+        },
+        {
+          "name": "quoted_excerpt",
+          "type": "text",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Optional short supporting excerpt."
+        }
+      ],
+      "uniques": [
+        [
+          "message_id",
+          "citation_no"
+        ]
+      ],
+      "checks": [
+        "Message role is assistant. Citation source mall/access scope must be permitted by the conversation and current user authorization.",
+        "Retain referenced revisions or an approved redacted evidence record for the conversation retention period."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "MESSAGE_RECOMMENDATION": {
+      "module": "08-chatbot-rag",
+      "name": "MESSAGE_RECOMMENDATION",
+      "description": "Ordered, structured product-listing recommendations in an answer.",
+      "columns": [
+        {
+          "name": "message_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "CHAT_MESSAGE.message_id",
+          "description": "Assistant answer."
+        },
+        {
+          "name": "shop_product_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP_PRODUCT.shop_product_id",
+          "description": "Recommended listing; shop is derived from this listing."
+        },
+        {
+          "name": "rank_no",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Display order."
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Short explanation grounded in source data."
+        }
+      ],
+      "uniques": [
+        [
+          "message_id",
+          "rank_no"
+        ]
+      ],
+      "checks": [
+        "Listing belongs to conversation mall. Refresh availability/price from catalogue at display time.",
+        "Validate model-proposed IDs and ranking against database results; generated text must not create fictional inventory."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "METRIC_DEFINITION": {
+      "module": "09-analytics-reports",
+      "name": "METRIC_DEFINITION",
+      "description": "Meaning and formula version for each metric.",
+      "columns": [
+        {
+          "name": "metric_code",
+          "type": "varchar(80)",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Versioned key, such as mean_published_rating_v1."
+        },
+        {
+          "name": "name",
+          "type": "varchar(120)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Metric display name."
+        },
+        {
+          "name": "unit",
+          "type": "varchar(24)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "count, rating_1_5, amount_BDT, or ratio."
+        },
+        {
+          "name": "formula_version",
+          "type": "varchar(40)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Version of the calculation specification."
+        },
+        {
+          "name": "definition",
+          "type": "text",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Population, exclusions, aggregation, and time-boundary rules."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Use a new metric code when the definition changes; never silently change historical semantics."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "SHOP_METRIC_SNAPSHOT": {
+      "module": "09-analytics-reports",
+      "name": "SHOP_METRIC_SNAPSHOT",
+      "description": "Frozen shop metric for a specific observation period and calculation cutoff.",
+      "columns": [
+        {
+          "name": "snapshot_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Snapshot identifier."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Measured shop."
+        },
+        {
+          "name": "metric_code",
+          "type": "varchar(80)",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "METRIC_DEFINITION.metric_code",
+          "description": "Versioned metric definition."
+        },
+        {
+          "name": "period_start",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Inclusive observation start."
+        },
+        {
+          "name": "period_end",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Exclusive observation end."
+        },
+        {
+          "name": "source_cutoff_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Latest source-update time included."
+        },
+        {
+          "name": "metric_value",
+          "type": "decimal",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Null when undefined or insufficient data."
+        },
+        {
+          "name": "sample_size",
+          "type": "integer",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Count of underlying observations."
+        },
+        {
+          "name": "dataset_label",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "real or demo."
+        },
+        {
+          "name": "calculated_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Calculation time."
+        }
+      ],
+      "uniques": [
+        [
+          "shop_id",
+          "metric_code",
+          "period_start",
+          "period_end",
+          "source_cutoff_at",
+          "dataset_label"
+        ]
+      ],
+      "checks": [
+        "period_end > period_start; sample_size >= 0.",
+        "Store review count and rating mean separately; do not turn zero observations into a zero rating.",
+        "Separate shop-level and product-listing ratings in metric definitions; distinguish verified and unverified populations."
+      ],
+      "indexes": [
+        [
+          "shop_id",
+          "metric_code",
+          "period_start"
+        ]
+      ],
+      "phase": "Core"
+    },
+    "REPORT_RUN": {
+      "module": "09-analytics-reports",
+      "name": "REPORT_RUN",
+      "description": "One reproducible report request for a mall and period.",
+      "columns": [
+        {
+          "name": "report_run_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Report generation identifier."
+        },
+        {
+          "name": "mall_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "MALL.mall_id",
+          "description": "Report mall."
+        },
+        {
+          "name": "requested_by_user_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": true,
+          "ref": "APP_USER.user_id",
+          "description": "Authorized requester; null for a configured scheduled job."
+        },
+        {
+          "name": "report_type",
+          "type": "varchar(32)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "monthly_reviews or shop_performance."
+        },
+        {
+          "name": "period_start",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Inclusive reporting start."
+        },
+        {
+          "name": "period_end",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Exclusive reporting end."
+        },
+        {
+          "name": "source_cutoff_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Data cutoff used by the run."
+        },
+        {
+          "name": "dataset_label",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "real or demo; all report input snapshots and included forecasts use this label."
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "queued, running, succeeded, or failed."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Request time."
+        },
+        {
+          "name": "completed_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Completion time."
+        },
+        {
+          "name": "error_summary",
+          "type": "text",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Sanitized failure description."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "period_end > period_start. Compute monthly boundaries in MALL.timezone, then store UTC instants.",
+        "Scheduled jobs execute with explicit service authorization; a null requester is not public permission.",
+        "dataset_label is real or demo. Every input snapshot and included forecast must use the same label; never mix them in one report."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "REPORT_SHOP_SCOPE": {
+      "module": "09-analytics-reports",
+      "name": "REPORT_SHOP_SCOPE",
+      "description": "Frozen list of shops included in a report run.",
+      "columns": [
+        {
+          "name": "report_run_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "REPORT_RUN.report_run_id",
+          "description": "Owning report."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Included shop."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Every shop belongs to the report mall. Record explicit rows even for an all-shops report."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "REPORT_METRIC_SNAPSHOT": {
+      "module": "09-analytics-reports",
+      "name": "REPORT_METRIC_SNAPSHOT",
+      "description": "Exact immutable metric snapshots used in a report.",
+      "columns": [
+        {
+          "name": "report_run_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "REPORT_RUN.report_run_id",
+          "description": "Owning report."
+        },
+        {
+          "name": "snapshot_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP_METRIC_SNAPSHOT.snapshot_id",
+          "description": "Included snapshot."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Snapshot shop is in REPORT_SHOP_SCOPE; period, cutoff, and intended dataset label match report configuration."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "REPORT_ARTIFACT": {
+      "module": "09-analytics-reports",
+      "name": "REPORT_ARTIFACT",
+      "description": "A generated downloadable output from a report run.",
+      "columns": [
+        {
+          "name": "report_artifact_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Artifact identifier."
+        },
+        {
+          "name": "report_run_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "REPORT_RUN.report_run_id",
+          "description": "Generating report."
+        },
+        {
+          "name": "object_key",
+          "type": "text",
+          "keys": [
+            "UK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Private file storage key."
+        },
+        {
+          "name": "format",
+          "type": "varchar(12)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "pdf, csv, or html."
+        },
+        {
+          "name": "sha256",
+          "type": "varchar(64)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "File checksum."
+        },
+        {
+          "name": "size_bytes",
+          "type": "bigint",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Output size."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Output creation time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "size_bytes > 0. Access is authorized through the report mall before issuing a temporary download link."
+      ],
+      "indexes": [],
+      "phase": "Core"
+    },
+    "FORECAST_RUN": {
+      "module": "09-analytics-reports",
+      "name": "FORECAST_RUN",
+      "description": "Optional experimental regression run for one shop and metric.",
+      "columns": [
+        {
+          "name": "forecast_run_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Experiment identifier."
+        },
+        {
+          "name": "shop_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP.shop_id",
+          "description": "Forecast subject."
+        },
+        {
+          "name": "metric_code",
+          "type": "varchar(80)",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "METRIC_DEFINITION.metric_code",
+          "description": "Forecast target definition."
+        },
+        {
+          "name": "model_name",
+          "type": "varchar(80)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Example linear_regression."
+        },
+        {
+          "name": "model_version",
+          "type": "varchar(60)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Implementation or fitted model version."
+        },
+        {
+          "name": "training_start",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Inclusive training period start."
+        },
+        {
+          "name": "training_end",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Exclusive training period end."
+        },
+        {
+          "name": "parameters_json",
+          "type": "json",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Features, hyperparameters, preprocessing, and reproducibility details."
+        },
+        {
+          "name": "evaluation_json",
+          "type": "json",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Time-based holdout errors and sample counts."
+        },
+        {
+          "name": "dataset_label",
+          "type": "varchar(16)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "real or demo."
+        },
+        {
+          "name": "status",
+          "type": "varchar(20)",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "succeeded, failed, or insufficient_data."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Run time."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "training_end > training_start. Future observations must not enter training or preprocessing.",
+        "Report insufficient data explicitly. Synthetic/demo forecasts are labelled and cannot substantiate real shop performance."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "FORECAST_TRAINING_SNAPSHOT": {
+      "module": "09-analytics-reports",
+      "name": "FORECAST_TRAINING_SNAPSHOT",
+      "description": "Exact historical snapshots used to train a forecast run.",
+      "columns": [
+        {
+          "name": "forecast_run_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FORECAST_RUN.forecast_run_id",
+          "description": "Training run."
+        },
+        {
+          "name": "snapshot_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "SHOP_METRIC_SNAPSHOT.snapshot_id",
+          "description": "Input observation."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Snapshot shop, target metric, and dataset label equal the run; each observation ends no later than training_end.",
+        "Choose one source cutoff per training period; do not train on multiple revised copies of the same observation."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "FORECAST_POINT": {
+      "module": "09-analytics-reports",
+      "name": "FORECAST_POINT",
+      "description": "Predicted value for one future period.",
+      "columns": [
+        {
+          "name": "forecast_point_id",
+          "type": "uuid",
+          "keys": [
+            "PK"
+          ],
+          "nullable": false,
+          "ref": null,
+          "description": "Predicted point identifier."
+        },
+        {
+          "name": "forecast_run_id",
+          "type": "uuid",
+          "keys": [
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FORECAST_RUN.forecast_run_id",
+          "description": "Producing model run."
+        },
+        {
+          "name": "period_start",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Inclusive forecast start."
+        },
+        {
+          "name": "period_end",
+          "type": "timestamptz",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Exclusive forecast end."
+        },
+        {
+          "name": "predicted_value",
+          "type": "decimal",
+          "keys": [],
+          "nullable": false,
+          "ref": null,
+          "description": "Point prediction in the target metric unit."
+        },
+        {
+          "name": "lower_bound",
+          "type": "decimal",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Optional validated interval lower bound."
+        },
+        {
+          "name": "upper_bound",
+          "type": "decimal",
+          "keys": [],
+          "nullable": true,
+          "ref": null,
+          "description": "Optional validated interval upper bound."
+        }
+      ],
+      "uniques": [
+        [
+          "forecast_run_id",
+          "period_start",
+          "period_end"
+        ]
+      ],
+      "checks": [
+        "period_end > period_start and period_start >= training_end.",
+        "Interval bounds are both null or both present with lower_bound <= predicted_value <= upper_bound; state interval confidence/method in run parameters."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    },
+    "REPORT_FORECAST": {
+      "module": "09-analytics-reports",
+      "name": "REPORT_FORECAST",
+      "description": "Optional forecast runs included in a generated report.",
+      "columns": [
+        {
+          "name": "report_run_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "REPORT_RUN.report_run_id",
+          "description": "Report containing forecasts."
+        },
+        {
+          "name": "forecast_run_id",
+          "type": "uuid",
+          "keys": [
+            "PK",
+            "FK"
+          ],
+          "nullable": false,
+          "ref": "FORECAST_RUN.forecast_run_id",
+          "description": "Included experiment."
+        }
+      ],
+      "uniques": [],
+      "checks": [
+        "Forecast shop belongs to REPORT_SHOP_SCOPE and dataset_label equals REPORT_RUN.dataset_label; clearly label forecast output separately from observed metrics."
+      ],
+      "indexes": [],
+      "phase": "Prototype"
+    }
+  },
+  "relationships": [
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "USER_ROLE",
+      "child_column": "user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "ROLE",
+      "parent_column": "role_id",
+      "child": "USER_ROLE",
+      "child_column": "role_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "MALL_MEMBERSHIP",
+      "child_column": "user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "MALL_MEMBERSHIP",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "ROLE",
+      "parent_column": "role_id",
+      "child": "MALL_MEMBERSHIP",
+      "child_column": "role_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "SHOP_MEMBERSHIP",
+      "child_column": "user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "SHOP_MEMBERSHIP",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "ROLE",
+      "parent_column": "role_id",
+      "child": "SHOP_MEMBERSHIP",
+      "child_column": "role_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "AUTH_SESSION",
+      "child_column": "user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "FLOOR",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP_CATEGORY",
+      "parent_column": "shop_category_id",
+      "child": "SHOP_CATEGORY",
+      "child_column": "parent_category_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "SHOP",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP_CATEGORY",
+      "parent_column": "shop_category_id",
+      "child": "SHOP",
+      "child_column": "shop_category_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "SHOP_UNIT",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "FLOOR",
+      "parent_column": "floor_id",
+      "child": "SHOP_UNIT",
+      "child_column": "floor_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "SHOP_OPENING_HOUR",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "FLOOR",
+      "parent_column": "floor_id",
+      "child": "FACILITY",
+      "child_column": "floor_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "PRODUCT_CATEGORY",
+      "parent_column": "product_category_id",
+      "child": "PRODUCT_CATEGORY",
+      "child_column": "parent_category_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "PRODUCT_CATEGORY",
+      "parent_column": "product_category_id",
+      "child": "PRODUCT",
+      "child_column": "product_category_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "PRODUCT",
+      "parent_column": "product_id",
+      "child": "PRODUCT_VARIANT",
+      "child_column": "product_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "SHOP_PRODUCT",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "PRODUCT_VARIANT",
+      "parent_column": "variant_id",
+      "child": "SHOP_PRODUCT",
+      "child_column": "variant_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "PRODUCT",
+      "parent_column": "product_id",
+      "child": "PRODUCT_IMAGE",
+      "child_column": "product_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP_PRODUCT",
+      "parent_column": "shop_product_id",
+      "child": "INVENTORY_BALANCE",
+      "child_column": "shop_product_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..1",
+      "identifying": true
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "MAP_VERSION",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "FLOOR_MAP",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "FLOOR",
+      "parent_column": "floor_id",
+      "child": "FLOOR_MAP",
+      "child_column": "floor_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "NAVIGATION_NODE",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "FLOOR",
+      "parent_column": "floor_id",
+      "child": "NAVIGATION_NODE",
+      "child_column": "floor_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "VERTICAL_CONNECTOR",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "VERTICAL_CONNECTOR",
+      "parent_column": "connector_id",
+      "child": "CONNECTOR_STOP",
+      "child_column": "connector_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "CONNECTOR_STOP",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "FLOOR",
+      "parent_column": "floor_id",
+      "child": "CONNECTOR_STOP",
+      "child_column": "floor_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "CONNECTOR_STOP",
+      "child_column": "node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "NAVIGATION_EDGE",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "NAVIGATION_EDGE",
+      "child_column": "from_node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "NAVIGATION_EDGE",
+      "child_column": "to_node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "VERTICAL_CONNECTOR",
+      "parent_column": "connector_id",
+      "child": "NAVIGATION_EDGE",
+      "child_column": "connector_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "QR_CHECKPOINT",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "QR_CHECKPOINT",
+      "parent_column": "checkpoint_id",
+      "child": "CHECKPOINT_ANCHOR",
+      "child_column": "checkpoint_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "CHECKPOINT_ANCHOR",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "CHECKPOINT_ANCHOR",
+      "child_column": "node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP_UNIT",
+      "parent_column": "shop_unit_id",
+      "child": "SHOP_ENTRANCE",
+      "child_column": "shop_unit_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "SHOP_ENTRANCE",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "SHOP_ENTRANCE",
+      "child_column": "node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "FACILITY",
+      "parent_column": "facility_id",
+      "child": "FACILITY_ANCHOR",
+      "child_column": "facility_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "FACILITY_ANCHOR",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "FACILITY_ANCHOR",
+      "child_column": "node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "AR_REFERENCE_ANCHOR",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "AR_REFERENCE_ANCHOR",
+      "child_column": "node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "ROUTE_SESSION",
+      "child_column": "user_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MAP_VERSION",
+      "parent_column": "map_version_id",
+      "child": "ROUTE_SESSION",
+      "child_column": "map_version_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "ROUTE_SESSION",
+      "child_column": "start_node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "ROUTE_SESSION",
+      "child_column": "destination_node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "ROUTE_SESSION",
+      "parent_column": "route_session_id",
+      "child": "ROUTE_STEP",
+      "child_column": "route_session_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "NAVIGATION_NODE",
+      "parent_column": "node_id",
+      "child": "ROUTE_STEP",
+      "child_column": "node_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "NAVIGATION_EDGE",
+      "parent_column": "edge_id",
+      "child": "ROUTE_STEP",
+      "child_column": "incoming_edge_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "PURCHASE",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "PURCHASE",
+      "child_column": "buyer_user_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "PURCHASE",
+      "parent_column": "purchase_id",
+      "child": "PURCHASE_ITEM",
+      "child_column": "purchase_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP_PRODUCT",
+      "parent_column": "shop_product_id",
+      "child": "PURCHASE_ITEM",
+      "child_column": "shop_product_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "PURCHASE_ITEM",
+      "parent_column": "purchase_item_id",
+      "child": "VERIFICATION_TOKEN",
+      "child_column": "purchase_item_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..1",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "VERIFICATION_TOKEN",
+      "child_column": "issued_by_user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "VERIFICATION_TOKEN",
+      "parent_column": "verification_token_id",
+      "child": "TOKEN_REDEMPTION",
+      "child_column": "verification_token_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..1",
+      "identifying": true
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "TOKEN_REDEMPTION",
+      "child_column": "user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "REVIEW",
+      "child_column": "author_user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "REVIEW",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP_PRODUCT",
+      "parent_column": "shop_product_id",
+      "child": "REVIEW",
+      "child_column": "shop_product_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "REVIEW",
+      "parent_column": "review_id",
+      "child": "REVIEW_VERIFICATION",
+      "child_column": "review_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..1",
+      "identifying": true
+    },
+    {
+      "parent": "TOKEN_REDEMPTION",
+      "parent_column": "verification_token_id",
+      "child": "REVIEW_VERIFICATION",
+      "child_column": "verification_token_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..1",
+      "identifying": false
+    },
+    {
+      "parent": "REVIEW",
+      "parent_column": "review_id",
+      "child": "REVIEW_REPLY",
+      "child_column": "review_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "REVIEW_REPLY",
+      "child_column": "author_user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "REVIEW",
+      "parent_column": "review_id",
+      "child": "REVIEW_REPORT",
+      "child_column": "review_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "REVIEW_REPORT",
+      "child_column": "reporter_user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "REVIEW",
+      "parent_column": "review_id",
+      "child": "MODERATION_ACTION",
+      "child_column": "review_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "REVIEW_REPORT",
+      "parent_column": "review_report_id",
+      "child": "MODERATION_ACTION",
+      "child_column": "review_report_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "MODERATION_ACTION",
+      "child_column": "actor_user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "USER_PREFERENCE",
+      "child_column": "user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..1",
+      "identifying": true
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "USER_PREFERENCE",
+      "child_column": "default_mall_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "FAVOURITE_SHOP",
+      "child_column": "user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "FAVOURITE_SHOP",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "FAVOURITE_PRODUCT",
+      "child_column": "user_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "SHOP_PRODUCT",
+      "parent_column": "shop_product_id",
+      "child": "FAVOURITE_PRODUCT",
+      "child_column": "shop_product_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "CONVERSATION",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "CONVERSATION",
+      "child_column": "user_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "CONVERSATION",
+      "parent_column": "conversation_id",
+      "child": "CHAT_MESSAGE",
+      "child_column": "conversation_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "KNOWLEDGE_DOCUMENT",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "KNOWLEDGE_DOCUMENT",
+      "child_column": "shop_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP_PRODUCT",
+      "parent_column": "shop_product_id",
+      "child": "KNOWLEDGE_DOCUMENT",
+      "child_column": "shop_product_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "KNOWLEDGE_DOCUMENT",
+      "parent_column": "document_id",
+      "child": "DOCUMENT_REVISION",
+      "child_column": "document_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "DOCUMENT_REVISION",
+      "parent_column": "revision_id",
+      "child": "KNOWLEDGE_CHUNK",
+      "child_column": "revision_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "KNOWLEDGE_CHUNK",
+      "parent_column": "chunk_id",
+      "child": "CHUNK_EMBEDDING",
+      "child_column": "chunk_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "CHAT_MESSAGE",
+      "parent_column": "message_id",
+      "child": "MESSAGE_CITATION",
+      "child_column": "message_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "KNOWLEDGE_CHUNK",
+      "parent_column": "chunk_id",
+      "child": "MESSAGE_CITATION",
+      "child_column": "chunk_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "CHAT_MESSAGE",
+      "parent_column": "message_id",
+      "child": "MESSAGE_RECOMMENDATION",
+      "child_column": "message_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "SHOP_PRODUCT",
+      "parent_column": "shop_product_id",
+      "child": "MESSAGE_RECOMMENDATION",
+      "child_column": "shop_product_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "SHOP_METRIC_SNAPSHOT",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "METRIC_DEFINITION",
+      "parent_column": "metric_code",
+      "child": "SHOP_METRIC_SNAPSHOT",
+      "child_column": "metric_code",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "MALL",
+      "parent_column": "mall_id",
+      "child": "REPORT_RUN",
+      "child_column": "mall_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "APP_USER",
+      "parent_column": "user_id",
+      "child": "REPORT_RUN",
+      "child_column": "requested_by_user_id",
+      "parent_cardinality": "0..1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "REPORT_RUN",
+      "parent_column": "report_run_id",
+      "child": "REPORT_SHOP_SCOPE",
+      "child_column": "report_run_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "REPORT_SHOP_SCOPE",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "REPORT_RUN",
+      "parent_column": "report_run_id",
+      "child": "REPORT_METRIC_SNAPSHOT",
+      "child_column": "report_run_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "SHOP_METRIC_SNAPSHOT",
+      "parent_column": "snapshot_id",
+      "child": "REPORT_METRIC_SNAPSHOT",
+      "child_column": "snapshot_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "REPORT_RUN",
+      "parent_column": "report_run_id",
+      "child": "REPORT_ARTIFACT",
+      "child_column": "report_run_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "SHOP",
+      "parent_column": "shop_id",
+      "child": "FORECAST_RUN",
+      "child_column": "shop_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "METRIC_DEFINITION",
+      "parent_column": "metric_code",
+      "child": "FORECAST_RUN",
+      "child_column": "metric_code",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "FORECAST_RUN",
+      "parent_column": "forecast_run_id",
+      "child": "FORECAST_TRAINING_SNAPSHOT",
+      "child_column": "forecast_run_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "SHOP_METRIC_SNAPSHOT",
+      "parent_column": "snapshot_id",
+      "child": "FORECAST_TRAINING_SNAPSHOT",
+      "child_column": "snapshot_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "FORECAST_RUN",
+      "parent_column": "forecast_run_id",
+      "child": "FORECAST_POINT",
+      "child_column": "forecast_run_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": false
+    },
+    {
+      "parent": "REPORT_RUN",
+      "parent_column": "report_run_id",
+      "child": "REPORT_FORECAST",
+      "child_column": "report_run_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    },
+    {
+      "parent": "FORECAST_RUN",
+      "parent_column": "forecast_run_id",
+      "child": "REPORT_FORECAST",
+      "child_column": "forecast_run_id",
+      "parent_cardinality": "1",
+      "child_cardinality": "0..many",
+      "identifying": true
+    }
+  ]
+}

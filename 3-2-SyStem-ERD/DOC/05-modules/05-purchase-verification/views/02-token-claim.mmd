@@ -1,0 +1,28 @@
+erDiagram
+    direction TB
+    %% Credential issuance and single-use claim
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    PURCHASE_ITEM["PURCHASE_ITEM (external M05)"] {
+        uuid purchase_item_id PK "NN"
+    }
+    VERIFICATION_TOKEN {
+        uuid verification_token_id PK "NN"
+        uuid purchase_item_id FK, UK "NN"
+        varchar(128) token_digest UK "NN"
+        uuid issued_by_user_id FK "NN"
+        timestamptz issued_at "NN"
+        timestamptz expires_at "NN"
+        timestamptz revoked_at "NULL"
+    }
+    TOKEN_REDEMPTION {
+        uuid verification_token_id PK, FK "NN"
+        uuid user_id FK "NN"
+        timestamptz redeemed_at "NN"
+    }
+    PURCHASE_ITEM ||..o| VERIFICATION_TOKEN : "purchase_item_id"
+    APP_USER ||..o{ VERIFICATION_TOKEN : "issued_by_user_id"
+    VERIFICATION_TOKEN ||--o| TOKEN_REDEMPTION : "verification_token_id"
+    APP_USER ||..o{ TOKEN_REDEMPTION : "user_id"

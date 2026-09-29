@@ -1,0 +1,87 @@
+# Reviews and Moderation: complete module ER diagram
+
+Normal and purchase-verified reviews, replies, reports, and moderation history.
+
+External entities display their primary keys only and are owned by the indicated module. All attributes of this module are shown. Relationship labels name the foreign-key field on the child.
+
+```mermaid
+erDiagram
+    direction TB
+    %% Reviews and Moderation
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    SHOP_PRODUCT["SHOP_PRODUCT (external M03)"] {
+        uuid shop_product_id PK "NN"
+    }
+    TOKEN_REDEMPTION["TOKEN_REDEMPTION (external M05)"] {
+        uuid verification_token_id PK, FK "NN"
+    }
+    REVIEW {
+        uuid review_id PK "NN"
+        uuid author_user_id FK "NN"
+        uuid shop_id FK "NN"
+        uuid shop_product_id FK "NULL"
+        smallint rating "NN"
+        varchar(160) title "NULL"
+        text body "NN"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+        timestamptz updated_at "NN"
+    }
+    REVIEW_VERIFICATION {
+        uuid review_id PK, FK "NN"
+        uuid verification_token_id FK, UK "NN"
+        timestamptz verified_at "NN"
+        timestamptz revoked_at "NULL"
+        text revocation_reason "NULL"
+    }
+    REVIEW_REPLY {
+        uuid review_reply_id PK "NN"
+        uuid review_id FK "NN"
+        uuid author_user_id FK "NN"
+        text body "NN"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+        timestamptz updated_at "NN"
+    }
+    REVIEW_REPORT {
+        uuid review_report_id PK "NN"
+        uuid review_id FK "NN"
+        uuid reporter_user_id FK "NN"
+        varchar(30) reason_code "NN"
+        text details "NULL"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+        timestamptz resolved_at "NULL"
+    }
+    MODERATION_ACTION {
+        uuid moderation_action_id PK "NN"
+        uuid review_id FK "NN"
+        uuid review_report_id FK "NULL"
+        uuid actor_user_id FK "NN"
+        varchar(24) action "NN"
+        text reason "NN"
+        varchar(16) previous_status "NN"
+        varchar(16) resulting_status "NN"
+        timestamptz created_at "NN"
+    }
+    APP_USER ||..o{ REVIEW : "author_user_id"
+    SHOP ||..o{ REVIEW : "shop_id"
+    SHOP_PRODUCT |o..o{ REVIEW : "shop_product_id"
+    REVIEW ||--o| REVIEW_VERIFICATION : "review_id"
+    TOKEN_REDEMPTION ||..o| REVIEW_VERIFICATION : "verification_token_id"
+    REVIEW ||..o{ REVIEW_REPLY : "review_id"
+    APP_USER ||..o{ REVIEW_REPLY : "author_user_id"
+    REVIEW ||..o{ REVIEW_REPORT : "review_id"
+    APP_USER ||..o{ REVIEW_REPORT : "reporter_user_id"
+    REVIEW ||..o{ MODERATION_ACTION : "review_id"
+    REVIEW_REPORT |o..o{ MODERATION_ACTION : "review_report_id"
+    APP_USER ||..o{ MODERATION_ACTION : "actor_user_id"
+```
+
+See [data dictionary](DATA-DICTIONARY.md) and [business rules](BUSINESS-RULES.md) for checks that a diagram cannot express.

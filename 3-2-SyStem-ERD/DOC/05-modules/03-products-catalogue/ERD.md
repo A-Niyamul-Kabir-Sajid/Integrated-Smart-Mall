@@ -1,0 +1,73 @@
+# Products and Catalogue: complete module ER diagram
+
+Shared products and variants, shop listings, images, and optional inventory.
+
+External entities display their primary keys only and are owned by the indicated module. All attributes of this module are shown. Relationship labels name the foreign-key field on the child.
+
+```mermaid
+erDiagram
+    direction TB
+    %% Products and Catalogue
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    PRODUCT_CATEGORY {
+        uuid product_category_id PK "NN"
+        uuid parent_category_id FK "NULL"
+        varchar(80) slug UK "NN"
+        varchar(100) name "NN"
+    }
+    PRODUCT {
+        uuid product_id PK "NN"
+        uuid product_category_id FK "NN"
+        varchar(160) name "NN"
+        varchar(100) brand "NULL"
+        text description "NULL"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+    }
+    PRODUCT_VARIANT {
+        uuid variant_id PK "NN"
+        uuid product_id FK "NN"
+        varchar(60) variant_code "NN"
+        varchar(120) label "NN"
+        json attributes_json "NN"
+        varchar(80) barcode UK "NULL"
+        varchar(16) status "NN"
+    }
+    SHOP_PRODUCT {
+        uuid shop_product_id PK "NN"
+        uuid shop_id FK "NN"
+        uuid variant_id FK "NN"
+        varchar(80) seller_sku "NN"
+        decimal price_amount "NN"
+        char(3) currency "NN"
+        varchar(20) availability_status "NN"
+        varchar(16) status "NN"
+        timestamptz updated_at "NN"
+    }
+    PRODUCT_IMAGE {
+        uuid product_image_id PK "NN"
+        uuid product_id FK "NN"
+        text object_key "NN"
+        varchar(200) alt_text "NN"
+        integer sort_order "NN"
+    }
+    INVENTORY_BALANCE {
+        uuid shop_product_id PK, FK "NN"
+        integer quantity_on_hand "NN"
+        integer quantity_reserved "NN"
+        timestamptz observed_at "NN"
+        varchar(20) source "NN"
+    }
+    PRODUCT_CATEGORY |o..o{ PRODUCT_CATEGORY : "parent_category_id"
+    PRODUCT_CATEGORY ||..o{ PRODUCT : "product_category_id"
+    PRODUCT ||..o{ PRODUCT_VARIANT : "product_id"
+    SHOP ||..o{ SHOP_PRODUCT : "shop_id"
+    PRODUCT_VARIANT ||..o{ SHOP_PRODUCT : "variant_id"
+    PRODUCT ||..o{ PRODUCT_IMAGE : "product_id"
+    SHOP_PRODUCT ||--o| INVENTORY_BALANCE : "shop_product_id"
+```
+
+See [data dictionary](DATA-DICTIONARY.md) and [business rules](BUSINESS-RULES.md) for checks that a diagram cannot express.

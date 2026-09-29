@@ -1,0 +1,52 @@
+erDiagram
+    direction TB
+    %% Versioned knowledge and vector index references
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    SHOP_PRODUCT["SHOP_PRODUCT (external M03)"] {
+        uuid shop_product_id PK "NN"
+    }
+    KNOWLEDGE_DOCUMENT {
+        uuid document_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid shop_id FK "NULL"
+        uuid shop_product_id FK "NULL"
+        varchar(24) source_kind "NN"
+        varchar(200) title "NN"
+        text source_locator "NN"
+        varchar(16) access_scope "NN"
+        varchar(16) status "NN"
+    }
+    DOCUMENT_REVISION {
+        uuid revision_id PK "NN"
+        uuid document_id FK "NN"
+        integer revision_no "NN"
+        varchar(64) content_hash "NN"
+        text content_text "NN"
+        timestamptz source_updated_at "NN"
+        timestamptz captured_at "NN"
+    }
+    KNOWLEDGE_CHUNK {
+        uuid chunk_id PK "NN"
+        uuid revision_id FK "NN"
+        integer chunk_no "NN"
+        text chunk_text "NN"
+    }
+    CHUNK_EMBEDDING {
+        uuid chunk_id PK, FK "NN"
+        varchar(120) model_key PK "NN"
+        integer dimensions "NN"
+        varchar(200) index_record_key UK "NN"
+        timestamptz created_at "NN"
+    }
+    MALL ||..o{ KNOWLEDGE_DOCUMENT : "mall_id"
+    SHOP |o..o{ KNOWLEDGE_DOCUMENT : "shop_id"
+    SHOP_PRODUCT |o..o{ KNOWLEDGE_DOCUMENT : "shop_product_id"
+    KNOWLEDGE_DOCUMENT ||..o{ DOCUMENT_REVISION : "document_id"
+    DOCUMENT_REVISION ||..o{ KNOWLEDGE_CHUNK : "revision_id"
+    KNOWLEDGE_CHUNK ||--o{ CHUNK_EMBEDDING : "chunk_id"

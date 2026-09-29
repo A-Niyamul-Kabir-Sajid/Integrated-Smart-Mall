@@ -1,0 +1,56 @@
+erDiagram
+    direction TB
+    %% Stable QR codes and destination bindings
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    SHOP_UNIT["SHOP_UNIT (external M02)"] {
+        uuid shop_unit_id PK "NN"
+    }
+    FACILITY["FACILITY (external M02)"] {
+        uuid facility_id PK "NN"
+    }
+    MAP_VERSION["MAP_VERSION (external M04)"] {
+        uuid map_version_id PK "NN"
+    }
+    NAVIGATION_NODE["NAVIGATION_NODE (external M04)"] {
+        uuid node_id PK "NN"
+    }
+    QR_CHECKPOINT {
+        uuid checkpoint_id PK "NN"
+        uuid mall_id FK "NN"
+        varchar(50) checkpoint_code "NN"
+        varchar(120) public_slug UK "NN"
+        varchar(120) label "NN"
+        varchar(16) status "NN"
+    }
+    CHECKPOINT_ANCHOR {
+        uuid checkpoint_id PK, FK "NN"
+        uuid map_version_id PK, FK "NN"
+        uuid node_id FK "NN"
+        decimal yaw_deg "NN"
+        decimal marker_height_m "NULL"
+    }
+    SHOP_ENTRANCE {
+        uuid shop_entrance_id PK "NN"
+        uuid shop_unit_id FK "NN"
+        uuid map_version_id FK "NN"
+        uuid node_id FK "NN"
+        boolean is_primary "NN"
+    }
+    FACILITY_ANCHOR {
+        uuid facility_id PK, FK "NN"
+        uuid map_version_id PK, FK "NN"
+        uuid node_id FK "NN"
+    }
+    MALL ||..o{ QR_CHECKPOINT : "mall_id"
+    QR_CHECKPOINT ||--o{ CHECKPOINT_ANCHOR : "checkpoint_id"
+    MAP_VERSION ||--o{ CHECKPOINT_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ CHECKPOINT_ANCHOR : "node_id"
+    SHOP_UNIT ||..o{ SHOP_ENTRANCE : "shop_unit_id"
+    MAP_VERSION ||..o{ SHOP_ENTRANCE : "map_version_id"
+    NAVIGATION_NODE ||..o{ SHOP_ENTRANCE : "node_id"
+    FACILITY ||--o{ FACILITY_ANCHOR : "facility_id"
+    MAP_VERSION ||--o{ FACILITY_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ FACILITY_ANCHOR : "node_id"

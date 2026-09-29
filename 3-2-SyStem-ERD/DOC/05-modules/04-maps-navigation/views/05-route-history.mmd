@@ -1,0 +1,41 @@
+erDiagram
+    direction TB
+    %% Optional persisted route paths
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    MAP_VERSION["MAP_VERSION (external M04)"] {
+        uuid map_version_id PK "NN"
+    }
+    NAVIGATION_NODE["NAVIGATION_NODE (external M04)"] {
+        uuid node_id PK "NN"
+    }
+    NAVIGATION_EDGE["NAVIGATION_EDGE (external M04)"] {
+        uuid edge_id PK "NN"
+    }
+    ROUTE_SESSION {
+        uuid route_session_id PK "NN"
+        uuid user_id FK "NULL"
+        uuid map_version_id FK "NN"
+        uuid start_node_id FK "NN"
+        uuid destination_node_id FK "NN"
+        varchar(20) route_mode "NN"
+        varchar(12) algorithm "NN"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+        timestamptz expires_at "NN"
+    }
+    ROUTE_STEP {
+        uuid route_session_id PK, FK "NN"
+        integer step_no PK "NN"
+        uuid node_id FK "NN"
+        uuid incoming_edge_id FK "NULL"
+    }
+    APP_USER |o..o{ ROUTE_SESSION : "user_id"
+    MAP_VERSION ||..o{ ROUTE_SESSION : "map_version_id"
+    NAVIGATION_NODE ||..o{ ROUTE_SESSION : "start_node_id"
+    NAVIGATION_NODE ||..o{ ROUTE_SESSION : "destination_node_id"
+    ROUTE_SESSION ||--o{ ROUTE_STEP : "route_session_id"
+    NAVIGATION_NODE ||..o{ ROUTE_STEP : "node_id"
+    NAVIGATION_EDGE |o..o{ ROUTE_STEP : "incoming_edge_id"

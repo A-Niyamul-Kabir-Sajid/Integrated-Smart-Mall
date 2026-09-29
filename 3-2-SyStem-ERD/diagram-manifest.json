@@ -1,0 +1,455 @@
+[
+  {
+    "id": "master",
+    "title": "Master ER diagram \u00b7 keys and relationships",
+    "group": "Shared design",
+    "path": "DOC/03-database/MASTER-ERD.mmd",
+    "kind": "Master overview",
+    "owned": [
+      "APP_USER",
+      "ROLE",
+      "USER_ROLE",
+      "MALL_MEMBERSHIP",
+      "SHOP_MEMBERSHIP",
+      "AUTH_SESSION",
+      "MALL",
+      "FLOOR",
+      "SHOP_CATEGORY",
+      "SHOP",
+      "SHOP_UNIT",
+      "SHOP_OPENING_HOUR",
+      "FACILITY",
+      "PRODUCT_CATEGORY",
+      "PRODUCT",
+      "PRODUCT_VARIANT",
+      "SHOP_PRODUCT",
+      "PRODUCT_IMAGE",
+      "INVENTORY_BALANCE",
+      "MAP_VERSION",
+      "FLOOR_MAP",
+      "NAVIGATION_NODE",
+      "VERTICAL_CONNECTOR",
+      "CONNECTOR_STOP",
+      "NAVIGATION_EDGE",
+      "QR_CHECKPOINT",
+      "CHECKPOINT_ANCHOR",
+      "SHOP_ENTRANCE",
+      "FACILITY_ANCHOR",
+      "AR_REFERENCE_ANCHOR",
+      "ROUTE_SESSION",
+      "ROUTE_STEP",
+      "PURCHASE",
+      "PURCHASE_ITEM",
+      "VERIFICATION_TOKEN",
+      "TOKEN_REDEMPTION",
+      "REVIEW",
+      "REVIEW_VERIFICATION",
+      "REVIEW_REPLY",
+      "REVIEW_REPORT",
+      "MODERATION_ACTION",
+      "USER_PREFERENCE",
+      "FAVOURITE_SHOP",
+      "FAVOURITE_PRODUCT",
+      "CONVERSATION",
+      "CHAT_MESSAGE",
+      "KNOWLEDGE_DOCUMENT",
+      "DOCUMENT_REVISION",
+      "KNOWLEDGE_CHUNK",
+      "CHUNK_EMBEDDING",
+      "MESSAGE_CITATION",
+      "MESSAGE_RECOMMENDATION",
+      "METRIC_DEFINITION",
+      "SHOP_METRIC_SNAPSHOT",
+      "REPORT_RUN",
+      "REPORT_SHOP_SCOPE",
+      "REPORT_METRIC_SNAPSHOT",
+      "REPORT_ARTIFACT",
+      "FORECAST_RUN",
+      "FORECAST_TRAINING_SNAPSHOT",
+      "FORECAST_POINT",
+      "REPORT_FORECAST"
+    ]
+  },
+  {
+    "id": "01-accounts-access",
+    "title": "01 \u00b7 Accounts and Access",
+    "group": "M01 \u00b7 Accounts and Access",
+    "path": "DOC/05-modules/01-accounts-access/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "APP_USER",
+      "ROLE",
+      "USER_ROLE",
+      "MALL_MEMBERSHIP",
+      "SHOP_MEMBERSHIP",
+      "AUTH_SESSION"
+    ]
+  },
+  {
+    "id": "01-accounts-access-01-login-and-platform-roles",
+    "title": "Login and platform roles",
+    "group": "M01 \u00b7 Accounts and Access",
+    "path": "DOC/05-modules/01-accounts-access/views/01-login-and-platform-roles.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "APP_USER",
+      "ROLE",
+      "USER_ROLE",
+      "AUTH_SESSION"
+    ]
+  },
+  {
+    "id": "01-accounts-access-02-scoped-memberships",
+    "title": "Mall and shop memberships",
+    "group": "M01 \u00b7 Accounts and Access",
+    "path": "DOC/05-modules/01-accounts-access/views/02-scoped-memberships.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "MALL_MEMBERSHIP",
+      "SHOP_MEMBERSHIP"
+    ]
+  },
+  {
+    "id": "02-mall-shop-directory",
+    "title": "02 \u00b7 Mall and Shop Directory",
+    "group": "M02 \u00b7 Mall and Shop Directory",
+    "path": "DOC/05-modules/02-mall-shop-directory/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "MALL",
+      "FLOOR",
+      "SHOP_CATEGORY",
+      "SHOP",
+      "SHOP_UNIT",
+      "SHOP_OPENING_HOUR",
+      "FACILITY"
+    ]
+  },
+  {
+    "id": "02-mall-shop-directory-01-mall-floors-and-facilities",
+    "title": "Mall floors and facilities",
+    "group": "M02 \u00b7 Mall and Shop Directory",
+    "path": "DOC/05-modules/02-mall-shop-directory/views/01-mall-floors-and-facilities.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "MALL",
+      "FLOOR",
+      "FACILITY"
+    ]
+  },
+  {
+    "id": "02-mall-shop-directory-02-shops-and-physical-units",
+    "title": "Shops, units, categories, and opening hours",
+    "group": "M02 \u00b7 Mall and Shop Directory",
+    "path": "DOC/05-modules/02-mall-shop-directory/views/02-shops-and-physical-units.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "SHOP",
+      "SHOP_UNIT",
+      "SHOP_CATEGORY",
+      "SHOP_OPENING_HOUR"
+    ]
+  },
+  {
+    "id": "03-products-catalogue",
+    "title": "03 \u00b7 Products and Catalogue",
+    "group": "M03 \u00b7 Products and Catalogue",
+    "path": "DOC/05-modules/03-products-catalogue/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "PRODUCT_CATEGORY",
+      "PRODUCT",
+      "PRODUCT_VARIANT",
+      "SHOP_PRODUCT",
+      "PRODUCT_IMAGE",
+      "INVENTORY_BALANCE"
+    ]
+  },
+  {
+    "id": "03-products-catalogue-01-shared-product-model",
+    "title": "Shared products, variants, and images",
+    "group": "M03 \u00b7 Products and Catalogue",
+    "path": "DOC/05-modules/03-products-catalogue/views/01-shared-product-model.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "PRODUCT_CATEGORY",
+      "PRODUCT",
+      "PRODUCT_VARIANT",
+      "PRODUCT_IMAGE"
+    ]
+  },
+  {
+    "id": "03-products-catalogue-02-shop-listings",
+    "title": "Shop listings and optional stock",
+    "group": "M03 \u00b7 Products and Catalogue",
+    "path": "DOC/05-modules/03-products-catalogue/views/02-shop-listings.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "SHOP_PRODUCT",
+      "INVENTORY_BALANCE"
+    ]
+  },
+  {
+    "id": "04-maps-navigation",
+    "title": "04 \u00b7 Maps and Navigation",
+    "group": "M04 \u00b7 Maps and Navigation",
+    "path": "DOC/05-modules/04-maps-navigation/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "MAP_VERSION",
+      "FLOOR_MAP",
+      "NAVIGATION_NODE",
+      "VERTICAL_CONNECTOR",
+      "CONNECTOR_STOP",
+      "NAVIGATION_EDGE",
+      "QR_CHECKPOINT",
+      "CHECKPOINT_ANCHOR",
+      "SHOP_ENTRANCE",
+      "FACILITY_ANCHOR",
+      "AR_REFERENCE_ANCHOR",
+      "ROUTE_SESSION",
+      "ROUTE_STEP"
+    ]
+  },
+  {
+    "id": "04-maps-navigation-01-versioned-graph",
+    "title": "Map versions, floor assets, and directed graph",
+    "group": "M04 \u00b7 Maps and Navigation",
+    "path": "DOC/05-modules/04-maps-navigation/views/01-versioned-graph.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "MAP_VERSION",
+      "FLOOR_MAP",
+      "NAVIGATION_NODE",
+      "NAVIGATION_EDGE"
+    ]
+  },
+  {
+    "id": "04-maps-navigation-02-multifloor-connectors",
+    "title": "Physical connectors and versioned stops",
+    "group": "M04 \u00b7 Maps and Navigation",
+    "path": "DOC/05-modules/04-maps-navigation/views/02-multifloor-connectors.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "VERTICAL_CONNECTOR",
+      "CONNECTOR_STOP"
+    ]
+  },
+  {
+    "id": "04-maps-navigation-03-checkpoints-and-destinations",
+    "title": "Stable QR codes and destination bindings",
+    "group": "M04 \u00b7 Maps and Navigation",
+    "path": "DOC/05-modules/04-maps-navigation/views/03-checkpoints-and-destinations.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "QR_CHECKPOINT",
+      "CHECKPOINT_ANCHOR",
+      "SHOP_ENTRANCE",
+      "FACILITY_ANCHOR"
+    ]
+  },
+  {
+    "id": "04-maps-navigation-04-ar-alignment",
+    "title": "AR reference poses",
+    "group": "M04 \u00b7 Maps and Navigation",
+    "path": "DOC/05-modules/04-maps-navigation/views/04-ar-alignment.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "AR_REFERENCE_ANCHOR"
+    ]
+  },
+  {
+    "id": "04-maps-navigation-05-route-history",
+    "title": "Optional persisted route paths",
+    "group": "M04 \u00b7 Maps and Navigation",
+    "path": "DOC/05-modules/04-maps-navigation/views/05-route-history.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "ROUTE_SESSION",
+      "ROUTE_STEP"
+    ]
+  },
+  {
+    "id": "05-purchase-verification",
+    "title": "05 \u00b7 Purchase Verification",
+    "group": "M05 \u00b7 Purchase Verification",
+    "path": "DOC/05-modules/05-purchase-verification/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "PURCHASE",
+      "PURCHASE_ITEM",
+      "VERIFICATION_TOKEN",
+      "TOKEN_REDEMPTION"
+    ]
+  },
+  {
+    "id": "05-purchase-verification-01-purchase-evidence",
+    "title": "Recorded purchase lines",
+    "group": "M05 \u00b7 Purchase Verification",
+    "path": "DOC/05-modules/05-purchase-verification/views/01-purchase-evidence.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "PURCHASE",
+      "PURCHASE_ITEM"
+    ]
+  },
+  {
+    "id": "05-purchase-verification-02-token-claim",
+    "title": "Credential issuance and single-use claim",
+    "group": "M05 \u00b7 Purchase Verification",
+    "path": "DOC/05-modules/05-purchase-verification/views/02-token-claim.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "VERIFICATION_TOKEN",
+      "TOKEN_REDEMPTION"
+    ]
+  },
+  {
+    "id": "06-reviews-moderation",
+    "title": "06 \u00b7 Reviews and Moderation",
+    "group": "M06 \u00b7 Reviews and Moderation",
+    "path": "DOC/05-modules/06-reviews-moderation/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "REVIEW",
+      "REVIEW_VERIFICATION",
+      "REVIEW_REPLY",
+      "REVIEW_REPORT",
+      "MODERATION_ACTION"
+    ]
+  },
+  {
+    "id": "06-reviews-moderation-01-reviews-and-verification",
+    "title": "Review targets and purchase verification",
+    "group": "M06 \u00b7 Reviews and Moderation",
+    "path": "DOC/05-modules/06-reviews-moderation/views/01-reviews-and-verification.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "REVIEW",
+      "REVIEW_VERIFICATION"
+    ]
+  },
+  {
+    "id": "06-reviews-moderation-02-moderation-and-replies",
+    "title": "Replies, reports, and moderation history",
+    "group": "M06 \u00b7 Reviews and Moderation",
+    "path": "DOC/05-modules/06-reviews-moderation/views/02-moderation-and-replies.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "REVIEW_REPLY",
+      "REVIEW_REPORT",
+      "MODERATION_ACTION"
+    ]
+  },
+  {
+    "id": "07-favourites-preferences",
+    "title": "07 \u00b7 Favourites and Preferences",
+    "group": "M07 \u00b7 Favourites and Preferences",
+    "path": "DOC/05-modules/07-favourites-preferences/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "USER_PREFERENCE",
+      "FAVOURITE_SHOP",
+      "FAVOURITE_PRODUCT"
+    ]
+  },
+  {
+    "id": "08-chatbot-rag",
+    "title": "08 \u00b7 Chatbot and RAG",
+    "group": "M08 \u00b7 Chatbot and RAG",
+    "path": "DOC/05-modules/08-chatbot-rag/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "CONVERSATION",
+      "CHAT_MESSAGE",
+      "KNOWLEDGE_DOCUMENT",
+      "DOCUMENT_REVISION",
+      "KNOWLEDGE_CHUNK",
+      "CHUNK_EMBEDDING",
+      "MESSAGE_CITATION",
+      "MESSAGE_RECOMMENDATION"
+    ]
+  },
+  {
+    "id": "08-chatbot-rag-01-knowledge-ingestion",
+    "title": "Versioned knowledge and vector index references",
+    "group": "M08 \u00b7 Chatbot and RAG",
+    "path": "DOC/05-modules/08-chatbot-rag/views/01-knowledge-ingestion.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "KNOWLEDGE_DOCUMENT",
+      "DOCUMENT_REVISION",
+      "KNOWLEDGE_CHUNK",
+      "CHUNK_EMBEDDING"
+    ]
+  },
+  {
+    "id": "08-chatbot-rag-02-conversations-and-evidence",
+    "title": "Messages, citations, and recommendations",
+    "group": "M08 \u00b7 Chatbot and RAG",
+    "path": "DOC/05-modules/08-chatbot-rag/views/02-conversations-and-evidence.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "CONVERSATION",
+      "CHAT_MESSAGE",
+      "MESSAGE_CITATION",
+      "MESSAGE_RECOMMENDATION"
+    ]
+  },
+  {
+    "id": "09-analytics-reports",
+    "title": "09 \u00b7 Analytics and Reports",
+    "group": "M09 \u00b7 Analytics and Reports",
+    "path": "DOC/05-modules/09-analytics-reports/ERD.mmd",
+    "kind": "Complete module",
+    "owned": [
+      "METRIC_DEFINITION",
+      "SHOP_METRIC_SNAPSHOT",
+      "REPORT_RUN",
+      "REPORT_SHOP_SCOPE",
+      "REPORT_METRIC_SNAPSHOT",
+      "REPORT_ARTIFACT",
+      "FORECAST_RUN",
+      "FORECAST_TRAINING_SNAPSHOT",
+      "FORECAST_POINT",
+      "REPORT_FORECAST"
+    ]
+  },
+  {
+    "id": "09-analytics-reports-01-measurement",
+    "title": "Metric definitions and frozen measurements",
+    "group": "M09 \u00b7 Analytics and Reports",
+    "path": "DOC/05-modules/09-analytics-reports/views/01-measurement.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "METRIC_DEFINITION",
+      "SHOP_METRIC_SNAPSHOT"
+    ]
+  },
+  {
+    "id": "09-analytics-reports-02-report-generation",
+    "title": "Report scope, input snapshots, and files",
+    "group": "M09 \u00b7 Analytics and Reports",
+    "path": "DOC/05-modules/09-analytics-reports/views/02-report-generation.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "REPORT_RUN",
+      "REPORT_SHOP_SCOPE",
+      "REPORT_METRIC_SNAPSHOT",
+      "REPORT_ARTIFACT"
+    ]
+  },
+  {
+    "id": "09-analytics-reports-03-forecast-experiments",
+    "title": "Optional regression runs and report inclusion",
+    "group": "M09 \u00b7 Analytics and Reports",
+    "path": "DOC/05-modules/09-analytics-reports/views/03-forecast-experiments.mmd",
+    "kind": "Focused view",
+    "owned": [
+      "FORECAST_RUN",
+      "FORECAST_TRAINING_SNAPSHOT",
+      "FORECAST_POINT",
+      "REPORT_FORECAST"
+    ]
+  }
+]

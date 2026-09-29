@@ -1,0 +1,54 @@
+erDiagram
+    direction TB
+    %% Report scope, input snapshots, and files
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    SHOP_METRIC_SNAPSHOT["SHOP_METRIC_SNAPSHOT (external M09)"] {
+        uuid snapshot_id PK "NN"
+    }
+    REPORT_RUN {
+        uuid report_run_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid requested_by_user_id FK "NULL"
+        varchar(32) report_type "NN"
+        timestamptz period_start "NN"
+        timestamptz period_end "NN"
+        timestamptz source_cutoff_at "NN"
+        varchar(16) dataset_label "NN"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+        timestamptz completed_at "NULL"
+        text error_summary "NULL"
+    }
+    REPORT_SHOP_SCOPE {
+        uuid report_run_id PK, FK "NN"
+        uuid shop_id PK, FK "NN"
+    }
+    REPORT_METRIC_SNAPSHOT {
+        uuid report_run_id PK, FK "NN"
+        uuid snapshot_id PK, FK "NN"
+    }
+    REPORT_ARTIFACT {
+        uuid report_artifact_id PK "NN"
+        uuid report_run_id FK "NN"
+        text object_key UK "NN"
+        varchar(12) format "NN"
+        varchar(64) sha256 "NN"
+        bigint size_bytes "NN"
+        timestamptz created_at "NN"
+    }
+    MALL ||..o{ REPORT_RUN : "mall_id"
+    APP_USER |o..o{ REPORT_RUN : "requested_by_user_id"
+    REPORT_RUN ||--o{ REPORT_SHOP_SCOPE : "report_run_id"
+    SHOP ||--o{ REPORT_SHOP_SCOPE : "shop_id"
+    REPORT_RUN ||--o{ REPORT_METRIC_SNAPSHOT : "report_run_id"
+    SHOP_METRIC_SNAPSHOT ||--o{ REPORT_METRIC_SNAPSHOT : "snapshot_id"
+    REPORT_RUN ||..o{ REPORT_ARTIFACT : "report_run_id"

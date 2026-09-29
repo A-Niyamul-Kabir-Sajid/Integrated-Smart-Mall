@@ -1,0 +1,66 @@
+erDiagram
+    direction TB
+    %% Map versions, floor assets, and directed graph
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    FLOOR["FLOOR (external M02)"] {
+        uuid floor_id PK "NN"
+    }
+    MAP_VERSION {
+        uuid map_version_id PK "NN"
+        uuid mall_id FK "NN"
+        integer version_no "NN"
+        varchar(16) status "NN"
+        varchar(80) coordinate_frame "NN"
+        timestamptz created_at "NN"
+        timestamptz published_at "NULL"
+    }
+    FLOOR_MAP {
+        uuid floor_map_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid floor_id FK "NN"
+        text plan_2d_key "NN"
+        text model_3d_key "NULL"
+        decimal pixel_origin_x "NN"
+        decimal pixel_origin_y "NN"
+        decimal metres_per_pixel "NN"
+        decimal rotation_deg "NN"
+        decimal world_origin_x_m "NN"
+        decimal world_origin_y_m "NN"
+    }
+    NAVIGATION_NODE {
+        uuid node_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid floor_id FK "NN"
+        varchar(50) node_code "NN"
+        varchar(24) node_type "NN"
+        decimal x_m "NN"
+        decimal y_m "NN"
+        decimal z_m "NN"
+        boolean is_accessible "NN"
+    }
+    VERTICAL_CONNECTOR["VERTICAL_CONNECTOR (external M04)"] {
+        uuid connector_id PK "NN"
+    }
+    NAVIGATION_EDGE {
+        uuid edge_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid from_node_id FK "NN"
+        uuid to_node_id FK "NN"
+        uuid connector_id FK "NULL"
+        decimal length_m "NN"
+        decimal expected_seconds "NN"
+        boolean is_accessible "NN"
+        varchar(20) status "NN"
+    }
+    MALL ||..o{ MAP_VERSION : "mall_id"
+    MAP_VERSION ||..o{ FLOOR_MAP : "map_version_id"
+    FLOOR ||..o{ FLOOR_MAP : "floor_id"
+    MAP_VERSION ||..o{ NAVIGATION_NODE : "map_version_id"
+    FLOOR ||..o{ NAVIGATION_NODE : "floor_id"
+    MAP_VERSION ||..o{ NAVIGATION_EDGE : "map_version_id"
+    NAVIGATION_NODE ||..o{ NAVIGATION_EDGE : "from_node_id"
+    NAVIGATION_NODE ||..o{ NAVIGATION_EDGE : "to_node_id"
+    VERTICAL_CONNECTOR |o..o{ NAVIGATION_EDGE : "connector_id"

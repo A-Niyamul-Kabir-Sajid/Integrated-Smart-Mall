@@ -1,0 +1,41 @@
+erDiagram
+    direction TB
+    %% Favourites and Preferences
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    SHOP_PRODUCT["SHOP_PRODUCT (external M03)"] {
+        uuid shop_product_id PK "NN"
+    }
+    USER_PREFERENCE {
+        uuid user_id PK, FK "NN"
+        uuid default_mall_id FK "NULL"
+        varchar(20) locale "NN"
+        varchar(20) route_mode "NN"
+        boolean ar_preferred "NN"
+        boolean personalization_opt_in "NN"
+        timestamptz updated_at "NN"
+    }
+    FAVOURITE_SHOP {
+        uuid user_id PK, FK "NN"
+        uuid shop_id PK, FK "NN"
+        timestamptz created_at "NN"
+    }
+    FAVOURITE_PRODUCT {
+        uuid user_id PK, FK "NN"
+        uuid shop_product_id PK, FK "NN"
+        timestamptz created_at "NN"
+    }
+    APP_USER ||--o| USER_PREFERENCE : "user_id"
+    MALL |o..o{ USER_PREFERENCE : "default_mall_id"
+    APP_USER ||--o{ FAVOURITE_SHOP : "user_id"
+    SHOP ||--o{ FAVOURITE_SHOP : "shop_id"
+    APP_USER ||--o{ FAVOURITE_PRODUCT : "user_id"
+    SHOP_PRODUCT ||--o{ FAVOURITE_PRODUCT : "shop_product_id"

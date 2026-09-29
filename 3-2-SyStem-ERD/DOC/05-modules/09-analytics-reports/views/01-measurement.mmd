@@ -1,0 +1,28 @@
+erDiagram
+    direction TB
+    %% Metric definitions and frozen measurements
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    METRIC_DEFINITION {
+        varchar(80) metric_code PK "NN"
+        varchar(120) name "NN"
+        varchar(24) unit "NN"
+        varchar(40) formula_version "NN"
+        text definition "NN"
+    }
+    SHOP_METRIC_SNAPSHOT {
+        uuid snapshot_id PK "NN"
+        uuid shop_id FK "NN"
+        varchar(80) metric_code FK "NN"
+        timestamptz period_start "NN"
+        timestamptz period_end "NN"
+        timestamptz source_cutoff_at "NN"
+        decimal metric_value "NULL"
+        integer sample_size "NN"
+        varchar(16) dataset_label "NN"
+        timestamptz calculated_at "NN"
+    }
+    SHOP ||..o{ SHOP_METRIC_SNAPSHOT : "shop_id"
+    METRIC_DEFINITION ||..o{ SHOP_METRIC_SNAPSHOT : "metric_code"

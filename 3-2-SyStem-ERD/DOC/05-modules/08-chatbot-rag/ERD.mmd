@@ -1,0 +1,92 @@
+erDiagram
+    direction TB
+    %% Chatbot and RAG
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    SHOP_PRODUCT["SHOP_PRODUCT (external M03)"] {
+        uuid shop_product_id PK "NN"
+    }
+    CONVERSATION {
+        uuid conversation_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid user_id FK "NULL"
+        varchar(16) access_scope "NN"
+        timestamptz created_at "NN"
+        timestamptz expires_at "NN"
+    }
+    CHAT_MESSAGE {
+        uuid message_id PK "NN"
+        uuid conversation_id FK "NN"
+        integer sequence_no "NN"
+        varchar(16) role "NN"
+        text content "NN"
+        varchar(120) model_label "NULL"
+        timestamptz created_at "NN"
+    }
+    KNOWLEDGE_DOCUMENT {
+        uuid document_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid shop_id FK "NULL"
+        uuid shop_product_id FK "NULL"
+        varchar(24) source_kind "NN"
+        varchar(200) title "NN"
+        text source_locator "NN"
+        varchar(16) access_scope "NN"
+        varchar(16) status "NN"
+    }
+    DOCUMENT_REVISION {
+        uuid revision_id PK "NN"
+        uuid document_id FK "NN"
+        integer revision_no "NN"
+        varchar(64) content_hash "NN"
+        text content_text "NN"
+        timestamptz source_updated_at "NN"
+        timestamptz captured_at "NN"
+    }
+    KNOWLEDGE_CHUNK {
+        uuid chunk_id PK "NN"
+        uuid revision_id FK "NN"
+        integer chunk_no "NN"
+        text chunk_text "NN"
+    }
+    CHUNK_EMBEDDING {
+        uuid chunk_id PK, FK "NN"
+        varchar(120) model_key PK "NN"
+        integer dimensions "NN"
+        varchar(200) index_record_key UK "NN"
+        timestamptz created_at "NN"
+    }
+    MESSAGE_CITATION {
+        uuid message_id PK, FK "NN"
+        uuid chunk_id PK, FK "NN"
+        integer citation_no "NN"
+        decimal retrieval_score "NULL"
+        text quoted_excerpt "NULL"
+    }
+    MESSAGE_RECOMMENDATION {
+        uuid message_id PK, FK "NN"
+        uuid shop_product_id PK, FK "NN"
+        integer rank_no "NN"
+        text reason "NN"
+    }
+    MALL ||..o{ CONVERSATION : "mall_id"
+    APP_USER |o..o{ CONVERSATION : "user_id"
+    CONVERSATION ||..o{ CHAT_MESSAGE : "conversation_id"
+    MALL ||..o{ KNOWLEDGE_DOCUMENT : "mall_id"
+    SHOP |o..o{ KNOWLEDGE_DOCUMENT : "shop_id"
+    SHOP_PRODUCT |o..o{ KNOWLEDGE_DOCUMENT : "shop_product_id"
+    KNOWLEDGE_DOCUMENT ||..o{ DOCUMENT_REVISION : "document_id"
+    DOCUMENT_REVISION ||..o{ KNOWLEDGE_CHUNK : "revision_id"
+    KNOWLEDGE_CHUNK ||--o{ CHUNK_EMBEDDING : "chunk_id"
+    CHAT_MESSAGE ||--o{ MESSAGE_CITATION : "message_id"
+    KNOWLEDGE_CHUNK ||--o{ MESSAGE_CITATION : "chunk_id"
+    CHAT_MESSAGE ||--o{ MESSAGE_RECOMMENDATION : "message_id"
+    SHOP_PRODUCT ||--o{ MESSAGE_RECOMMENDATION : "shop_product_id"

@@ -1,0 +1,120 @@
+# Analytics and Reports: complete module ER diagram
+
+Defined metrics, reproducible snapshots, monthly reports, and optional forecasts.
+
+External entities display their primary keys only and are owned by the indicated module. All attributes of this module are shown. Relationship labels name the foreign-key field on the child.
+
+```mermaid
+erDiagram
+    direction TB
+    %% Analytics and Reports
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    METRIC_DEFINITION {
+        varchar(80) metric_code PK "NN"
+        varchar(120) name "NN"
+        varchar(24) unit "NN"
+        varchar(40) formula_version "NN"
+        text definition "NN"
+    }
+    SHOP_METRIC_SNAPSHOT {
+        uuid snapshot_id PK "NN"
+        uuid shop_id FK "NN"
+        varchar(80) metric_code FK "NN"
+        timestamptz period_start "NN"
+        timestamptz period_end "NN"
+        timestamptz source_cutoff_at "NN"
+        decimal metric_value "NULL"
+        integer sample_size "NN"
+        varchar(16) dataset_label "NN"
+        timestamptz calculated_at "NN"
+    }
+    REPORT_RUN {
+        uuid report_run_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid requested_by_user_id FK "NULL"
+        varchar(32) report_type "NN"
+        timestamptz period_start "NN"
+        timestamptz period_end "NN"
+        timestamptz source_cutoff_at "NN"
+        varchar(16) dataset_label "NN"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+        timestamptz completed_at "NULL"
+        text error_summary "NULL"
+    }
+    REPORT_SHOP_SCOPE {
+        uuid report_run_id PK, FK "NN"
+        uuid shop_id PK, FK "NN"
+    }
+    REPORT_METRIC_SNAPSHOT {
+        uuid report_run_id PK, FK "NN"
+        uuid snapshot_id PK, FK "NN"
+    }
+    REPORT_ARTIFACT {
+        uuid report_artifact_id PK "NN"
+        uuid report_run_id FK "NN"
+        text object_key UK "NN"
+        varchar(12) format "NN"
+        varchar(64) sha256 "NN"
+        bigint size_bytes "NN"
+        timestamptz created_at "NN"
+    }
+    FORECAST_RUN {
+        uuid forecast_run_id PK "NN"
+        uuid shop_id FK "NN"
+        varchar(80) metric_code FK "NN"
+        varchar(80) model_name "NN"
+        varchar(60) model_version "NN"
+        timestamptz training_start "NN"
+        timestamptz training_end "NN"
+        json parameters_json "NN"
+        json evaluation_json "NULL"
+        varchar(16) dataset_label "NN"
+        varchar(20) status "NN"
+        timestamptz created_at "NN"
+    }
+    FORECAST_TRAINING_SNAPSHOT {
+        uuid forecast_run_id PK, FK "NN"
+        uuid snapshot_id PK, FK "NN"
+    }
+    FORECAST_POINT {
+        uuid forecast_point_id PK "NN"
+        uuid forecast_run_id FK "NN"
+        timestamptz period_start "NN"
+        timestamptz period_end "NN"
+        decimal predicted_value "NN"
+        decimal lower_bound "NULL"
+        decimal upper_bound "NULL"
+    }
+    REPORT_FORECAST {
+        uuid report_run_id PK, FK "NN"
+        uuid forecast_run_id PK, FK "NN"
+    }
+    SHOP ||..o{ SHOP_METRIC_SNAPSHOT : "shop_id"
+    METRIC_DEFINITION ||..o{ SHOP_METRIC_SNAPSHOT : "metric_code"
+    MALL ||..o{ REPORT_RUN : "mall_id"
+    APP_USER |o..o{ REPORT_RUN : "requested_by_user_id"
+    REPORT_RUN ||--o{ REPORT_SHOP_SCOPE : "report_run_id"
+    SHOP ||--o{ REPORT_SHOP_SCOPE : "shop_id"
+    REPORT_RUN ||--o{ REPORT_METRIC_SNAPSHOT : "report_run_id"
+    SHOP_METRIC_SNAPSHOT ||--o{ REPORT_METRIC_SNAPSHOT : "snapshot_id"
+    REPORT_RUN ||..o{ REPORT_ARTIFACT : "report_run_id"
+    SHOP ||..o{ FORECAST_RUN : "shop_id"
+    METRIC_DEFINITION ||..o{ FORECAST_RUN : "metric_code"
+    FORECAST_RUN ||--o{ FORECAST_TRAINING_SNAPSHOT : "forecast_run_id"
+    SHOP_METRIC_SNAPSHOT ||--o{ FORECAST_TRAINING_SNAPSHOT : "snapshot_id"
+    FORECAST_RUN ||..o{ FORECAST_POINT : "forecast_run_id"
+    REPORT_RUN ||--o{ REPORT_FORECAST : "report_run_id"
+    FORECAST_RUN ||--o{ REPORT_FORECAST : "forecast_run_id"
+```
+
+See [data dictionary](DATA-DICTIONARY.md) and [business rules](BUSINESS-RULES.md) for checks that a diagram cannot express.

@@ -1,0 +1,38 @@
+erDiagram
+    direction TB
+    %% Mall and shop memberships
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    ROLE["ROLE (external M01)"] {
+        uuid role_id PK "NN"
+    }
+    MALL_MEMBERSHIP {
+        uuid mall_membership_id PK "NN"
+        uuid user_id FK "NN"
+        uuid mall_id FK "NN"
+        uuid role_id FK "NN"
+        varchar(16) status "NN"
+        timestamptz assigned_at "NN"
+    }
+    SHOP_MEMBERSHIP {
+        uuid shop_membership_id PK "NN"
+        uuid user_id FK "NN"
+        uuid shop_id FK "NN"
+        uuid role_id FK "NN"
+        varchar(16) status "NN"
+        timestamptz assigned_at "NN"
+    }
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    APP_USER ||..o{ MALL_MEMBERSHIP : "user_id"
+    MALL ||..o{ MALL_MEMBERSHIP : "mall_id"
+    ROLE ||..o{ MALL_MEMBERSHIP : "role_id"
+    APP_USER ||..o{ SHOP_MEMBERSHIP : "user_id"
+    SHOP ||..o{ SHOP_MEMBERSHIP : "shop_id"
+    ROLE ||..o{ SHOP_MEMBERSHIP : "role_id"

@@ -1,0 +1,400 @@
+erDiagram
+    direction TB
+    %% Master ERD — all modules, keys only
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER {
+        uuid user_id PK "NN"
+    }
+    ROLE {
+        uuid role_id PK "NN"
+    }
+    USER_ROLE {
+        uuid user_id PK, FK "NN"
+        uuid role_id PK, FK "NN"
+    }
+    MALL_MEMBERSHIP {
+        uuid mall_membership_id PK "NN"
+        uuid user_id FK "NN"
+        uuid mall_id FK "NN"
+        uuid role_id FK "NN"
+    }
+    SHOP_MEMBERSHIP {
+        uuid shop_membership_id PK "NN"
+        uuid user_id FK "NN"
+        uuid shop_id FK "NN"
+        uuid role_id FK "NN"
+    }
+    AUTH_SESSION {
+        uuid session_id PK "NN"
+        uuid user_id FK "NN"
+    }
+    MALL {
+        uuid mall_id PK "NN"
+    }
+    FLOOR {
+        uuid floor_id PK "NN"
+        uuid mall_id FK "NN"
+    }
+    SHOP_CATEGORY {
+        uuid shop_category_id PK "NN"
+        uuid parent_category_id FK "NULL"
+    }
+    SHOP {
+        uuid shop_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid shop_category_id FK "NN"
+    }
+    SHOP_UNIT {
+        uuid shop_unit_id PK "NN"
+        uuid shop_id FK "NN"
+        uuid floor_id FK "NN"
+    }
+    SHOP_OPENING_HOUR {
+        uuid shop_id PK, FK "NN"
+        smallint weekday PK "NN"
+        smallint interval_no PK "NN"
+    }
+    FACILITY {
+        uuid facility_id PK "NN"
+        uuid floor_id FK "NN"
+    }
+    PRODUCT_CATEGORY {
+        uuid product_category_id PK "NN"
+        uuid parent_category_id FK "NULL"
+    }
+    PRODUCT {
+        uuid product_id PK "NN"
+        uuid product_category_id FK "NN"
+    }
+    PRODUCT_VARIANT {
+        uuid variant_id PK "NN"
+        uuid product_id FK "NN"
+    }
+    SHOP_PRODUCT {
+        uuid shop_product_id PK "NN"
+        uuid shop_id FK "NN"
+        uuid variant_id FK "NN"
+    }
+    PRODUCT_IMAGE {
+        uuid product_image_id PK "NN"
+        uuid product_id FK "NN"
+    }
+    INVENTORY_BALANCE {
+        uuid shop_product_id PK, FK "NN"
+    }
+    MAP_VERSION {
+        uuid map_version_id PK "NN"
+        uuid mall_id FK "NN"
+    }
+    FLOOR_MAP {
+        uuid floor_map_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid floor_id FK "NN"
+    }
+    NAVIGATION_NODE {
+        uuid node_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid floor_id FK "NN"
+    }
+    VERTICAL_CONNECTOR {
+        uuid connector_id PK "NN"
+        uuid mall_id FK "NN"
+    }
+    CONNECTOR_STOP {
+        uuid connector_stop_id PK "NN"
+        uuid connector_id FK "NN"
+        uuid map_version_id FK "NN"
+        uuid floor_id FK "NN"
+        uuid node_id FK "NN"
+    }
+    NAVIGATION_EDGE {
+        uuid edge_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid from_node_id FK "NN"
+        uuid to_node_id FK "NN"
+        uuid connector_id FK "NULL"
+    }
+    QR_CHECKPOINT {
+        uuid checkpoint_id PK "NN"
+        uuid mall_id FK "NN"
+    }
+    CHECKPOINT_ANCHOR {
+        uuid checkpoint_id PK, FK "NN"
+        uuid map_version_id PK, FK "NN"
+        uuid node_id FK "NN"
+    }
+    SHOP_ENTRANCE {
+        uuid shop_entrance_id PK "NN"
+        uuid shop_unit_id FK "NN"
+        uuid map_version_id FK "NN"
+        uuid node_id FK "NN"
+    }
+    FACILITY_ANCHOR {
+        uuid facility_id PK, FK "NN"
+        uuid map_version_id PK, FK "NN"
+        uuid node_id FK "NN"
+    }
+    AR_REFERENCE_ANCHOR {
+        uuid ar_anchor_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid node_id FK "NN"
+    }
+    ROUTE_SESSION {
+        uuid route_session_id PK "NN"
+        uuid user_id FK "NULL"
+        uuid map_version_id FK "NN"
+        uuid start_node_id FK "NN"
+        uuid destination_node_id FK "NN"
+    }
+    ROUTE_STEP {
+        uuid route_session_id PK, FK "NN"
+        integer step_no PK "NN"
+        uuid node_id FK "NN"
+        uuid incoming_edge_id FK "NULL"
+    }
+    PURCHASE {
+        uuid purchase_id PK "NN"
+        uuid shop_id FK "NN"
+        uuid buyer_user_id FK "NULL"
+    }
+    PURCHASE_ITEM {
+        uuid purchase_item_id PK "NN"
+        uuid purchase_id FK "NN"
+        uuid shop_product_id FK "NN"
+    }
+    VERIFICATION_TOKEN {
+        uuid verification_token_id PK "NN"
+        uuid purchase_item_id FK, UK "NN"
+        uuid issued_by_user_id FK "NN"
+    }
+    TOKEN_REDEMPTION {
+        uuid verification_token_id PK, FK "NN"
+        uuid user_id FK "NN"
+    }
+    REVIEW {
+        uuid review_id PK "NN"
+        uuid author_user_id FK "NN"
+        uuid shop_id FK "NN"
+        uuid shop_product_id FK "NULL"
+    }
+    REVIEW_VERIFICATION {
+        uuid review_id PK, FK "NN"
+        uuid verification_token_id FK, UK "NN"
+    }
+    REVIEW_REPLY {
+        uuid review_reply_id PK "NN"
+        uuid review_id FK "NN"
+        uuid author_user_id FK "NN"
+    }
+    REVIEW_REPORT {
+        uuid review_report_id PK "NN"
+        uuid review_id FK "NN"
+        uuid reporter_user_id FK "NN"
+    }
+    MODERATION_ACTION {
+        uuid moderation_action_id PK "NN"
+        uuid review_id FK "NN"
+        uuid review_report_id FK "NULL"
+        uuid actor_user_id FK "NN"
+    }
+    USER_PREFERENCE {
+        uuid user_id PK, FK "NN"
+        uuid default_mall_id FK "NULL"
+    }
+    FAVOURITE_SHOP {
+        uuid user_id PK, FK "NN"
+        uuid shop_id PK, FK "NN"
+    }
+    FAVOURITE_PRODUCT {
+        uuid user_id PK, FK "NN"
+        uuid shop_product_id PK, FK "NN"
+    }
+    CONVERSATION {
+        uuid conversation_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid user_id FK "NULL"
+    }
+    CHAT_MESSAGE {
+        uuid message_id PK "NN"
+        uuid conversation_id FK "NN"
+    }
+    KNOWLEDGE_DOCUMENT {
+        uuid document_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid shop_id FK "NULL"
+        uuid shop_product_id FK "NULL"
+    }
+    DOCUMENT_REVISION {
+        uuid revision_id PK "NN"
+        uuid document_id FK "NN"
+    }
+    KNOWLEDGE_CHUNK {
+        uuid chunk_id PK "NN"
+        uuid revision_id FK "NN"
+    }
+    CHUNK_EMBEDDING {
+        uuid chunk_id PK, FK "NN"
+        varchar(120) model_key PK "NN"
+    }
+    MESSAGE_CITATION {
+        uuid message_id PK, FK "NN"
+        uuid chunk_id PK, FK "NN"
+    }
+    MESSAGE_RECOMMENDATION {
+        uuid message_id PK, FK "NN"
+        uuid shop_product_id PK, FK "NN"
+    }
+    METRIC_DEFINITION {
+        varchar(80) metric_code PK "NN"
+    }
+    SHOP_METRIC_SNAPSHOT {
+        uuid snapshot_id PK "NN"
+        uuid shop_id FK "NN"
+        varchar(80) metric_code FK "NN"
+    }
+    REPORT_RUN {
+        uuid report_run_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid requested_by_user_id FK "NULL"
+    }
+    REPORT_SHOP_SCOPE {
+        uuid report_run_id PK, FK "NN"
+        uuid shop_id PK, FK "NN"
+    }
+    REPORT_METRIC_SNAPSHOT {
+        uuid report_run_id PK, FK "NN"
+        uuid snapshot_id PK, FK "NN"
+    }
+    REPORT_ARTIFACT {
+        uuid report_artifact_id PK "NN"
+        uuid report_run_id FK "NN"
+    }
+    FORECAST_RUN {
+        uuid forecast_run_id PK "NN"
+        uuid shop_id FK "NN"
+        varchar(80) metric_code FK "NN"
+    }
+    FORECAST_TRAINING_SNAPSHOT {
+        uuid forecast_run_id PK, FK "NN"
+        uuid snapshot_id PK, FK "NN"
+    }
+    FORECAST_POINT {
+        uuid forecast_point_id PK "NN"
+        uuid forecast_run_id FK "NN"
+    }
+    REPORT_FORECAST {
+        uuid report_run_id PK, FK "NN"
+        uuid forecast_run_id PK, FK "NN"
+    }
+    APP_USER ||--o{ USER_ROLE : "user_id"
+    ROLE ||--o{ USER_ROLE : "role_id"
+    APP_USER ||..o{ MALL_MEMBERSHIP : "user_id"
+    MALL ||..o{ MALL_MEMBERSHIP : "mall_id"
+    ROLE ||..o{ MALL_MEMBERSHIP : "role_id"
+    APP_USER ||..o{ SHOP_MEMBERSHIP : "user_id"
+    SHOP ||..o{ SHOP_MEMBERSHIP : "shop_id"
+    ROLE ||..o{ SHOP_MEMBERSHIP : "role_id"
+    APP_USER ||..o{ AUTH_SESSION : "user_id"
+    MALL ||..o{ FLOOR : "mall_id"
+    SHOP_CATEGORY |o..o{ SHOP_CATEGORY : "parent_category_id"
+    MALL ||..o{ SHOP : "mall_id"
+    SHOP_CATEGORY ||..o{ SHOP : "shop_category_id"
+    SHOP ||..o{ SHOP_UNIT : "shop_id"
+    FLOOR ||..o{ SHOP_UNIT : "floor_id"
+    SHOP ||--o{ SHOP_OPENING_HOUR : "shop_id"
+    FLOOR ||..o{ FACILITY : "floor_id"
+    PRODUCT_CATEGORY |o..o{ PRODUCT_CATEGORY : "parent_category_id"
+    PRODUCT_CATEGORY ||..o{ PRODUCT : "product_category_id"
+    PRODUCT ||..o{ PRODUCT_VARIANT : "product_id"
+    SHOP ||..o{ SHOP_PRODUCT : "shop_id"
+    PRODUCT_VARIANT ||..o{ SHOP_PRODUCT : "variant_id"
+    PRODUCT ||..o{ PRODUCT_IMAGE : "product_id"
+    SHOP_PRODUCT ||--o| INVENTORY_BALANCE : "shop_product_id"
+    MALL ||..o{ MAP_VERSION : "mall_id"
+    MAP_VERSION ||..o{ FLOOR_MAP : "map_version_id"
+    FLOOR ||..o{ FLOOR_MAP : "floor_id"
+    MAP_VERSION ||..o{ NAVIGATION_NODE : "map_version_id"
+    FLOOR ||..o{ NAVIGATION_NODE : "floor_id"
+    MALL ||..o{ VERTICAL_CONNECTOR : "mall_id"
+    VERTICAL_CONNECTOR ||..o{ CONNECTOR_STOP : "connector_id"
+    MAP_VERSION ||..o{ CONNECTOR_STOP : "map_version_id"
+    FLOOR ||..o{ CONNECTOR_STOP : "floor_id"
+    NAVIGATION_NODE ||..o{ CONNECTOR_STOP : "node_id"
+    MAP_VERSION ||..o{ NAVIGATION_EDGE : "map_version_id"
+    NAVIGATION_NODE ||..o{ NAVIGATION_EDGE : "from_node_id"
+    NAVIGATION_NODE ||..o{ NAVIGATION_EDGE : "to_node_id"
+    VERTICAL_CONNECTOR |o..o{ NAVIGATION_EDGE : "connector_id"
+    MALL ||..o{ QR_CHECKPOINT : "mall_id"
+    QR_CHECKPOINT ||--o{ CHECKPOINT_ANCHOR : "checkpoint_id"
+    MAP_VERSION ||--o{ CHECKPOINT_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ CHECKPOINT_ANCHOR : "node_id"
+    SHOP_UNIT ||..o{ SHOP_ENTRANCE : "shop_unit_id"
+    MAP_VERSION ||..o{ SHOP_ENTRANCE : "map_version_id"
+    NAVIGATION_NODE ||..o{ SHOP_ENTRANCE : "node_id"
+    FACILITY ||--o{ FACILITY_ANCHOR : "facility_id"
+    MAP_VERSION ||--o{ FACILITY_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ FACILITY_ANCHOR : "node_id"
+    MAP_VERSION ||..o{ AR_REFERENCE_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ AR_REFERENCE_ANCHOR : "node_id"
+    APP_USER |o..o{ ROUTE_SESSION : "user_id"
+    MAP_VERSION ||..o{ ROUTE_SESSION : "map_version_id"
+    NAVIGATION_NODE ||..o{ ROUTE_SESSION : "start_node_id"
+    NAVIGATION_NODE ||..o{ ROUTE_SESSION : "destination_node_id"
+    ROUTE_SESSION ||--o{ ROUTE_STEP : "route_session_id"
+    NAVIGATION_NODE ||..o{ ROUTE_STEP : "node_id"
+    NAVIGATION_EDGE |o..o{ ROUTE_STEP : "incoming_edge_id"
+    SHOP ||..o{ PURCHASE : "shop_id"
+    APP_USER |o..o{ PURCHASE : "buyer_user_id"
+    PURCHASE ||..o{ PURCHASE_ITEM : "purchase_id"
+    SHOP_PRODUCT ||..o{ PURCHASE_ITEM : "shop_product_id"
+    PURCHASE_ITEM ||..o| VERIFICATION_TOKEN : "purchase_item_id"
+    APP_USER ||..o{ VERIFICATION_TOKEN : "issued_by_user_id"
+    VERIFICATION_TOKEN ||--o| TOKEN_REDEMPTION : "verification_token_id"
+    APP_USER ||..o{ TOKEN_REDEMPTION : "user_id"
+    APP_USER ||..o{ REVIEW : "author_user_id"
+    SHOP ||..o{ REVIEW : "shop_id"
+    SHOP_PRODUCT |o..o{ REVIEW : "shop_product_id"
+    REVIEW ||--o| REVIEW_VERIFICATION : "review_id"
+    TOKEN_REDEMPTION ||..o| REVIEW_VERIFICATION : "verification_token_id"
+    REVIEW ||..o{ REVIEW_REPLY : "review_id"
+    APP_USER ||..o{ REVIEW_REPLY : "author_user_id"
+    REVIEW ||..o{ REVIEW_REPORT : "review_id"
+    APP_USER ||..o{ REVIEW_REPORT : "reporter_user_id"
+    REVIEW ||..o{ MODERATION_ACTION : "review_id"
+    REVIEW_REPORT |o..o{ MODERATION_ACTION : "review_report_id"
+    APP_USER ||..o{ MODERATION_ACTION : "actor_user_id"
+    APP_USER ||--o| USER_PREFERENCE : "user_id"
+    MALL |o..o{ USER_PREFERENCE : "default_mall_id"
+    APP_USER ||--o{ FAVOURITE_SHOP : "user_id"
+    SHOP ||--o{ FAVOURITE_SHOP : "shop_id"
+    APP_USER ||--o{ FAVOURITE_PRODUCT : "user_id"
+    SHOP_PRODUCT ||--o{ FAVOURITE_PRODUCT : "shop_product_id"
+    MALL ||..o{ CONVERSATION : "mall_id"
+    APP_USER |o..o{ CONVERSATION : "user_id"
+    CONVERSATION ||..o{ CHAT_MESSAGE : "conversation_id"
+    MALL ||..o{ KNOWLEDGE_DOCUMENT : "mall_id"
+    SHOP |o..o{ KNOWLEDGE_DOCUMENT : "shop_id"
+    SHOP_PRODUCT |o..o{ KNOWLEDGE_DOCUMENT : "shop_product_id"
+    KNOWLEDGE_DOCUMENT ||..o{ DOCUMENT_REVISION : "document_id"
+    DOCUMENT_REVISION ||..o{ KNOWLEDGE_CHUNK : "revision_id"
+    KNOWLEDGE_CHUNK ||--o{ CHUNK_EMBEDDING : "chunk_id"
+    CHAT_MESSAGE ||--o{ MESSAGE_CITATION : "message_id"
+    KNOWLEDGE_CHUNK ||--o{ MESSAGE_CITATION : "chunk_id"
+    CHAT_MESSAGE ||--o{ MESSAGE_RECOMMENDATION : "message_id"
+    SHOP_PRODUCT ||--o{ MESSAGE_RECOMMENDATION : "shop_product_id"
+    SHOP ||..o{ SHOP_METRIC_SNAPSHOT : "shop_id"
+    METRIC_DEFINITION ||..o{ SHOP_METRIC_SNAPSHOT : "metric_code"
+    MALL ||..o{ REPORT_RUN : "mall_id"
+    APP_USER |o..o{ REPORT_RUN : "requested_by_user_id"
+    REPORT_RUN ||--o{ REPORT_SHOP_SCOPE : "report_run_id"
+    SHOP ||--o{ REPORT_SHOP_SCOPE : "shop_id"
+    REPORT_RUN ||--o{ REPORT_METRIC_SNAPSHOT : "report_run_id"
+    SHOP_METRIC_SNAPSHOT ||--o{ REPORT_METRIC_SNAPSHOT : "snapshot_id"
+    REPORT_RUN ||..o{ REPORT_ARTIFACT : "report_run_id"
+    SHOP ||..o{ FORECAST_RUN : "shop_id"
+    METRIC_DEFINITION ||..o{ FORECAST_RUN : "metric_code"
+    FORECAST_RUN ||--o{ FORECAST_TRAINING_SNAPSHOT : "forecast_run_id"
+    SHOP_METRIC_SNAPSHOT ||--o{ FORECAST_TRAINING_SNAPSHOT : "snapshot_id"
+    FORECAST_RUN ||..o{ FORECAST_POINT : "forecast_run_id"
+    REPORT_RUN ||--o{ REPORT_FORECAST : "report_run_id"
+    FORECAST_RUN ||--o{ REPORT_FORECAST : "forecast_run_id"

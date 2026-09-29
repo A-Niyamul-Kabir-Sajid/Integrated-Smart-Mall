@@ -1,0 +1,27 @@
+erDiagram
+    direction TB
+    %% AR reference poses
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    MAP_VERSION["MAP_VERSION (external M04)"] {
+        uuid map_version_id PK "NN"
+    }
+    NAVIGATION_NODE["NAVIGATION_NODE (external M04)"] {
+        uuid node_id PK "NN"
+    }
+    AR_REFERENCE_ANCHOR {
+        uuid ar_anchor_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid node_id FK "NN"
+        varchar(20) reference_type "NN"
+        text reference_key "NN"
+        decimal x_m "NN"
+        decimal y_m "NN"
+        decimal z_m "NN"
+        decimal yaw_deg "NN"
+        decimal pitch_deg "NN"
+        decimal roll_deg "NN"
+        decimal physical_width_m "NULL"
+        varchar(16) status "NN"
+    }
+    MAP_VERSION ||..o{ AR_REFERENCE_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ AR_REFERENCE_ANCHOR : "node_id"

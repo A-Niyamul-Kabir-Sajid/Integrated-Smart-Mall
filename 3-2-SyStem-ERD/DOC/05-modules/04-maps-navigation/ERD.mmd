@@ -1,0 +1,170 @@
+erDiagram
+    direction TB
+    %% Maps and Navigation
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    MALL["MALL (external M02)"] {
+        uuid mall_id PK "NN"
+    }
+    FLOOR["FLOOR (external M02)"] {
+        uuid floor_id PK "NN"
+    }
+    SHOP_UNIT["SHOP_UNIT (external M02)"] {
+        uuid shop_unit_id PK "NN"
+    }
+    FACILITY["FACILITY (external M02)"] {
+        uuid facility_id PK "NN"
+    }
+    MAP_VERSION {
+        uuid map_version_id PK "NN"
+        uuid mall_id FK "NN"
+        integer version_no "NN"
+        varchar(16) status "NN"
+        varchar(80) coordinate_frame "NN"
+        timestamptz created_at "NN"
+        timestamptz published_at "NULL"
+    }
+    FLOOR_MAP {
+        uuid floor_map_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid floor_id FK "NN"
+        text plan_2d_key "NN"
+        text model_3d_key "NULL"
+        decimal pixel_origin_x "NN"
+        decimal pixel_origin_y "NN"
+        decimal metres_per_pixel "NN"
+        decimal rotation_deg "NN"
+        decimal world_origin_x_m "NN"
+        decimal world_origin_y_m "NN"
+    }
+    NAVIGATION_NODE {
+        uuid node_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid floor_id FK "NN"
+        varchar(50) node_code "NN"
+        varchar(24) node_type "NN"
+        decimal x_m "NN"
+        decimal y_m "NN"
+        decimal z_m "NN"
+        boolean is_accessible "NN"
+    }
+    VERTICAL_CONNECTOR {
+        uuid connector_id PK "NN"
+        uuid mall_id FK "NN"
+        varchar(100) name "NN"
+        varchar(16) connector_type "NN"
+        boolean is_accessible "NN"
+    }
+    CONNECTOR_STOP {
+        uuid connector_stop_id PK "NN"
+        uuid connector_id FK "NN"
+        uuid map_version_id FK "NN"
+        uuid floor_id FK "NN"
+        uuid node_id FK "NN"
+    }
+    NAVIGATION_EDGE {
+        uuid edge_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid from_node_id FK "NN"
+        uuid to_node_id FK "NN"
+        uuid connector_id FK "NULL"
+        decimal length_m "NN"
+        decimal expected_seconds "NN"
+        boolean is_accessible "NN"
+        varchar(20) status "NN"
+    }
+    QR_CHECKPOINT {
+        uuid checkpoint_id PK "NN"
+        uuid mall_id FK "NN"
+        varchar(50) checkpoint_code "NN"
+        varchar(120) public_slug UK "NN"
+        varchar(120) label "NN"
+        varchar(16) status "NN"
+    }
+    CHECKPOINT_ANCHOR {
+        uuid checkpoint_id PK, FK "NN"
+        uuid map_version_id PK, FK "NN"
+        uuid node_id FK "NN"
+        decimal yaw_deg "NN"
+        decimal marker_height_m "NULL"
+    }
+    SHOP_ENTRANCE {
+        uuid shop_entrance_id PK "NN"
+        uuid shop_unit_id FK "NN"
+        uuid map_version_id FK "NN"
+        uuid node_id FK "NN"
+        boolean is_primary "NN"
+    }
+    FACILITY_ANCHOR {
+        uuid facility_id PK, FK "NN"
+        uuid map_version_id PK, FK "NN"
+        uuid node_id FK "NN"
+    }
+    AR_REFERENCE_ANCHOR {
+        uuid ar_anchor_id PK "NN"
+        uuid map_version_id FK "NN"
+        uuid node_id FK "NN"
+        varchar(20) reference_type "NN"
+        text reference_key "NN"
+        decimal x_m "NN"
+        decimal y_m "NN"
+        decimal z_m "NN"
+        decimal yaw_deg "NN"
+        decimal pitch_deg "NN"
+        decimal roll_deg "NN"
+        decimal physical_width_m "NULL"
+        varchar(16) status "NN"
+    }
+    ROUTE_SESSION {
+        uuid route_session_id PK "NN"
+        uuid user_id FK "NULL"
+        uuid map_version_id FK "NN"
+        uuid start_node_id FK "NN"
+        uuid destination_node_id FK "NN"
+        varchar(20) route_mode "NN"
+        varchar(12) algorithm "NN"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+        timestamptz expires_at "NN"
+    }
+    ROUTE_STEP {
+        uuid route_session_id PK, FK "NN"
+        integer step_no PK "NN"
+        uuid node_id FK "NN"
+        uuid incoming_edge_id FK "NULL"
+    }
+    MALL ||..o{ MAP_VERSION : "mall_id"
+    MAP_VERSION ||..o{ FLOOR_MAP : "map_version_id"
+    FLOOR ||..o{ FLOOR_MAP : "floor_id"
+    MAP_VERSION ||..o{ NAVIGATION_NODE : "map_version_id"
+    FLOOR ||..o{ NAVIGATION_NODE : "floor_id"
+    MALL ||..o{ VERTICAL_CONNECTOR : "mall_id"
+    VERTICAL_CONNECTOR ||..o{ CONNECTOR_STOP : "connector_id"
+    MAP_VERSION ||..o{ CONNECTOR_STOP : "map_version_id"
+    FLOOR ||..o{ CONNECTOR_STOP : "floor_id"
+    NAVIGATION_NODE ||..o{ CONNECTOR_STOP : "node_id"
+    MAP_VERSION ||..o{ NAVIGATION_EDGE : "map_version_id"
+    NAVIGATION_NODE ||..o{ NAVIGATION_EDGE : "from_node_id"
+    NAVIGATION_NODE ||..o{ NAVIGATION_EDGE : "to_node_id"
+    VERTICAL_CONNECTOR |o..o{ NAVIGATION_EDGE : "connector_id"
+    MALL ||..o{ QR_CHECKPOINT : "mall_id"
+    QR_CHECKPOINT ||--o{ CHECKPOINT_ANCHOR : "checkpoint_id"
+    MAP_VERSION ||--o{ CHECKPOINT_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ CHECKPOINT_ANCHOR : "node_id"
+    SHOP_UNIT ||..o{ SHOP_ENTRANCE : "shop_unit_id"
+    MAP_VERSION ||..o{ SHOP_ENTRANCE : "map_version_id"
+    NAVIGATION_NODE ||..o{ SHOP_ENTRANCE : "node_id"
+    FACILITY ||--o{ FACILITY_ANCHOR : "facility_id"
+    MAP_VERSION ||--o{ FACILITY_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ FACILITY_ANCHOR : "node_id"
+    MAP_VERSION ||..o{ AR_REFERENCE_ANCHOR : "map_version_id"
+    NAVIGATION_NODE ||..o{ AR_REFERENCE_ANCHOR : "node_id"
+    APP_USER |o..o{ ROUTE_SESSION : "user_id"
+    MAP_VERSION ||..o{ ROUTE_SESSION : "map_version_id"
+    NAVIGATION_NODE ||..o{ ROUTE_SESSION : "start_node_id"
+    NAVIGATION_NODE ||..o{ ROUTE_SESSION : "destination_node_id"
+    ROUTE_SESSION ||--o{ ROUTE_STEP : "route_session_id"
+    NAVIGATION_NODE ||..o{ ROUTE_STEP : "node_id"
+    NAVIGATION_EDGE |o..o{ ROUTE_STEP : "incoming_edge_id"

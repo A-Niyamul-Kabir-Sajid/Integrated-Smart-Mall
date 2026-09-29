@@ -1,0 +1,83 @@
+# Mall and Shop Directory: complete module ER diagram
+
+Malls, floors, shop locations, facilities, and opening hours.
+
+External entities display their primary keys only and are owned by the indicated module. All attributes of this module are shown. Relationship labels name the foreign-key field on the child.
+
+```mermaid
+erDiagram
+    direction TB
+    %% Mall and Shop Directory
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    MALL {
+        uuid mall_id PK "NN"
+        varchar(100) slug UK "NN"
+        varchar(160) name "NN"
+        text address "NN"
+        varchar(100) city "NN"
+        varchar(60) timezone "NN"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+    }
+    FLOOR {
+        uuid floor_id PK "NN"
+        uuid mall_id FK "NN"
+        varchar(20) code "NN"
+        varchar(80) name "NN"
+        integer sort_order "NN"
+        decimal elevation_m "NN"
+        varchar(16) status "NN"
+    }
+    SHOP_CATEGORY {
+        uuid shop_category_id PK "NN"
+        uuid parent_category_id FK "NULL"
+        varchar(80) slug UK "NN"
+        varchar(100) name "NN"
+    }
+    SHOP {
+        uuid shop_id PK "NN"
+        uuid mall_id FK "NN"
+        uuid shop_category_id FK "NN"
+        varchar(100) slug "NN"
+        varchar(160) name "NN"
+        text description "NULL"
+        varchar(24) contact_phone "NULL"
+        varchar(16) status "NN"
+        timestamptz created_at "NN"
+        timestamptz updated_at "NN"
+    }
+    SHOP_UNIT {
+        uuid shop_unit_id PK "NN"
+        uuid shop_id FK "NN"
+        uuid floor_id FK "NN"
+        varchar(40) unit_code "NN"
+        decimal area_sq_m "NULL"
+        varchar(16) status "NN"
+    }
+    SHOP_OPENING_HOUR {
+        uuid shop_id PK, FK "NN"
+        smallint weekday PK "NN"
+        smallint interval_no PK "NN"
+        time opens_at "NN"
+        time closes_at "NN"
+        boolean closes_next_day "NN"
+    }
+    FACILITY {
+        uuid facility_id PK "NN"
+        uuid floor_id FK "NN"
+        varchar(120) name "NN"
+        varchar(32) facility_type "NN"
+        boolean is_accessible "NN"
+        varchar(16) status "NN"
+    }
+    MALL ||..o{ FLOOR : "mall_id"
+    SHOP_CATEGORY |o..o{ SHOP_CATEGORY : "parent_category_id"
+    MALL ||..o{ SHOP : "mall_id"
+    SHOP_CATEGORY ||..o{ SHOP : "shop_category_id"
+    SHOP ||..o{ SHOP_UNIT : "shop_id"
+    FLOOR ||..o{ SHOP_UNIT : "floor_id"
+    SHOP ||--o{ SHOP_OPENING_HOUR : "shop_id"
+    FLOOR ||..o{ FACILITY : "floor_id"
+```
+
+See [data dictionary](DATA-DICTIONARY.md) and [business rules](BUSINESS-RULES.md) for checks that a diagram cannot express.

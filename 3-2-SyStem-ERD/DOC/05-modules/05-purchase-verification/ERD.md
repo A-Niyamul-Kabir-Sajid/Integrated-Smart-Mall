@@ -1,0 +1,67 @@
+# Purchase Verification: complete module ER diagram
+
+Recorded purchases and single-use purchase evidence for product reviews.
+
+External entities display their primary keys only and are owned by the indicated module. All attributes of this module are shown. Relationship labels name the foreign-key field on the child.
+
+```mermaid
+erDiagram
+    direction TB
+    %% Purchase Verification
+    %% NN = required; NULL = nullable. Composite unique/check rules are in the module documents.
+    APP_USER["APP_USER (external M01)"] {
+        uuid user_id PK "NN"
+    }
+    SHOP["SHOP (external M02)"] {
+        uuid shop_id PK "NN"
+    }
+    SHOP_PRODUCT["SHOP_PRODUCT (external M03)"] {
+        uuid shop_product_id PK "NN"
+    }
+    PURCHASE {
+        uuid purchase_id PK "NN"
+        uuid shop_id FK "NN"
+        uuid buyer_user_id FK "NULL"
+        varchar(120) external_receipt_ref "NN"
+        varchar(20) status "NN"
+        char(3) currency "NN"
+        decimal total_amount "NN"
+        timestamptz purchased_at "NN"
+        timestamptz recorded_at "NN"
+    }
+    PURCHASE_ITEM {
+        uuid purchase_item_id PK "NN"
+        uuid purchase_id FK "NN"
+        integer line_no "NN"
+        uuid shop_product_id FK "NN"
+        varchar(200) product_label_snapshot "NN"
+        integer quantity "NN"
+        decimal unit_price_amount "NN"
+        decimal line_discount_amount "NN"
+        decimal line_total_amount "NN"
+    }
+    VERIFICATION_TOKEN {
+        uuid verification_token_id PK "NN"
+        uuid purchase_item_id FK, UK "NN"
+        varchar(128) token_digest UK "NN"
+        uuid issued_by_user_id FK "NN"
+        timestamptz issued_at "NN"
+        timestamptz expires_at "NN"
+        timestamptz revoked_at "NULL"
+    }
+    TOKEN_REDEMPTION {
+        uuid verification_token_id PK, FK "NN"
+        uuid user_id FK "NN"
+        timestamptz redeemed_at "NN"
+    }
+    SHOP ||..o{ PURCHASE : "shop_id"
+    APP_USER |o..o{ PURCHASE : "buyer_user_id"
+    PURCHASE ||..o{ PURCHASE_ITEM : "purchase_id"
+    SHOP_PRODUCT ||..o{ PURCHASE_ITEM : "shop_product_id"
+    PURCHASE_ITEM ||..o| VERIFICATION_TOKEN : "purchase_item_id"
+    APP_USER ||..o{ VERIFICATION_TOKEN : "issued_by_user_id"
+    VERIFICATION_TOKEN ||--o| TOKEN_REDEMPTION : "verification_token_id"
+    APP_USER ||..o{ TOKEN_REDEMPTION : "user_id"
+```
+
+See [data dictionary](DATA-DICTIONARY.md) and [business rules](BUSINESS-RULES.md) for checks that a diagram cannot express.
