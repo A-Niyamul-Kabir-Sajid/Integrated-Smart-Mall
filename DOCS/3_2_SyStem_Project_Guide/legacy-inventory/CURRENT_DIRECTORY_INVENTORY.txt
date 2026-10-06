@@ -1,0 +1,1370 @@
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/30/2026  12:43 AM                3-2-SyStem-ERD                                                                                                                                                            
+d-----         9/30/2026  12:45 AM                3_2_SyStem_Module_Scaffold                                                                                                                                                
+-a----         10/6/2026   2:01 PM              0 output.txt                                                                                                                                                                
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                DOC                                                                                                                                                                       
+-a----         9/29/2026  11:50 PM          13175 CHECKSUMS.sha256                                                                                                                                                          
+-a----         9/29/2026  11:50 PM          12766 diagram-manifest.json                                                                                                                                                     
+-a----         9/29/2026  11:50 PM        3960249 OPEN-DIAGRAMS.html                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           4201 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                02-architecture                                                                                                                                                           
+d-----         9/29/2026  11:51 PM                03-database                                                                                                                                                               
+d-----         9/29/2026  11:51 PM                05-modules                                                                                                                                                                
+-a----         9/29/2026  11:50 PM            927 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\02-architecture
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM           3925 MODULE-CONNECTIONS.md                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\03-database
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM           6245 CONSTRAINT-ENFORCEMENT.md                                                                                                                                                 
+-a----         9/29/2026  11:50 PM           4222 CONVENTIONS.md                                                                                                                                                            
+-a----         9/29/2026  11:50 PM           3533 CROSS-MODULE-RELATIONS.md                                                                                                                                                 
+-a----         9/29/2026  11:50 PM           3065 DATA-LIFECYCLE.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM          13659 MASTER-ERD.md                                                                                                                                                             
+-a----         9/29/2026  11:50 PM          13303 MASTER-ERD.mmd                                                                                                                                                            
+-a----         9/29/2026  11:50 PM         692709 MASTER-ERD.svg                                                                                                                                                            
+-a----         9/29/2026  11:50 PM           3110 OPEN-DECISIONS.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           8593 RELATIONSHIPS.md                                                                                                                                                          
+-a----         9/29/2026  11:50 PM         155117 SCHEMA.json                                                                                                                                                               
+-a----         9/29/2026  11:50 PM           7311 TABLE-OWNERSHIP.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           2091 VALIDATION-REPORT.md                                                                                                                                                      
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                01-accounts-access                                                                                                                                                        
+d-----         9/29/2026  11:51 PM                02-mall-shop-directory                                                                                                                                                    
+d-----         9/29/2026  11:51 PM                03-products-catalogue                                                                                                                                                     
+d-----         9/29/2026  11:51 PM                04-maps-navigation                                                                                                                                                        
+d-----         9/29/2026  11:51 PM                05-purchase-verification                                                                                                                                                  
+d-----         9/29/2026  11:51 PM                06-reviews-moderation                                                                                                                                                     
+d-----         9/29/2026  11:51 PM                07-favourites-preferences                                                                                                                                                 
+d-----         9/29/2026  11:51 PM                08-chatbot-rag                                                                                                                                                            
+d-----         9/29/2026  11:51 PM                09-analytics-reports                                                                                                                                                      
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\01-accounts-access
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                views                                                                                                                                                                     
+-a----         9/29/2026  11:50 PM           1053 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           5488 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           2474 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           2036 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM         124521 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           2332 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\01-accounts-access\views
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM           1183 01-login-and-platform-roles.mmd                                                                                                                                           
+-a----         9/29/2026  11:50 PM          74452 01-login-and-platform-roles.svg                                                                                                                                           
+-a----         9/29/2026  11:50 PM           1161 02-scoped-memberships.mmd                                                                                                                                                 
+-a----         9/29/2026  11:50 PM          66602 02-scoped-memberships.svg                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\02-mall-shop-directory
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                views                                                                                                                                                                     
+-a----         9/29/2026  11:50 PM           1324 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           6678 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           2635 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           2185 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM         147473 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           2285 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\02-mall-shop-directory\views
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM            956 01-mall-floors-and-facilities.mmd                                                                                                                                         
+-a----         9/29/2026  11:50 PM          66596 01-mall-floors-and-facilities.svg                                                                                                                                         
+-a----         9/29/2026  11:50 PM           1548 02-shops-and-physical-units.mmd                                                                                                                                           
+-a----         9/29/2026  11:50 PM          98013 02-shops-and-physical-units.svg                                                                                                                                           
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\03-products-catalogue
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                views                                                                                                                                                                     
+-a----         9/29/2026  11:50 PM           1224 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           5864 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           2516 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           2052 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM         124175 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           2333 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\03-products-catalogue\views
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM           1287 01-shared-product-model.mmd                                                                                                                                               
+-a----         9/29/2026  11:50 PM          78682 01-shared-product-model.svg                                                                                                                                               
+-a----         9/29/2026  11:50 PM           1038 02-shop-listings.mmd                                                                                                                                                      
+-a----         9/29/2026  11:50 PM          56934 02-shop-listings.svg                                                                                                                                                      
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\04-maps-navigation
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                views                                                                                                                                                                     
+-a----         9/29/2026  11:50 PM           3743 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM          13862 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           6270 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           5796 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM         322393 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           4399 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\04-maps-navigation\views
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM           2205 01-versioned-graph.mmd                                                                                                                                                    
+-a----         9/29/2026  11:50 PM         127519 01-versioned-graph.svg                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           1153 02-multifloor-connectors.mmd                                                                                                                                              
+-a----         9/29/2026  11:50 PM          60292 02-multifloor-connectors.svg                                                                                                                                              
+-a----         9/29/2026  11:50 PM           1904 03-checkpoints-and-destinations.mmd                                                                                                                                       
+-a----         9/29/2026  11:50 PM          97043 03-checkpoints-and-destinations.svg                                                                                                                                       
+-a----         9/29/2026  11:50 PM            892 04-ar-alignment.mmd                                                                                                                                                       
+-a----         9/29/2026  11:50 PM          51159 04-ar-alignment.svg                                                                                                                                                       
+-a----         9/29/2026  11:50 PM           1451 05-route-history.mmd                                                                                                                                                      
+-a----         9/29/2026  11:50 PM          72216 05-route-history.svg                                                                                                                                                      
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\05-purchase-verification
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                views                                                                                                                                                                     
+-a----         9/29/2026  11:50 PM           1929 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           4517 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           2439 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           1980 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM         107774 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           2556 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\05-purchase-verification\views
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM           1286 01-purchase-evidence.mmd                                                                                                                                                  
+-a----         9/29/2026  11:50 PM          73683 01-purchase-evidence.svg                                                                                                                                                  
+-a----         9/29/2026  11:50 PM           1041 02-token-claim.mmd                                                                                                                                                        
+-a----         9/29/2026  11:50 PM          49815 02-token-claim.svg                                                                                                                                                        
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\06-reviews-moderation
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                views                                                                                                                                                                     
+-a----         9/29/2026  11:50 PM           1799 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           5469 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           3083 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           2616 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM         146578 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           3086 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\06-reviews-moderation\views
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM           1351 01-reviews-and-verification.mmd                                                                                                                                           
+-a----         9/29/2026  11:50 PM          73483 01-reviews-and-verification.svg                                                                                                                                           
+-a----         9/29/2026  11:50 PM           1607 02-moderation-and-replies.mmd                                                                                                                                             
+-a----         9/29/2026  11:50 PM          89614 02-moderation-and-replies.svg                                                                                                                                             
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\07-favourites-preferences
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM            569 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           2514 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           1782 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           1319 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM          70208 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           1941 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\08-chatbot-rag
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                views                                                                                                                                                                     
+-a----         9/29/2026  11:50 PM           2178 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           7532 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           3485 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           3019 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM         171976 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           3269 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\08-chatbot-rag\views
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM           1726 01-knowledge-ingestion.mmd                                                                                                                                                
+-a----         9/29/2026  11:50 PM          97770 01-knowledge-ingestion.svg                                                                                                                                                
+-a----         9/29/2026  11:50 PM           1751 02-conversations-and-evidence.mmd                                                                                                                                         
+-a----         9/29/2026  11:50 PM          95641 02-conversations-and-evidence.svg                                                                                                                                         
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\09-analytics-reports
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  11:51 PM                views                                                                                                                                                                     
+-a----         9/29/2026  11:50 PM           2495 BUSINESS-RULES.md                                                                                                                                                         
+-a----         9/29/2026  11:50 PM           9562 DATA-DICTIONARY.md                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           4273 ERD.md                                                                                                                                                                    
+-a----         9/29/2026  11:50 PM           3805 ERD.mmd                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM         209469 ERD.svg                                                                                                                                                                   
+-a----         9/29/2026  11:50 PM           3371 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3-2-SyStem-ERD\DOC\05-modules\09-analytics-reports\views
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  11:50 PM            957 01-measurement.mmd                                                                                                                                                        
+-a----         9/29/2026  11:50 PM          53718 01-measurement.svg                                                                                                                                                        
+-a----         9/29/2026  11:50 PM           1825 02-report-generation.mmd                                                                                                                                                  
+-a----         9/29/2026  11:50 PM          98542 02-report-generation.svg                                                                                                                                                  
+-a----         9/29/2026  11:50 PM           1934 03-forecast-experiments.mmd                                                                                                                                               
+-a----         9/29/2026  11:50 PM          99472 03-forecast-experiments.svg                                                                                                                                               
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                DOC                                                                                                                                                                       
+d-----         9/29/2026  10:42 PM                modules                                                                                                                                                                   
+-a----         9/29/2026  10:42 PM            956 AGENTS.md                                                                                                                                                                 
+-a----         9/30/2026  12:16 AM            712 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                ai                                                                                                                                                                        
+d-----         9/29/2026  10:42 PM                integration                                                                                                                                                               
+d-----         9/29/2026  10:42 PM                modules                                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                planning                                                                                                                                                                  
+d-----         9/29/2026  10:42 PM                project                                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                quality                                                                                                                                                                   
+-a----         9/29/2026  10:42 PM           4776 MODULE_CONNECTIONS.md                                                                                                                                                     
+-a----         9/29/2026  10:42 PM           1013 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\ai
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM            551 MODULE_TASK_PROMPT.md                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\integration
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3633 CONTRACTS.md                                                                                                                                                              
+-a----         9/29/2026  10:42 PM           1231 SCENARIOS.md                                                                                                                                                              
+-a----         9/29/2026  10:42 PM           1284 SOURCE_LAYOUT.md                                                                                                                                                          
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                01_customer_accounts_preferences                                                                                                                                          
+d-----         9/29/2026  10:42 PM                02_mall_directory_product_discovery                                                                                                                                       
+d-----         9/29/2026  10:42 PM                03_indoor_maps_navigation                                                                                                                                                 
+d-----         9/29/2026  10:42 PM                04_shopping_purchase_assistance                                                                                                                                           
+d-----         9/29/2026  10:42 PM                05_reviews_ratings_trust                                                                                                                                                  
+d-----         9/29/2026  10:42 PM                06_customer_chatbot_recommendations                                                                                                                                       
+d-----         9/29/2026  10:42 PM                07_parking_facilities_visitor_support                                                                                                                                     
+d-----         9/29/2026  10:42 PM                08_shop_owner_operations                                                                                                                                                  
+d-----         9/29/2026  10:42 PM                09_shop_owner_analytics                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                10_mall_owner_administration                                                                                                                                              
+d-----         9/29/2026  10:42 PM                11_mall_owner_analytics_decision_support                                                                                                                                  
+d-----         9/29/2026  10:42 PM                12_shared_platform_requirements                                                                                                                                           
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\01_customer_accounts_preferences
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           2983 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\02_mall_directory_product_discovery
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3276 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\03_indoor_maps_navigation
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           4036 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\04_shopping_purchase_assistance
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3641 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\05_reviews_ratings_trust
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3605 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\06_customer_chatbot_recommendations
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3313 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\07_parking_facilities_visitor_support
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3294 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\08_shop_owner_operations
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3753 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\09_shop_owner_analytics
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3082 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\10_mall_owner_administration
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3743 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\11_mall_owner_analytics_decision_support
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3835 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\modules\12_shared_platform_requirements
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           3654 GUIDE.md                                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\planning
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           1145 BUILD_ORDER.md                                                                                                                                                            
+-a----         9/29/2026  10:42 PM            761 PROGRESS.md                                                                                                                                                               
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\project
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM            973 DECISIONS.md                                                                                                                                                              
+-a----         9/29/2026  10:42 PM          13808 FEATURE_CATALOGUE.md                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           6587 PROJECT_CONTEXT.md                                                                                                                                                        
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\DOC\quality
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+-a----         9/29/2026  10:42 PM           1365 SECURITY_VERIFICATION.md                                                                                                                                                  
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                01_customer_accounts_preferences                                                                                                                                          
+d-----         9/29/2026  10:42 PM                02_mall_directory_product_discovery                                                                                                                                       
+d-----         9/29/2026  10:42 PM                03_indoor_maps_navigation                                                                                                                                                 
+d-----         9/29/2026  10:42 PM                04_shopping_purchase_assistance                                                                                                                                           
+d-----         9/29/2026  10:42 PM                05_reviews_ratings_trust                                                                                                                                                  
+d-----         9/29/2026  10:42 PM                06_customer_chatbot_recommendations                                                                                                                                       
+d-----         9/29/2026  10:42 PM                07_parking_facilities_visitor_support                                                                                                                                     
+d-----         9/29/2026  10:42 PM                08_shop_owner_operations                                                                                                                                                  
+d-----         9/29/2026  10:42 PM                09_shop_owner_analytics                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                10_mall_owner_administration                                                                                                                                              
+d-----         9/29/2026  10:42 PM                11_mall_owner_analytics_decision_support                                                                                                                                  
+d-----         9/29/2026  10:42 PM                12_shared_platform_requirements                                                                                                                                           
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\01_customer_accounts_preferences
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                accounts                                                                                                                                                                  
+d-----         9/29/2026  10:42 PM                favourites                                                                                                                                                                
+d-----         9/29/2026  10:42 PM                preferences                                                                                                                                                               
+d-----         9/29/2026  10:42 PM                visit_history                                                                                                                                                             
+-a----         9/29/2026  10:42 PM            619 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\01_customer_accounts_preferences\accounts
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\01_customer_accounts_preferences\favourites
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\01_customer_accounts_preferences\preferences
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\01_customer_accounts_preferences\visit_history
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\02_mall_directory_product_discovery
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                comparison                                                                                                                                                                
+d-----         9/29/2026  10:42 PM                directory                                                                                                                                                                 
+d-----         9/29/2026  10:42 PM                facilities                                                                                                                                                                
+d-----         9/29/2026  10:42 PM                offers                                                                                                                                                                    
+d-----         9/29/2026  10:42 PM                product_discovery                                                                                                                                                         
+-a----         9/29/2026  10:42 PM            641 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\02_mall_directory_product_discovery\comparison
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\02_mall_directory_product_discovery\directory
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\02_mall_directory_product_discovery\facilities
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\02_mall_directory_product_discovery\offers
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\02_mall_directory_product_discovery\product_discovery
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\03_indoor_maps_navigation
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                checkpoints                                                                                                                                                               
+d-----         9/29/2026  10:42 PM                maps                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                navigation_ui                                                                                                                                                             
+d-----         9/29/2026  10:42 PM                routing                                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                webar                                                                                                                                                                     
+-a----         9/29/2026  10:42 PM            609 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\03_indoor_maps_navigation\checkpoints
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\03_indoor_maps_navigation\maps
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\03_indoor_maps_navigation\navigation_ui
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\03_indoor_maps_navigation\routing
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\03_indoor_maps_navigation\webar
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\04_shopping_purchase_assistance
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                coupons_loyalty                                                                                                                                                           
+d-----         9/29/2026  10:42 PM                enquiries_messaging                                                                                                                                                       
+d-----         9/29/2026  10:42 PM                payments                                                                                                                                                                  
+d-----         9/29/2026  10:42 PM                receipts_returns                                                                                                                                                          
+d-----         9/29/2026  10:42 PM                reservations_orders                                                                                                                                                       
+d-----         9/29/2026  10:42 PM                shopping_lists                                                                                                                                                            
+-a----         9/29/2026  10:42 PM            678 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\04_shopping_purchase_assistance\coupons_loyalty
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\04_shopping_purchase_assistance\enquiries_messaging
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\04_shopping_purchase_assistance\payments
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\04_shopping_purchase_assistance\receipts_returns
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\04_shopping_purchase_assistance\reservations_orders
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\04_shopping_purchase_assistance\shopping_lists
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\05_reviews_ratings_trust
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                moderation                                                                                                                                                                
+d-----         9/29/2026  10:42 PM                normal_reviews                                                                                                                                                            
+d-----         9/29/2026  10:42 PM                purchase_verification                                                                                                                                                     
+d-----         9/29/2026  10:42 PM                ratings                                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                responses                                                                                                                                                                 
+-a----         9/29/2026  10:42 PM            630 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\05_reviews_ratings_trust\moderation
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\05_reviews_ratings_trust\normal_reviews
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\05_reviews_ratings_trust\purchase_verification
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\05_reviews_ratings_trust\ratings
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\05_reviews_ratings_trust\responses
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\06_customer_chatbot_recommendations
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                faq                                                                                                                                                                       
+d-----         9/29/2026  10:42 PM                navigation_handoff                                                                                                                                                        
+d-----         9/29/2026  10:42 PM                recommendations                                                                                                                                                           
+d-----         9/29/2026  10:42 PM                retrieval                                                                                                                                                                 
+-a----         9/29/2026  10:42 PM            628 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\06_customer_chatbot_recommendations\faq
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\06_customer_chatbot_recommendations\navigation_handoff
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\06_customer_chatbot_recommendations\recommendations
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\06_customer_chatbot_recommendations\retrieval
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\07_parking_facilities_visitor_support
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                emergency_information                                                                                                                                                     
+d-----         9/29/2026  10:42 PM                events                                                                                                                                                                    
+d-----         9/29/2026  10:42 PM                help_complaints                                                                                                                                                           
+d-----         9/29/2026  10:42 PM                lost_found                                                                                                                                                                
+d-----         9/29/2026  10:42 PM                parking                                                                                                                                                                   
+-a----         9/29/2026  10:42 PM            654 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\07_parking_facilities_visitor_support\emergency_information
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\07_parking_facilities_visitor_support\events
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\07_parking_facilities_visitor_support\help_complaints
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\07_parking_facilities_visitor_support\lost_found
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\07_parking_facilities_visitor_support\parking
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\08_shop_owner_operations
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                catalogue_inventory                                                                                                                                                       
+d-----         9/29/2026  10:42 PM                mall_requests                                                                                                                                                             
+d-----         9/29/2026  10:42 PM                onboarding_staff                                                                                                                                                          
+d-----         9/29/2026  10:42 PM                order_fulfilment                                                                                                                                                          
+d-----         9/29/2026  10:42 PM                promotions                                                                                                                                                                
+d-----         9/29/2026  10:42 PM                purchase_registration                                                                                                                                                     
+d-----         9/29/2026  10:42 PM                support                                                                                                                                                                   
+-a----         9/29/2026  10:42 PM            677 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\08_shop_owner_operations\catalogue_inventory
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\08_shop_owner_operations\mall_requests
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\08_shop_owner_operations\onboarding_staff
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\08_shop_owner_operations\order_fulfilment
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\08_shop_owner_operations\promotions
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\08_shop_owner_operations\purchase_registration
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\08_shop_owner_operations\support
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\09_shop_owner_analytics
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                campaigns                                                                                                                                                                 
+d-----         9/29/2026  10:42 PM                discovery                                                                                                                                                                 
+d-----         9/29/2026  10:42 PM                exports                                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                feedback                                                                                                                                                                  
+d-----         9/29/2026  10:42 PM                products_inventory                                                                                                                                                        
+d-----         9/29/2026  10:42 PM                sales                                                                                                                                                                     
+d-----         9/29/2026  10:42 PM                sales_forecasting                                                                                                                                                         
+-a----         9/29/2026  10:42 PM            646 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\09_shop_owner_analytics\campaigns
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\09_shop_owner_analytics\discovery
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\09_shop_owner_analytics\exports
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\09_shop_owner_analytics\feedback
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\09_shop_owner_analytics\products_inventory
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\09_shop_owner_analytics\sales
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\09_shop_owner_analytics\sales_forecasting
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\10_mall_owner_administration
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                advertising                                                                                                                                                               
+d-----         9/29/2026  10:42 PM                announcements                                                                                                                                                             
+d-----         9/29/2026  10:42 PM                complaints_maintenance                                                                                                                                                    
+d-----         9/29/2026  10:42 PM                leases_dues                                                                                                                                                               
+d-----         9/29/2026  10:42 PM                map_graph_checkpoint_admin                                                                                                                                                
+d-----         9/29/2026  10:42 PM                permissions_moderation                                                                                                                                                    
+d-----         9/29/2026  10:42 PM                tenant_structure                                                                                                                                                          
+-a----         9/29/2026  10:42 PM            704 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\10_mall_owner_administration\advertising
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\10_mall_owner_administration\announcements
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\10_mall_owner_administration\complaints_maintenance
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\10_mall_owner_administration\leases_dues
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\10_mall_owner_administration\map_graph_checkpoint_admin
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\10_mall_owner_administration\permissions_moderation
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\10_mall_owner_administration\tenant_structure
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\11_mall_owner_analytics_decision_support
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                admin_assistant                                                                                                                                                           
+d-----         9/29/2026  10:42 PM                demand_analysis                                                                                                                                                           
+d-----         9/29/2026  10:42 PM                exports                                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                monthly_reports                                                                                                                                                           
+d-----         9/29/2026  10:42 PM                overview_comparisons                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                performance_forecasting                                                                                                                                                   
+d-----         9/29/2026  10:42 PM                review_analysis                                                                                                                                                           
+-a----         9/29/2026  10:42 PM            721 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\11_mall_owner_analytics_decision_support\admin_assistant
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\11_mall_owner_analytics_decision_support\demand_analysis
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\11_mall_owner_analytics_decision_support\exports
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\11_mall_owner_analytics_decision_support\monthly_reports
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\11_mall_owner_analytics_decision_support\overview_comparisons
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\11_mall_owner_analytics_decision_support\performance_forecasting
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\11_mall_owner_analytics_decision_support\review_analysis
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/29/2026  10:42 PM                accessibility_localization                                                                                                                                                
+d-----         9/29/2026  10:42 PM                audit                                                                                                                                                                     
+d-----         9/29/2026  10:42 PM                backup_recovery                                                                                                                                                           
+d-----         9/29/2026  10:42 PM                identity_authorization                                                                                                                                                    
+d-----         9/29/2026  10:42 PM                integrations                                                                                                                                                              
+d-----         9/29/2026  10:42 PM                notifications                                                                                                                                                             
+d-----         9/29/2026  10:42 PM                offline_cache                                                                                                                                                             
+d-----         9/29/2026  10:42 PM                privacy_security                                                                                                                                                          
+-a----         9/29/2026  10:42 PM            717 README.md                                                                                                                                                                 
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements\accessibility_localization
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements\audit
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements\backup_recovery
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements\identity_authorization
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements\integrations
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements\notifications
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements\offline_cache
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+
+    Directory: D:\Codes\KUET PROJECTS\3 2 SyStem\Integrated Smart Mall\3_2_SyStem_Module_Scaffold\modules\12_shared_platform_requirements\privacy_security
+
+
+Mode                 LastWriteTime         Length Name                                                                                                                                                                      
+----                 -------------         ------ ----                                                                                                                                                                      
+d-----         9/28/2026   8:45 PM                backend                                                                                                                                                                   
+d-----         9/28/2026   8:45 PM                frontend                                                                                                                                                                  
+d-----         9/28/2026   8:45 PM                tests                                                                                                                                                                     
+
+

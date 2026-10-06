@@ -1,0 +1,31 @@
+I can read the image now. It shows the contents of a **Master PRD that also includes technical design, testing, operations, and release planning**. I can see the contents page, not the full document.
+
+For **3 2 SyStem**, use this as a structural reference. Sections such as “Document Adapters,” “Normalization,” and “Matching” belong to that project’s verification engine; replace them with your mall-specific modules.
+
+**Maintain these main documents in order:**
+
+| Order | Document | Purpose |
+|---|---|---|
+| 1 | **Master PRD** | Define the product, users, scope, requirements, workflows, success criteria, and acceptance conditions. |
+| 2 | **System Analysis and Design Report** | Explain the problems, solution, architecture, algorithms, database, security, and design decisions using your twelve-section format. |
+| 3 | **Implementation Roadmap** | Break the agreed scope into milestones and weekly tasks. |
+| 4 | **Technical Specifications** | Maintain database design, API contracts, routing graph format, and module interfaces as implementation progresses. |
+| 5 | **Testing and Evidence Report** | Record test cases, results, screenshots, navigation measurements, and prototype limitations. |
+| 6 | **Deployment and User Guide** | Explain setup, deployment, backup, and how each user role operates the system. |
+
+Keep a **decision log and weekly progress log** alongside these. You do not need a separate document for every chapter.
+
+**Adapt the Master PRD in the image to this outline:**
+
+| Part | Chapters for your mall platform |
+|---|---|
+| **I — Product** | 1. Introduction and Product Overview; 2. Problems and Objectives; 3. Stakeholders and Use Cases; 4. Scope and Implementation Boundaries; 5. Functional Requirements; 6. Quality Targets and Success Criteria; 7. Product Workflows and User Experience |
+| **II — System** | 8. System Architecture; 9. Repository and Code Organisation; 10. Customer Web App; 11. Shop-Owner Dashboard; 12. Mall-Owner Dashboard; 13. API Design and Integrations |
+| **III — Core Modules** | 14. Custom Maps and QR Checkpoints; 15. Routing Algorithms and Multi-floor Navigation; 16. WebAR Positioning and Guidance; 17. Purchase Verification and Reviews; 18. Chatbot and RAG; 19. Analytics, Monthly Reports, and Forecasting |
+| **IV — Data, Security, and Quality** | 20. Data Models and Lifecycle; 21. Security and Privacy; 22. Engineering Standards; 23. Testing and Evaluation; 24. Deployment, Backup, and Operations |
+| **V — Delivery** | 25. Hosting and Running Costs; 26. Milestones and Roadmap; 27. Release Acceptance, Limitations, and Open Decisions |
+| **Appendices** | Diagrams, research references, decision log, and requirement-to-test mapping |
+
+**Your twelve-section report remains valid.** It is the academic explanation of the system; the Master PRD is the detailed reference for what you intend to build. Keep requirement IDs consistent between them—for example, `NAV-01`, `REV-01`, and `ADMIN-01`—and reference detailed specifications instead of duplicating them.
+
+The immediate next step is to **freeze the first-version scope**, then write the Master PRD and your twelve-section report around that same scope.
