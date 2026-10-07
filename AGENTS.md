@@ -1,3 +1,11 @@
+# Project documentation
+
+Before implementation, read [DOCS/00_START_HERE.md](DOCS/00_START_HERE.md), follow its reading order, and open `DOCS/modules/<ExactAppModuleName>/README.md`. Check `DOCS/CONFLICTS.md` before changing affected architecture or data ownership. `DOCS/references/` preserves source specifications; `DOCS/archive/` contains historical templates, not current implementation instructions. Follow the latest explicit user scope, including documentation-only or no-package tasks.
+
+# Project documentation
+
+Before implementation, read [DOCS/00_START_HERE.md](DOCS/00_START_HERE.md), follow its reading order, and open `DOCS/modules/<ExactAppModuleName>/README.md`. Check `DOCS/CONFLICTS.md` before changing affected architecture or data ownership. `DOCS/references/` preserves source specifications; `DOCS/archive/` contains historical templates, not current implementation instructions. Follow the latest explicit user scope, including documentation-only or no-package tasks.
+
 <laravel-boost-guidelines>
 # Laravel Application
 
