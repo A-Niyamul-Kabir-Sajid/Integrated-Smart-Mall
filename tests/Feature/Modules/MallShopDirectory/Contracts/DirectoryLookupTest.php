@@ -65,6 +65,17 @@ class DirectoryLookupTest extends TestCase
         $this->assertEqualsCanonicalizing([$active->getKey(), $closed->getKey()], $this->lookup()->listedShopIds($mall->getKey()));
     }
 
+    public function test_operational_shop_ids_are_the_malls_active_shops_only(): void
+    {
+        $mall = Mall::factory()->create();
+        $active = Shop::factory()->for($mall)->create();
+        Shop::factory()->for($mall)->closed()->create();
+        Shop::factory()->for($mall)->draft()->create();
+        Shop::factory()->create();
+
+        $this->assertSame([$active->getKey()], $this->lookup()->operationalShopIds($mall->getKey()));
+    }
+
     public function test_floors_are_the_malls_active_floors_in_display_order(): void
     {
         $mall = Mall::factory()->create();

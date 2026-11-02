@@ -64,7 +64,11 @@
         <div class="mt-6 grid gap-6 lg:grid-cols-2">
             <section class="rounded-xl border border-dashed border-slate-300 bg-white p-6" aria-labelledby="products-heading" data-integration="products">
                 <h2 id="products-heading" class="font-semibold">{{ __('Products at this shop') }}</h2>
-                <p class="mt-2 text-sm text-slate-600">{{ __('Product listings and prices will appear here.') }}</p>
+                @if (Route::has('products.index'))
+                    <a href="{{ route('products.index', ['publicMall' => $mall->slug, 'shop' => $shop->slug]) }}" class="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline">{{ __("See this shop's products and prices") }}</a>
+                @else
+                    <p class="mt-2 text-sm text-slate-600">{{ __('Product listings and prices will appear here.') }}</p>
+                @endif
             </section>
             <section class="rounded-xl border border-dashed border-slate-300 bg-white p-6" aria-labelledby="directions-heading" data-integration="navigation">
                 <h2 id="directions-heading" class="flex items-center gap-2 font-semibold"><x-icon name="map" class="text-brand-600" />{{ __('Directions') }}</h2>

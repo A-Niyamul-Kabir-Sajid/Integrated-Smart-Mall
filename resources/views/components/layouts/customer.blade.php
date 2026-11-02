@@ -23,6 +23,9 @@
             @if ($mall)
                 <nav class="hidden items-center gap-1 text-sm sm:flex" aria-label="{{ __('Main') }}">
                     <x-nav-link :href="route('shops.index', ['publicMall' => $mall->slug])" :active="request()->routeIs('shops.*')">{{ __('Shops') }}</x-nav-link>
+                    @if (Route::has('products.index'))
+                        <x-nav-link :href="route('products.index', ['publicMall' => $mall->slug])" :active="request()->routeIs('products.*')">{{ __('Products') }}</x-nav-link>
+                    @endif
                 </nav>
             @endif
 

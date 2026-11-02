@@ -41,6 +41,13 @@ interface DirectoryLookup
     public function listedShopIds(string $mallId): array;
 
     /**
+     * Ids of the mall's active shops, the only ones whose listings customers may buy from.
+     *
+     * @return list<string>
+     */
+    public function operationalShopIds(string $mallId): array;
+
+    /**
      * The mall's active floors in display order.
      *
      * @return Collection<int, Floor>
