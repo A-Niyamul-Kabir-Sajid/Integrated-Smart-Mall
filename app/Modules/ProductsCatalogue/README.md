@@ -1,9 +1,12 @@
 # ProductsCatalogue
 
-## Purpose
+Shared products and variants, shop-specific listings, prices and availability.
 
-Documentation and implementation details for this module will be added later.
+- Namespace: `App\Modules\ProductsCatalogue`
+- Jira: EPIC-04 Products Catalogue
+- Requirements, business rules and ERD: [DOCS/modules/ProductsCatalogue/README.md](../../../DOCS/modules/ProductsCatalogue/README.md)
+- Folder layout and coupling rules: [app/Modules/README.md](../README.md)
 
 ## Status
 
-Folder architecture created. Implementation not started.
+Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).

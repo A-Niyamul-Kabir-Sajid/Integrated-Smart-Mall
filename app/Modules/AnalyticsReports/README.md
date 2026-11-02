@@ -1,9 +1,12 @@
 # AnalyticsReports
 
-## Purpose
+Metric definitions, shop and mall dashboards, monthly reports and evaluated forecasts.
 
-Documentation and implementation details for this module will be added later.
+- Namespace: `App\Modules\AnalyticsReports`
+- Jira: EPIC-12 Analytics & Reports
+- Requirements, business rules and ERD: [DOCS/modules/AnalyticsReports/README.md](../../../DOCS/modules/AnalyticsReports/README.md)
+- Folder layout and coupling rules: [app/Modules/README.md](../README.md)
 
 ## Status
 
-Folder architecture created. Implementation not started.
+Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
