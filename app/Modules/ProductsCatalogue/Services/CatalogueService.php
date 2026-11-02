@@ -85,6 +85,37 @@ class CatalogueService
     }
 
     /**
+     * Adds a new option (variant) to an existing shared product and lists it.
+     * Adding an option changes the shared product, so only its sole lister may.
+     *
+     * @param  array{variant_code?: string|null, label: string, attributes?: array<string, string>}  $variant
+     * @param  array{seller_sku: string, price_amount: string|float, availability_status: string}  $listing
+     */
+    public function addVariantListing(Shop $shop, Product $product, array $variant, array $listing): ShopProduct
+    {
+        $this->ensureOperational($shop);
+        $this->ensureSoleLister($shop, $product);
+        $this->ensureSkuFree($shop, $listing['seller_sku']);
+
+        $code = Str::slug($variant['variant_code'] ?? '') ?: 'default';
+
+        if ($product->variants()->where('variant_code', $code)->exists()) {
+            throw new BusinessRuleViolation('variant.code_taken', __('This product already has the option :code.', ['code' => $code]));
+        }
+
+        return DB::transaction(function () use ($shop, $product, $variant, $code, $listing): ShopProduct {
+            $created = $product->variants()->create([
+                'variant_code' => $code,
+                'label' => trim($variant['label']),
+                'attributes_json' => $variant['attributes'] ?? [],
+                'status' => 'active',
+            ]);
+
+            return $this->storeListing($shop, $created, $listing);
+        });
+    }
+
+    /**
      * Changes the shop's own price, SKU or availability. A listing never changes shop.
      *
      * @param  array{seller_sku: string, price_amount: string|float, availability_status: string}  $changes
