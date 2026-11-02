@@ -19,6 +19,8 @@ class RouteProtectionTest extends TestCase
     private const PUBLIC_URIS = [
         '/',
         'locale',
+        'malls/{publicMall}',
+        'malls/{publicMall}/shops',
         'up',
     ];
 
