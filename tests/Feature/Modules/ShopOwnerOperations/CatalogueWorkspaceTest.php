@@ -66,6 +66,7 @@ class CatalogueWorkspaceTest extends TestCase
         $foreign = ShopProduct::factory()->create();
 
         $this->actingAs($this->staff)->get(route('workspace.catalogue.edit', [$this->shop, $foreign]))->assertNotFound();
+        $this->actingAs($this->staff)->get(route('workspace.catalogue.edit', [$this->shop, 'not-a-uuid']))->assertNotFound();
         $this->actingAs($this->staff)->post(route('workspace.catalogue.archive', [$this->shop, $foreign]))->assertNotFound();
         $this->assertSame('active', $foreign->fresh()->status);
     }
