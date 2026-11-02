@@ -3,10 +3,14 @@
 namespace App\Modules\SharedPlatform\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
+use App\Modules\SharedPlatform\Adapters\LogSmsGateway;
+use App\Modules\SharedPlatform\Contracts\SmsGateway;
+use App\Modules\SharedPlatform\Notifications\Channels\SmsChannel;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -17,12 +21,19 @@ use Illuminate\Validation\Rules\Password;
  */
 class SharedPlatformServiceProvider extends ModuleServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->bind(SmsGateway::class, LogSmsGateway::class);
+    }
+
     public function boot(): void
     {
         parent::boot();
 
         $this->configureSecureDefaults();
         $this->configureRateLimiters();
+
+        Notification::extend('sms', fn ($app): SmsChannel => $app->make(SmsChannel::class));
     }
 
     /**
