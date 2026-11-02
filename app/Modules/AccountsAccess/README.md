@@ -10,7 +10,32 @@ Identity, customer accounts, profiles and scoped access (platform, mall and shop
 
 ## Status
 
-Implemented: accounts and roles (2.2), registration (2.3), sign-in (2.4), memberships and abilities (2.5). Profile, preferences and account security follow in 2.6 to 2.8. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
+EPIC-02 complete: accounts and roles, registration, sign-in, memberships and abilities, profile and account security. Account preferences live in FavouritesPreferences (decision D-010). Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
+
+## Endpoints
+
+| Method and path | Access | Purpose |
+|---|---|---|
+| `GET/POST /register` | guest, `throttle:registration` | Create a customer account (email or mobile) |
+| `GET/POST /login` | guest, `throttle:login` | Sign in with email or mobile number |
+| `POST /logout` | auth | Sign out |
+| `GET/POST /forgot-password` | guest, `throttle:password-reset` | Request a reset link by email |
+| `GET /reset-password/{token}`, `POST /reset-password` | guest, `throttle:password-reset` | Choose a new password with a valid link |
+| `GET /account` | auth | Own account summary |
+| `GET/PUT /account/profile` | auth | Edit own name and contacts (current password for contact changes) |
+| `GET/PUT /account/password` | auth, `throttle:password-change` | Change own password |
+
+## Services, events and audit actions
+
+| Service | Does | Audit actions |
+|---|---|---|
+| `RegistrationService` | Customer account with the customer role; dispatches `Registered` | `account.registered`, `access.role_assigned` |
+| `RoleAssignmentService` | Platform roles (customer, platform_admin) | `access.role_assigned`, `access.role_revoked` |
+| `MembershipService` | Mall and shop roles for one mall or shop | `access.role_assigned`, `access.role_revoked` (mall/shop scope) |
+| `ProfileService` | Own profile; changed contacts lose verification | `account.profile_updated` (field names only) |
+| `AccountSecurityService` | Password change and reset; ends sessions; `PasswordChanged` notice; dispatches `PasswordReset` | `account.password_changed`, `account.password_reset` |
+
+Demo accounts (one per role) come from `Database\Seeders\DemoAccountsSeeder`.
 
 ## Domain
 
