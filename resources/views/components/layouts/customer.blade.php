@@ -21,9 +21,16 @@
             </a>
 
             <div class="ml-auto flex items-center gap-2 text-sm">
-                @guest
-                    <a href="{{ route('register') }}" class="rounded-lg px-3 py-1.5 font-medium text-brand-700 hover:bg-brand-50">{{ __('Create an account') }}</a>
-                @endguest
+                @auth
+                    <a href="{{ route('account.show') }}" class="rounded-lg px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100">{{ auth()->user()->display_name }}</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="rounded-lg px-3 py-1.5 font-medium text-brand-700 hover:bg-brand-50">{{ __('Sign out') }}</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="rounded-lg px-3 py-1.5 font-medium text-brand-700 hover:bg-brand-50">{{ __('Sign in') }}</a>
+                    <a href="{{ route('register') }}" class="hidden rounded-lg px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100 sm:inline-block">{{ __('Create an account') }}</a>
+                @endauth
             </div>
         </div>
     </header>
