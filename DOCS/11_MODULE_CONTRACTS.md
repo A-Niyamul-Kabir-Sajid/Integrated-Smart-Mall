@@ -45,6 +45,16 @@ The architecture tests enforce the two mechanical rules: no module references an
 
 Services query Eloquent models directly by default. Add a repository in the owning module's `Repositories/` only when a query is complex and reused by several services, or when the data has several sources (database plus an external system), as listed in [design patterns](04_DESIGN_PATTERNS.md). A repository never crosses module ownership: it returns only the owning module's models.
 
+## Call a service or dispatch an event?
+
+| Situation | Use | Why |
+|---|---|---|
+| The caller needs the result, or the work must succeed for the caller to succeed | Synchronous call to the owner's service or contract | Errors surface immediately; one transaction can cover both |
+| Something happened and other modules may react, but the action is complete without them | Domain event | The owner does not need to know who reacts; reactions can be queued |
+| Several writes must succeed or fail together | One service method in one transaction | Listeners run after commit and must never be part of an atomic workflow |
+
+Listeners are registered in the consuming module's provider by listing them in its `$listen` property (event class => listener classes); `ModuleServiceProvider` registers them on boot. Do not rely on automatic listener discovery.
+
 ## Events
 
 - Dispatch domain events from services, never from controllers or models.
@@ -86,6 +96,8 @@ Reacting with an event:
 // MallShopDirectory service (the owner dispatches)
 ShopStatusChanged::dispatch($shop->shop_id, $previous, $shop->status);
 
-// ShopOwnerOperations provider boot() (an orchestrating module reacts; dependency points at the owner)
-Event::listen(ShopStatusChanged::class, NotifyShopStaffOfStatusChange::class);
+// ShopOwnerOperations provider (an orchestrating module reacts; the dependency points at the owner)
+protected array $listen = [
+    ShopStatusChanged::class => [NotifyShopStaffOfStatusChange::class],
+];
 ```
