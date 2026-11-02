@@ -4,6 +4,7 @@ namespace App\Modules\AccountsAccess\Models;
 
 use App\Core\Services\PhoneNumberNormalizer;
 use App\Modules\AccountsAccess\Enums\AccountStatus;
+use App\Modules\AccountsAccess\Enums\RoleCode;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -45,6 +47,21 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === AccountStatus::Active;
+    }
+
+    /**
+     * Platform-scoped roles held directly (USER_ROLE).
+     *
+     * @return BelongsToMany<Role, $this>
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')->withPivot('assigned_at');
+    }
+
+    public function hasPlatformRole(RoleCode $code): bool
+    {
+        return $this->roles()->where('code', $code->value)->exists();
     }
 
     /**
