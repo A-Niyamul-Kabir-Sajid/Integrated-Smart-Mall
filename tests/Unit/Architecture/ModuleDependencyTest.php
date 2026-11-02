@@ -16,6 +16,8 @@ class ModuleDependencyTest extends TestCase
 
     public function test_no_module_uses_another_modules_http_layer(): void
     {
+        $this->assertNotEmpty($this->moduleSources(), 'No module sources were scanned.');
+
         foreach ($this->moduleSources() as [$module, $path, $source]) {
             preg_match_all('/App\\\\Modules\\\\(\w+)\\\\Http\\\\/', $source, $matches);
 
@@ -27,6 +29,8 @@ class ModuleDependencyTest extends TestCase
 
     public function test_data_owning_modules_do_not_depend_on_orchestrating_modules(): void
     {
+        $this->assertNotEmpty($this->moduleSources(), 'No module sources were scanned.');
+
         foreach ($this->moduleSources() as [$module, $path, $source]) {
             if (in_array($module, self::ORCHESTRATING_MODULES, true)) {
                 continue;
