@@ -4,7 +4,9 @@ namespace Tests\Feature\Seeders;
 
 use App\Modules\MallShopDirectory\Enums\MallStatus;
 use App\Modules\MallShopDirectory\Models\Mall;
+use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\MallShopDirectory\Models\ShopCategory;
+use App\Modules\MallShopDirectory\Models\ShopUnit;
 use Database\Seeders\DemoMallSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -23,5 +25,18 @@ class DemoMallSeederTest extends TestCase
         $this->assertSame('Asia/Dhaka', $mall->timezone);
         $this->assertSame(['G', 'F1'], $mall->floors()->pluck('code')->all());
         $this->assertEqualsCanonicalizing(array_keys(DemoMallSeeder::SHOP_CATEGORIES), ShopCategory::query()->pluck('slug')->all());
+    }
+
+    public function test_seeds_shops_with_units_on_floors_of_the_same_mall(): void
+    {
+        $this->seed(DemoMallSeeder::class);
+
+        $this->assertSame(14, Shop::query()->count());
+        $this->assertSame(13, Shop::query()->listed()->count());
+        $this->assertSame(2, Shop::query()->where('slug', 'food-court')->sole()->units()->count());
+
+        ShopUnit::query()->with(['shop', 'floor'])->get()->each(
+            fn (ShopUnit $unit) => $this->assertSame($unit->shop->mall_id, $unit->floor->mall_id)
+        );
     }
 }
