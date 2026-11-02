@@ -3,6 +3,7 @@
         <div class="flex items-center justify-between gap-4">
             <h1 class="text-2xl font-semibold">{{ __('Your account') }}</h1>
             <div class="flex gap-2">
+                <a href="{{ route('account.password.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Change password') }}</a>
                 <a href="{{ route('account.preferences.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Preferences') }}</a>
                 <a href="{{ route('account.profile.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Edit profile') }}</a>
             </div>

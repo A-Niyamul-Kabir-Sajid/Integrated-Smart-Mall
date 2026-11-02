@@ -9,8 +9,11 @@ use App\Modules\AccountsAccess\Models\User;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\SharedPlatform\Enums\Ability;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * Registers AccountsAccess: registration, sign-in, profiles and scoped access.
@@ -24,6 +27,8 @@ class AccountsAccessServiceProvider extends ModuleServiceProvider
         $this->app->make(HttpKernel::class)->appendMiddlewareToGroup('web', EnsureAccountIsActive::class);
 
         $this->defineAbilities();
+
+        RateLimiter::for('password-change', fn (Request $request): Limit => Limit::perMinute(5)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
     }
 
     /**
