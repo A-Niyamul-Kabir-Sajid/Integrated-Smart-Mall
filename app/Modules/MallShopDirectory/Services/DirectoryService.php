@@ -8,6 +8,7 @@ use App\Modules\MallShopDirectory\Models\Shop;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Str;
 
 /**
  * Public, read-only directory queries for one mall. Customers only ever see
@@ -20,14 +21,22 @@ class DirectoryService
     public function __construct(private OpeningStatusService $openingStatus) {}
 
     /**
-     * One page of listed shops, alphabetical, each with an `is_open_now` attribute.
+     * Sort keys accepted by browseShops().
      *
-     * @param  array{category?: string|null, floor?: string|null, open_now?: bool}  $filters
+     * @var list<string>
+     */
+    public const SORTS = ['name', 'name_desc', 'newest'];
+
+    /**
+     * One page of listed shops, each with an `is_open_now` attribute.
+     *
+     * @param  array{q?: string|null, category?: string|null, floor?: string|null, open_now?: bool, sort?: string|null}  $filters
      * @return LengthAwarePaginator<int, Shop>
      */
     public function browseShops(Mall $mall, array $filters = [], int $perPage = self::PER_PAGE): LengthAwarePaginator
     {
         $query = $this->listedShops($mall)
+            ->tap(fn (Builder $query) => $this->applySearch($query, (string) ($filters['q'] ?? '')))
             ->when($filters['category'] ?? null, fn (Builder $query, string $slug) => $query->whereHas(
                 'category',
                 fn (Builder $category) => $category->where('slug', $slug),
@@ -43,9 +52,14 @@ class DirectoryService
             $query->whereIn('shop_id', $this->openShopIds($mall));
         }
 
+        match ($filters['sort'] ?? 'name') {
+            'name_desc' => $query->orderByDesc('name'),
+            'newest' => $query->orderByDesc('created_at'),
+            default => $query->orderBy('name'),
+        };
+
         $page = $query
             ->with(['category', 'units.floor', 'openingHours'])
-            ->orderBy('name')
             ->orderBy('shop_id')
             ->paginate($perPage)
             ->withQueryString();
@@ -72,6 +86,27 @@ class DirectoryService
             ->pluck('shop_id')
             ->values()
             ->all();
+    }
+
+    /**
+     * Normalised keyword search: case-insensitive, whitespace-collapsed, at most
+     * five words, every word must appear in the name, description or category
+     * name. LIKE wildcards typed by the user match literally.
+     *
+     * @param  Builder<Shop>  $query
+     */
+    private function applySearch(Builder $query, string $search): void
+    {
+        $words = array_slice(preg_split('/\s+/u', Str::lower(trim($search)), -1, PREG_SPLIT_NO_EMPTY), 0, 5);
+
+        foreach ($words as $word) {
+            $pattern = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $word).'%';
+
+            $query->where(fn (Builder $match) => $match
+                ->whereRaw("lower(name) like ? escape '\\'", [$pattern])
+                ->orWhereRaw("lower(coalesce(description, '')) like ? escape '\\'", [$pattern])
+                ->orWhereHas('category', fn (Builder $category) => $category->whereRaw("lower(name) like ? escape '\\'", [$pattern])));
+        }
     }
 
     /**
