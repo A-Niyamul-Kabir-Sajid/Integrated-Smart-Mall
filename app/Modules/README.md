@@ -12,7 +12,9 @@ Create a folder only when the module needs it.
 
 ```text
 app/Modules/<Module>/
+  Adapters/           Implementations of contracts that talk to external systems
   Contracts/          Interfaces other modules may depend on
+  Enums/              Backed enums for this module's fixed value sets
   Events/             Domain events this module dispatches (past tense: ShopStatusChanged)
   Http/Controllers/   Thin controllers: validate, authorize, call a service, return a response
   Http/Middleware/    Middleware specific to this module
