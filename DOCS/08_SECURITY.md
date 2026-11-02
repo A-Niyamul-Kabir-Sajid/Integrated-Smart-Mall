@@ -27,3 +27,16 @@ Network firewall/WAF belongs to deployment infrastructure. No Firewall design-pa
 - **Authorize at the protected operation**: in the Form Request's `authorize()` for writes, or `Gate::authorize()` in the controller. Never decide access from data the browser sends (role names, shop IDs in hidden fields).
 - **Scope**: shop and mall permissions come from server-side memberships. When a user asks for a record of a shop or mall they do not belong to, respond 404 so the record's existence is not revealed; respond 403 when the record is in their scope but their role lacks the ability.
 - **Validation and errors**: writes use Form Requests; simple read filters may use `$request->validate()`. Domain rules throw `BusinessRuleViolation`. `api/*` and JSON requests always receive JSON errors. Production runs with `APP_DEBUG=false`, so responses never include stack traces. Never log passwords, tokens or credentials.
+
+## Abilities (EPIC-02, ISM-155)
+
+Modules check access by ability name, never by role: `Gate::allows(Ability::ManageShop, $shop)` or `->can('manage-shop', 'shop')` on a route. The names live in `App\Modules\SharedPlatform\Enums\Ability`; AccountsAccess defines them from roles and active memberships.
+
+| Ability | Granted to | Argument |
+|---|---|---|
+| `administer-platform` | `platform_admin` | — |
+| `administer-mall` | `mall_admin` with an active membership of that mall; platform admins | `Mall` |
+| `manage-shop` | `shop_owner` of that shop; platform admins | `Shop` |
+| `work-in-shop` | `shop_owner` or `shop_staff` of that shop; platform admins | `Shop` |
+
+Suspended or anonymised accounts hold no ability, and `EnsureAccountIsActive` (web group) signs them out on their next request. Revoked memberships grant nothing. `tests/Feature/Modules/AccountsAccess/AbilitiesTest.php` holds the full role-by-ability matrix, including denial for another mall or shop.

@@ -10,7 +10,7 @@ Identity, customer accounts, profiles and scoped access (platform, mall and shop
 
 ## Status
 
-Domain reviewed (story 2.1). Implementation follows in stories 2.2 to 2.9. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
+Implemented: accounts and roles (2.2), registration (2.3), sign-in (2.4), memberships and abilities (2.5). Profile, preferences and account security follow in 2.6 to 2.8. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
 
 ## Domain
 
@@ -46,4 +46,5 @@ A role name alone never grants access to every mall or shop: mall and shop permi
 ### Provided to other modules
 
 - The authenticated account (`auth()->user()`), its platform roles and its active mall and shop memberships, used by MallOwnerAdmin and ShopOwnerOperations for scoping.
-- Gates for role checks (story 2.5).
+- The abilities `administer-platform`, `administer-mall`, `manage-shop` and `work-in-shop` (named in `SharedPlatform\Enums\Ability`, defined in this module provider); see DOCS/08_SECURITY.md.
+- `MembershipService` to grant or revoke mall and shop roles; `RoleAssignmentService` for platform roles.
