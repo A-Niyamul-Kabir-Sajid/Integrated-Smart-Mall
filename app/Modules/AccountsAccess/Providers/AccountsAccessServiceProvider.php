@@ -4,10 +4,12 @@ namespace App\Modules\AccountsAccess\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
 use App\Modules\AccountsAccess\Enums\RoleCode;
+use App\Modules\AccountsAccess\Http\Middleware\EnsureAccountIsActive;
 use App\Modules\AccountsAccess\Models\User;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\SharedPlatform\Enums\Ability;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -18,6 +20,8 @@ class AccountsAccessServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $this->app->make(HttpKernel::class)->appendMiddlewareToGroup('web', EnsureAccountIsActive::class);
 
         $this->defineAbilities();
     }
