@@ -15,9 +15,14 @@ return new class extends Migration
     {
         Schema::create('shop_categories', function (Blueprint $table) {
             $table->uuid('shop_category_id')->primary();
-            $table->foreignUuid('parent_category_id')->nullable()->constrained('shop_categories', 'shop_category_id');
+            $table->uuid('parent_category_id')->nullable()->index();
             $table->string('slug', 80)->unique();
             $table->string('name', 100);
+        });
+
+        // A self-reference needs the primary key to exist first; PostgreSQL rejects it inside the create.
+        Schema::table('shop_categories', function (Blueprint $table) {
+            $table->foreign('parent_category_id')->references('shop_category_id')->on('shop_categories');
         });
     }
 
