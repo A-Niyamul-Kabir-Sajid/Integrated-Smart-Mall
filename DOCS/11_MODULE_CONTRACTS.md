@@ -41,6 +41,10 @@ The architecture tests enforce the two mechanical rules: no module references an
 | Listener | `<Verb><Object>` in the consuming module's `Listeners/`, registered in that module's provider | `RecordShopStatusAudit` |
 | Business rule code | `<area>.<rule>` in snake case, thrown with `BusinessRuleViolation` | `shop_unit.floor_in_other_mall` |
 
+## Repositories
+
+Services query Eloquent models directly by default. Add a repository in the owning module's `Repositories/` only when a query is complex and reused by several services, or when the data has several sources (database plus an external system), as listed in [design patterns](04_DESIGN_PATTERNS.md). A repository never crosses module ownership: it returns only the owning module's models.
+
 ## Events
 
 - Dispatch domain events from services, never from controllers or models.
