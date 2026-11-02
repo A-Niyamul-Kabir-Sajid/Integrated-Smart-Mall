@@ -4,10 +4,13 @@
             @csrf
             <x-form-field name="login" :label="__('Email or mobile number')" autocomplete="username" required autofocus />
             <x-form-field name="password" type="password" :label="__('Password')" autocomplete="current-password" required />
+            <div class="flex items-center justify-between gap-2">
             <label class="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="remember" value="1" @checked(old('remember')) class="size-4 accent-brand-600">
                 {{ __('Keep me signed in') }}
             </label>
+            <a href="{{ route('password.request') }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Forgot password?') }}</a>
+            </div>
             <button type="submit" class="w-full rounded-lg bg-brand-600 px-4 py-2.5 font-medium text-white hover:bg-brand-700">
                 {{ __('Sign in') }}
             </button>

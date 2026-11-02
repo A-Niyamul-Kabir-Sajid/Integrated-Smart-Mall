@@ -2,6 +2,7 @@
 
 use App\Modules\AccountsAccess\Http\Controllers\AccountController;
 use App\Modules\AccountsAccess\Http\Controllers\PasswordController;
+use App\Modules\AccountsAccess\Http\Controllers\PasswordResetController;
 use App\Modules\AccountsAccess\Http\Controllers\ProfileController;
 use App\Modules\AccountsAccess\Http\Controllers\RegisterController;
 use App\Modules\AccountsAccess\Http\Controllers\SessionController;
@@ -17,6 +18,15 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/login', [SessionController::class, 'store'])
         ->middleware('throttle:login')
         ->name('login.store');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'email'])
+        ->middleware('throttle:password-reset')
+        ->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])
+        ->middleware('throttle:password-reset')
+        ->name('password.update');
 });
 
 Route::middleware('auth')->group(function (): void {
