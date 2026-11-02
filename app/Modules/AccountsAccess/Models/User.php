@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -62,6 +63,44 @@ class User extends Authenticatable
     public function hasPlatformRole(RoleCode $code): bool
     {
         return $this->roles()->where('code', $code->value)->exists();
+    }
+
+    /**
+     * @return HasMany<MallMembership, $this>
+     */
+    public function mallMemberships(): HasMany
+    {
+        return $this->hasMany(MallMembership::class, 'user_id');
+    }
+
+    /**
+     * @return HasMany<ShopMembership, $this>
+     */
+    public function shopMemberships(): HasMany
+    {
+        return $this->hasMany(ShopMembership::class, 'user_id');
+    }
+
+    /**
+     * Whether the account holds one of the roles through an active membership of the mall.
+     */
+    public function hasMallRole(string $mallId, RoleCode ...$codes): bool
+    {
+        return $this->mallMemberships()->active()
+            ->where('mall_id', $mallId)
+            ->whereHas('role', fn ($role) => $role->whereIn('code', array_map(fn (RoleCode $code): string => $code->value, $codes)))
+            ->exists();
+    }
+
+    /**
+     * Whether the account holds one of the roles through an active membership of the shop.
+     */
+    public function hasShopRole(string $shopId, RoleCode ...$codes): bool
+    {
+        return $this->shopMemberships()->active()
+            ->where('shop_id', $shopId)
+            ->whereHas('role', fn ($role) => $role->whereIn('code', array_map(fn (RoleCode $code): string => $code->value, $codes)))
+            ->exists();
     }
 
     /**
