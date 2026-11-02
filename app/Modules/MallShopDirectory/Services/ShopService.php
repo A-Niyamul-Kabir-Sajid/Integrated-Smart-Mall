@@ -11,6 +11,7 @@ use App\Modules\MallShopDirectory\Models\Floor;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\MallShopDirectory\Models\ShopCategory;
+use App\Modules\MallShopDirectory\Models\ShopOpeningHour;
 use App\Modules\MallShopDirectory\Models\ShopUnit;
 use App\Modules\SharedPlatform\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
@@ -105,6 +106,50 @@ class ShopService
         });
     }
 
+    /**
+     * Replaces the shop's weekly opening hours. Times are local to the mall's
+     * timezone; a weekday without intervals means closed.
+     *
+     * @param  list<array{weekday: int, opens_at: string, closes_at: string, closes_next_day?: bool}>  $intervals
+     */
+    public function setOpeningHours(Shop $shop, array $intervals): void
+    {
+        $ranges = [];
+
+        foreach ($intervals as $interval) {
+            $ranges = [...$ranges, ...$this->weeklyRanges($interval)];
+        }
+
+        usort($ranges, fn (array $a, array $b): int => $a[0] <=> $b[0]);
+
+        for ($i = 1; $i < count($ranges); $i++) {
+            if ($ranges[$i][0] < $ranges[$i - 1][1]) {
+                throw new BusinessRuleViolation('opening_hour.overlap', __('Opening intervals overlap.'));
+            }
+        }
+
+        $rows = collect($intervals)
+            ->sortBy([['weekday', 'asc'], ['opens_at', 'asc']])
+            ->groupBy('weekday')
+            ->flatMap(fn ($day) => $day->values()->map(fn (array $interval, int $index): array => [
+                'shop_id' => $shop->getKey(),
+                'weekday' => $interval['weekday'],
+                'interval_no' => $index + 1,
+                'opens_at' => $interval['opens_at'],
+                'closes_at' => $interval['closes_at'],
+                'closes_next_day' => (bool) ($interval['closes_next_day'] ?? false),
+            ]))
+            ->values()
+            ->all();
+
+        DB::transaction(function () use ($shop, $rows): void {
+            $shop->openingHours()->delete();
+            ShopOpeningHour::query()->insert($rows);
+
+            $this->audit->record('shop.hours_changed', $shop, ['intervals' => count($rows)], $shop->mall_id, $shop->getKey());
+        });
+    }
+
     public function changeStatus(Shop $shop, ShopStatus $to, ?string $reason = null): Shop
     {
         $from = $shop->status;
@@ -126,5 +171,49 @@ class ShopService
         });
 
         return $shop;
+    }
+
+    /**
+     * Converts one interval into [start, end) minute ranges on a Monday-00:00
+     * weekly timeline, splitting Sunday-night intervals that wrap into Monday.
+     *
+     * @param  array{weekday: int, opens_at: string, closes_at: string, closes_next_day?: bool}  $interval
+     * @return list<array{0: int, 1: int}>
+     */
+    private function weeklyRanges(array $interval): array
+    {
+        $weekday = (int) $interval['weekday'];
+
+        if ($weekday < 1 || $weekday > 7) {
+            throw new BusinessRuleViolation('opening_hour.invalid_weekday', __('Weekdays run from 1 (Monday) to 7 (Sunday).'));
+        }
+
+        $opens = $this->minutes($interval['opens_at']);
+        $closes = $this->minutes($interval['closes_at']);
+        $nextDay = (bool) ($interval['closes_next_day'] ?? false);
+
+        if (! $nextDay && $closes <= $opens) {
+            throw new BusinessRuleViolation('opening_hour.closes_before_opening', __('Closing time must be after opening time, or mark the interval as closing the next day.'));
+        }
+
+        $start = ($weekday - 1) * 1440 + $opens;
+        $end = match (true) {
+            ! $nextDay => ($weekday - 1) * 1440 + $closes,
+            $closes === $opens => $start + 1440,
+            default => $weekday * 1440 + $closes,
+        };
+
+        $week = 7 * 1440;
+
+        return $end <= $week ? [[$start, $end]] : [[$start, $week], [0, $end - $week]];
+    }
+
+    private function minutes(string $time): int
+    {
+        if (preg_match('/^([01]\d|2[0-3]):([0-5]\d)(?::00)?$/', $time, $parts) !== 1) {
+            throw new BusinessRuleViolation('opening_hour.invalid_time', __(':time is not a valid 24-hour time.', ['time' => $time]));
+        }
+
+        return ((int) $parts[1]) * 60 + (int) $parts[2];
     }
 }
