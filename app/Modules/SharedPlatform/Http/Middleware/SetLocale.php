@@ -2,24 +2,23 @@
 
 namespace App\Modules\SharedPlatform\Http\Middleware;
 
+use App\Modules\SharedPlatform\Services\LocaleService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Applies the visitor's chosen interface language (English or Bangla).
+ * Applies the language chosen for this session (English by default).
  */
 class SetLocale
 {
-    public const SUPPORTED_LOCALES = ['en', 'bn'];
-
-    public const SESSION_KEY = 'locale';
+    public function __construct(private LocaleService $locales) {}
 
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = $request->session()->get(self::SESSION_KEY);
+        $locale = $this->locales->fromSession($request->session());
 
-        if (in_array($locale, self::SUPPORTED_LOCALES, true)) {
+        if ($locale !== null) {
             app()->setLocale($locale);
         }
 
