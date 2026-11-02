@@ -4,6 +4,7 @@ namespace Tests\Feature\Seeders;
 
 use App\Modules\MallShopDirectory\Enums\MallStatus;
 use App\Modules\MallShopDirectory\Models\Mall;
+use App\Modules\MallShopDirectory\Models\ShopCategory;
 use Database\Seeders\DemoMallSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -21,5 +22,6 @@ class DemoMallSeederTest extends TestCase
         $this->assertSame(MallStatus::Active, $mall->status);
         $this->assertSame('Asia/Dhaka', $mall->timezone);
         $this->assertSame(['G', 'F1'], $mall->floors()->pluck('code')->all());
+        $this->assertEqualsCanonicalizing(array_keys(DemoMallSeeder::SHOP_CATEGORIES), ShopCategory::query()->pluck('slug')->all());
     }
 }
