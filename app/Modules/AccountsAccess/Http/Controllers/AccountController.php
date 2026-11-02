@@ -10,6 +10,11 @@ class AccountController extends Controller
 {
     public function show(Request $request): View
     {
-        return view('account.show', ['user' => $request->user()]);
+        $user = $request->user();
+
+        return view('account.show', [
+            'user' => $user,
+            'shopMemberships' => $user->shopMemberships()->active()->with(['shop', 'role'])->get()->sortBy('shop.name'),
+        ]);
     }
 }

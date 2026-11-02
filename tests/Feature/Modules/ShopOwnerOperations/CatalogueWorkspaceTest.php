@@ -147,4 +147,14 @@ class CatalogueWorkspaceTest extends TestCase
             ->assertSessionHasErrors('business');
         $this->assertSame('Better Name', $product->fresh()->name);
     }
+
+    public function test_the_account_page_links_staff_to_their_shop_workspace(): void
+    {
+        $this->actingAs($this->staff)
+            ->get(route('account.show'))
+            ->assertSee('Cafe Brew')
+            ->assertSee('href="'.route('workspace.catalogue.index', $this->shop).'"', false);
+
+        $this->actingAs(User::factory()->create())->get(route('account.show'))->assertDontSee('Shops you work in');
+    }
 }

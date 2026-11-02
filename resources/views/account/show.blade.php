@@ -27,5 +27,21 @@
                 <dd class="font-medium">{{ $user->created_at->timezone('Asia/Dhaka')->format('d M Y') }}</dd>
             </div>
         </dl>
+
+        @if ($shopMemberships->isNotEmpty())
+            <section class="mt-8" aria-labelledby="shops-heading">
+                <h2 id="shops-heading" class="text-lg font-semibold">{{ __('Shops you work in') }}</h2>
+                <ul class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+                    @foreach ($shopMemberships as $membership)
+                        <li class="flex items-center justify-between gap-4 px-5 py-3">
+                            <span><span class="font-medium">{{ $membership->shop->name }}</span> <span class="text-sm text-slate-500">· {{ __($membership->role->name) }}</span></span>
+                            @if (Route::has('workspace.catalogue.index'))
+                                <a href="{{ route('workspace.catalogue.index', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Manage catalogue') }}</a>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
     </div>
 </x-layouts.customer>
