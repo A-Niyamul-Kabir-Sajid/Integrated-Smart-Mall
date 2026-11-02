@@ -41,6 +41,20 @@ Evidence: `composer ci` passed (Pint clean, 70 tests on SQLite); `composer test:
 
 Decisions applied (approved by the user, to be recorded in DECISIONS.md with EPIC-02): the `notifications` and `audit_logs` tables are SharedPlatform additions outside the ERD; notifiable and actor ids are strings so they hold the UUID account keys planned for APP_USER.
 
+## 2026-11-03: EPIC-02 accounts and access (ISM-17)
+
+Branches `feature/epic-02-accounts-core` and `feature/epic-02-access-control`, stories ISM-18 to ISM-26.
+
+- Identity (D-008): `users` is the physical APP_USER with UUID keys, normalised email/phone and `password_hash`; Laravel database sessions replace AUTH_SESSION.
+- Roles and memberships per the ERD; four abilities (`administer-platform`, `administer-mall`, `manage-shop`, `work-in-shop`) defined as gates; deactivated accounts are signed out.
+- Registration, sign-in/out with email or mobile, own profile, password change and email reset with session invalidation and throttles.
+- Preferences (D-010) in FavouritesPreferences: language (EN/BN switch), usual mall, route mode, AR, notification switches feeding the notification channels.
+- Demo accounts per role (`DemoAccountsSeeder`).
+
+Evidence: full suite on SQLite and PostgreSQL green; role-by-ability matrix test; route-protection guard test; screenshots of registration and sign-in checked.
+
+Known limitations: phone-only accounts have no self-service password reset yet (information desk); email/phone verification flows are not built (fields exist); EPIC-08 ISM-89 overlaps D-010.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
