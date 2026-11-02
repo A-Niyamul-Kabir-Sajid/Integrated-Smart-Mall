@@ -22,6 +22,9 @@ class RouteProtectionTest extends TestCase
         'malls/{publicMall}',
         'malls/{publicMall}/shops',
         'malls/{publicMall}/shops/{publicShop}',
+        'malls/{publicMall}/products',
+        'malls/{publicMall}/products/compare',
+        'malls/{publicMall}/products/{publicProduct}',
         'up',
     ];
 
