@@ -3,7 +3,7 @@
 namespace Tests\Feature\Modules\SharedPlatform;
 
 use App\Core\Middleware\AssignRequestId;
-use App\Models\User;
+use App\Modules\AccountsAccess\Models\User;
 use App\Modules\SharedPlatform\Models\AuditLog;
 use App\Modules\SharedPlatform\Services\AuditLogger;
 use Illuminate\Foundation\Testing\RefreshDatabase;

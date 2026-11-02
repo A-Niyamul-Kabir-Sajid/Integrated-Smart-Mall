@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Modules\SharedPlatform;
 
-use App\Models\User;
+use App\Modules\AccountsAccess\Models\User;
 use App\Modules\SharedPlatform\Contracts\NotificationPreferences;
 use App\Modules\SharedPlatform\Enums\NotificationType;
 use App\Modules\SharedPlatform\Notifications\SystemNotice;
