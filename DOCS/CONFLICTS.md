@@ -19,7 +19,7 @@
 | C-02 | Catalogue includes orders/reservations/returns/rewards; ERD purchase scope is trusted completed-sale evidence | Agree the release slice and owning module/schema for those extensions. PurchaseVerification is not automatically a checkout domain. |
 | C-03 | Catalogue broadly describes verified reviews; ERD allows verification only for product-listing reviews | Confirm entitlement policy before verified shop/mall reviews or per-purchase review uniqueness changes. Preserve existing baseline meanwhile. |
 | C-04 | Broad parking/events/cases/leases/notifications requirements exceed the nine-domain ERD | Define records, ownership and integrations when requested; reuse existing FACILITY/map records where appropriate. No new table inferred here. |
-| C-05 | Default Laravel User/auth/session files versus logical APP_USER/AUTH_SESSION | Decide physical mapping, authentication integration and migration strategy; avoid two account stores. |
+| C-05 | Default Laravel User/auth/session files versus logical APP_USER/AUTH_SESSION | **Resolved 2026-11-03 by D-008:** `users` is the physical APP_USER; Laravel database sessions replace AUTH_SESSION. |
 | C-06 | Shared product definitions versus shop-owned catalogue curation | Confirm who creates/merges products and how shop listings are governed; see ERD open decisions. |
 | C-07 | QR start point and requested WebAR versus unvalidated continuous localization | Select target devices and a measured alignment/tracking approach; preserve usable non-AR navigation. |
 | C-08 | Nine-week roadmap and nine-month horizon, unfinished PRD, no acceptance matrix | Confirm milestone scope/dates and measurable criteria before claiming a delivery schedule. |
