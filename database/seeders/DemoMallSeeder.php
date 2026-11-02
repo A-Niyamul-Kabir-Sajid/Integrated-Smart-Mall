@@ -3,11 +3,15 @@
 namespace Database\Seeders;
 
 use App\Modules\MallShopDirectory\Enums\MallStatus;
+use App\Modules\MallShopDirectory\Enums\ShopStatus;
 use App\Modules\MallShopDirectory\Models\Floor;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\MallShopDirectory\Models\ShopCategory;
 use App\Modules\MallShopDirectory\Models\ShopOpeningHour;
+use App\Modules\ProductsCatalogue\Models\Product;
+use App\Modules\ProductsCatalogue\Models\ProductCategory;
+use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -55,6 +59,108 @@ class DemoMallSeeder extends Seeder
         $this->seedFloors($mall);
         $this->seedShopCategories();
         $this->seedShops($mall);
+        $this->seedCatalogue();
+    }
+
+    /**
+     * Product categories, shared products with variants, and each shop's listings
+     * (price in BDT). Listings of shops that are not active stay archived.
+     */
+    private function seedCatalogue(): void
+    {
+        $categories = [];
+
+        foreach ([
+            'drinks' => 'Drinks', 'snacks-meals' => 'Snacks & Meals', 'phone-accessories' => 'Phone Accessories',
+            'audio' => 'Audio', 'clothing' => 'Clothing', 'footwear' => 'Footwear', 'personal-care' => 'Personal Care',
+            'medicine' => 'Medicine', 'books' => 'Books', 'stationery' => 'Stationery', 'groceries' => 'Groceries',
+        ] as $slug => $name) {
+            $categories[$slug] = ProductCategory::query()->create(['slug' => $slug, 'name' => $name]);
+        }
+
+        $catalogue = [
+            ['Mineral Water', 'AquaPure', 'drinks', 'Still drinking water.', [
+                ['500ml', '500 ml bottle', ['volume' => '500 ml'], ['Fresh Mart' => 20, 'Juice Corner' => 25, 'Pharma Care' => 20, 'Food Court' => 30]],
+                ['1500ml', '1.5 litre bottle', ['volume' => '1.5 L'], ['Fresh Mart' => 35]],
+            ]],
+            ['Cola Soft Drink', 'Fizzo', 'drinks', 'Chilled carbonated cola.', [
+                ['250ml', '250 ml can', ['volume' => '250 ml'], ['Fresh Mart' => 40, 'Juice Corner' => 45, 'Food Court' => 50]],
+            ]],
+            ['Mango Juice', 'Sonali Orchard', 'drinks', 'Fresh mango juice, served cold.', [
+                ['regular', 'Regular cup', ['size' => 'Regular'], ['Juice Corner' => 120]],
+                ['bottle', '250 ml bottle', ['volume' => '250 ml'], ['Fresh Mart' => 60]],
+            ]],
+            ['Cold Coffee', 'Cafe Brew', 'drinks', 'Iced coffee with milk.', [
+                ['regular', 'Regular', ['size' => 'Regular'], ['Cafe Brew' => 220]],
+                ['large', 'Large', ['size' => 'Large'], ['Cafe Brew' => 280]],
+            ]],
+            ['Espresso', 'Cafe Brew', 'drinks', 'Single-shot espresso.', [['default', 'Single shot', [], ['Cafe Brew' => 150]]]],
+            ['Chicken Burger', null, 'snacks-meals', 'Grilled chicken burger with fries.', [['default', 'Burger with fries', [], ['Food Court' => 350]]]],
+            ['Butter Croissant', null, 'snacks-meals', 'Baked fresh every morning.', [['default', 'One piece', [], ['Cafe Brew' => 160]]]],
+            ['USB-C Charger 20W', 'VoltEdge', 'phone-accessories', 'Fast wall charger with USB-C port.', [
+                ['default', '20 W', ['power' => '20 W'], ['Gadget Hub' => 1450, 'Phone Fix' => 1350]],
+            ]],
+            ['Tempered Glass Screen Protector', 'VoltEdge', 'phone-accessories', 'Fits most 6.1–6.7 inch phones.', [
+                ['default', 'Universal', [], ['Gadget Hub' => 350, 'Phone Fix' => 300]],
+            ]],
+            ['Wireless Earbuds', 'VoltEdge', 'audio', 'Bluetooth earbuds with charging case.', [
+                ['black', 'Black', ['colour' => 'Black'], ['Gadget Hub' => 2900]],
+                ['white', 'White', ['colour' => 'White'], ['Gadget Hub' => 2900]],
+            ]],
+            ['Cotton T-Shirt', 'Northloom', 'clothing', 'Plain cotton crew-neck T-shirt.', [
+                ['s', 'Size S', ['size' => 'S'], ['Style Avenue' => 650, 'Sports Zone' => 700]],
+                ['m', 'Size M', ['size' => 'M'], ['Style Avenue' => 650, 'Sports Zone' => 700]],
+                ['l', 'Size L', ['size' => 'L'], ['Style Avenue' => 650]],
+            ]],
+            ['Cotton Panjabi', 'Northloom', 'clothing', 'Festive cotton panjabi.', [
+                ['m', 'Size M', ['size' => 'M'], ['Style Avenue' => 2400]],
+                ['l', 'Size L', ['size' => 'L'], ['Style Avenue' => 2400]],
+            ]],
+            ['Kids Sneakers', 'Little Steps', 'footwear', 'Lightweight sneakers for children.', [['30', 'EU 30', ['size' => 'EU 30'], ['Little Steps' => 1800]]]],
+            ['Running Shoes', 'Stride', 'footwear', 'Cushioned shoes for daily running.', [['42', 'EU 42', ['size' => 'EU 42'], ['Sports Zone' => 4800]]]],
+            ['Sunscreen SPF 50', 'SunShield', 'personal-care', 'Broad-spectrum sunscreen, 50 ml.', [
+                ['50ml', '50 ml tube', ['volume' => '50 ml'], ['Glow Beauty' => 950, 'Pharma Care' => 900]],
+            ]],
+            ['Paracetamol 500 mg', null, 'medicine', 'Strip of 10 tablets.', [['strip', 'Strip of 10', [], ['Pharma Care' => 12]]]],
+            ['A5 Notebook', 'Lekha', 'stationery', '120-page ruled notebook.', [['default', '120 pages', [], ['Book Nook' => 90, 'Fresh Mart' => 100]]]],
+            ['Bangla–English Dictionary', 'Lekha', 'books', 'Pocket bilingual dictionary.', [['default', 'Paperback', [], ['Book Nook' => 450]]]],
+            ['Miniket Rice', null, 'groceries', 'Polished rice.', [['5kg', '5 kg bag', ['weight' => '5 kg'], ['Fresh Mart' => 420]]]],
+        ];
+
+        $skuNumber = 0;
+
+        foreach ($catalogue as [$name, $brand, $category, $description, $variants]) {
+            $product = Product::query()->create([
+                'product_category_id' => $categories[$category]->getKey(),
+                'name' => $name,
+                'brand' => $brand,
+                'description' => $description,
+                'status' => 'active',
+            ]);
+
+            foreach ($variants as [$code, $label, $attributes, $prices]) {
+                $variant = $product->variants()->create([
+                    'variant_code' => $code,
+                    'label' => $label,
+                    'attributes_json' => $attributes,
+                    'status' => 'active',
+                ]);
+
+                foreach ($prices as $shopName => $price) {
+                    $shop = $this->shops[$shopName];
+
+                    ShopProduct::query()->create([
+                        'shop_id' => $shop->getKey(),
+                        'variant_id' => $variant->getKey(),
+                        'seller_sku' => sprintf('DEMO-%04d', ++$skuNumber),
+                        'price_amount' => $price,
+                        'currency' => 'BDT',
+                        'availability_status' => $skuNumber % 9 === 0 ? 'unavailable' : 'available',
+                        'status' => $shop->status === ShopStatus::Active ? 'active' : 'archived',
+                    ]);
+                }
+            }
+        }
     }
 
     private function seedFloors(Mall $mall): void

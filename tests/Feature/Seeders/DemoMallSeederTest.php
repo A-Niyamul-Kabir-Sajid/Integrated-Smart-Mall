@@ -7,6 +7,8 @@ use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\MallShopDirectory\Models\ShopCategory;
 use App\Modules\MallShopDirectory\Models\ShopUnit;
+use App\Modules\ProductsCatalogue\Models\Product;
+use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use Database\Seeders\DemoMallSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -38,5 +40,19 @@ class DemoMallSeederTest extends TestCase
         ShopUnit::query()->with(['shop', 'floor'])->get()->each(
             fn (ShopUnit $unit) => $this->assertSame($unit->shop->mall_id, $unit->floor->mall_id)
         );
+    }
+
+    public function test_seeds_a_shared_catalogue_with_listings_only_active_shops_sell(): void
+    {
+        $this->seed(DemoMallSeeder::class);
+
+        $this->assertSame(19, Product::query()->count());
+        $water = Product::query()->where('name', 'Mineral Water')->sole();
+        $this->assertSame(2, $water->variants()->count());
+        $this->assertSame(5, $water->listings()->count());
+
+        $archived = ShopProduct::query()->where('status', 'archived')->with('shop')->get();
+        $this->assertNotEmpty($archived);
+        $this->assertSame(['sports-zone'], $archived->pluck('shop.slug')->unique()->values()->all());
     }
 }
