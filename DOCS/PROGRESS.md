@@ -67,6 +67,19 @@ Evidence: suites on SQLite and PostgreSQL green; opening-hour boundary cases; se
 
 Review notes: keyword search uses `lower(column) like` and cannot use an index, acceptable at mall scale (tens to hundreds of shops); add a trigram or full-text index if a mall grows far beyond that. The ERD needed no change. FACILITY (washrooms, prayer rooms, exits) is not created yet: it is built with the facility directory stories of EPIC-09 (ISM-92/ISM-93).
 
+## 2026-11-03: EPIC-04 products catalogue (ISM-38)
+
+Branch `feature/epic-04-products-catalogue`, stories ISM-48, ISM-51 and ISM-54.
+
+- Decision D-011 resolves C-06: shared products and variants, shop-owned listings, shared details editable by the sole lister or the mall administrator.
+- Data layer per ERD domain 03 (categories, products, variants, images, listings; PostgreSQL price check) and a demo catalogue of 19 products across the demo shops.
+- Shop workspace (`work-in-shop`): add, edit, archive and restore listings, shared details and photos as sole lister, CSV import with row-level preview and all-or-nothing commit.
+- Customer pages: product search (keyword, category, shop, price range, in stock, sort), product offers across shops, comparison of up to four offers; `CatalogueLookup` contract for favourites, navigation and the assistant.
+
+Evidence: suites on SQLite and PostgreSQL green; cross-shop 403/404 tests; import error and token tests; visibility tests (archived, closed or draft shops, other malls); screenshot of a product page with four offers.
+
+Limitations: no inventory ledger (availability is owner-maintained); mall-administrator curation of shared products has no screen yet (EPIC-11); images use the public disk without resizing; workspace pages are English only.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
