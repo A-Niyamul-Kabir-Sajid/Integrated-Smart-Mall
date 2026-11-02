@@ -3,8 +3,10 @@
 namespace App\Modules\MallShopDirectory\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
+use App\Modules\MallShopDirectory\Contracts\DirectoryLookup;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
+use App\Modules\MallShopDirectory\Services\DirectoryLookupService;
 use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +15,11 @@ use Illuminate\Support\Facades\Route;
  */
 class MallShopDirectoryServiceProvider extends ModuleServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->bind(DirectoryLookup::class, DirectoryLookupService::class);
+    }
+
     public function boot(): void
     {
         parent::boot();
