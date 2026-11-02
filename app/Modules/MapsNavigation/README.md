@@ -1,9 +1,12 @@
 # MapsNavigation
 
-## Purpose
+Versioned floor maps, QR checkpoints, the navigation graph, routing and AR coordination.
 
-Documentation and implementation details for this module will be added later.
+- Namespace: `App\Modules\MapsNavigation`
+- Jira: EPIC-05 Maps & Navigation
+- Requirements, business rules and ERD: [DOCS/modules/MapsNavigation/README.md](../../../DOCS/modules/MapsNavigation/README.md)
+- Folder layout and coupling rules: [app/Modules/README.md](../README.md)
 
 ## Status
 
-Folder architecture created. Implementation not started.
+Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).

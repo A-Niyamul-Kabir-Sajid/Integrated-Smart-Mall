@@ -1,9 +1,12 @@
 # FavouritesPreferences
 
-## Purpose
+Saved shop and listing favourites, shopping lists and user preferences.
 
-Documentation and implementation details for this module will be added later.
+- Namespace: `App\Modules\FavouritesPreferences`
+- Jira: EPIC-08 Favourites & Preferences
+- Requirements, business rules and ERD: [DOCS/modules/FavouritesPreferences/README.md](../../../DOCS/modules/FavouritesPreferences/README.md)
+- Folder layout and coupling rules: [app/Modules/README.md](../README.md)
 
 ## Status
 
-Folder architecture created. Implementation not started.
+Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).

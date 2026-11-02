@@ -1,9 +1,12 @@
 # ParkingFacilities
 
-## Purpose
+Saved parking, facility finder and visitor-support flows built on directory facilities and navigation.
 
-Documentation and implementation details for this module will be added later.
+- Namespace: `App\Modules\ParkingFacilities`
+- Jira: EPIC-09 Parking & Facilities
+- Requirements, business rules and ERD: [DOCS/modules/ParkingFacilities/README.md](../../../DOCS/modules/ParkingFacilities/README.md)
+- Folder layout and coupling rules: [app/Modules/README.md](../README.md)
 
 ## Status
 
-Folder architecture created. Implementation not started.
+Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
