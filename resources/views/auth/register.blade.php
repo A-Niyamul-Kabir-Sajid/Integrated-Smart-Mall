@@ -14,5 +14,9 @@
                 {{ __('Create account') }}
             </button>
         </form>
+
+        <x-slot:footer>
+            {{ __('Already have an account?') }} <a href="{{ route('login') }}" class="font-medium text-brand-700 hover:underline">{{ __('Sign in') }}</a>
+        </x-slot:footer>
     </x-auth-card>
 </x-layouts.customer>

@@ -116,6 +116,6 @@ class RegisterControllerTest extends TestCase
 
     public function test_guests_cannot_open_the_account_page(): void
     {
-        $this->get(route('account.show'))->assertRedirect('/register');
+        $this->get(route('account.show'))->assertRedirect(route('login'));
     }
 }

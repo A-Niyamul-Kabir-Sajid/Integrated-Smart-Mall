@@ -2,6 +2,7 @@
 
 use App\Modules\AccountsAccess\Http\Controllers\AccountController;
 use App\Modules\AccountsAccess\Http\Controllers\RegisterController;
+use App\Modules\AccountsAccess\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function (): void {
@@ -9,8 +10,15 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/register', [RegisterController::class, 'store'])
         ->middleware('throttle:registration')
         ->name('register.store');
+
+    Route::get('/login', [SessionController::class, 'create'])->name('login');
+    Route::post('/login', [SessionController::class, 'store'])
+        ->middleware('throttle:login')
+        ->name('login.store');
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
+
     Route::get('/account', [AccountController::class, 'show'])->name('account.show');
 });
