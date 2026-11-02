@@ -10,7 +10,7 @@ Shared products and variants, shop-specific listings, prices and availability.
 
 ## Status
 
-Domain reviewed (ISM-49). Data layer, shop catalogue management and customer discovery follow in ISM-50 to ISM-56. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
+EPIC-04 complete: data layer and demo catalogue (ISM-50), shop catalogue management and CSV import through the shop workspace (ISM-52/53), customer search, product pages and comparison (ISM-55/56). Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
 
 ## Domain
 
@@ -44,3 +44,13 @@ PRODUCT_CATEGORY (parent: PRODUCT_CATEGORY, acyclic) 1──* PRODUCT 1──* P
 | MapsNavigation | The shop of a listing, for the "directions" hand-off |
 | ChatbotRag | Structured listing search (category, price range, availability, shop) instead of free text |
 | ReviewsModeration, PurchaseVerification | Stable `shop_product_id` references |
+
+## Services and contract
+
+| Class | Does |
+|---|---|
+| `Services\CatalogueService` | Shop-side writes per D-011: new product + listing, list an existing option, add an option (sole lister), update/archive/restore listings, shared details and images (sole lister). Audited. |
+| `Services\CatalogueImportService` | CSV preview (row-level errors, planned action per row) and all-or-nothing import |
+| `Contracts\CatalogueLookup` → `Services\ProductDiscoveryService` | Visible-offer search with filters, sorting and pagination; a product's offers; one visible listing by id |
+
+The shop workspace (`/workspace/shops/{shop}/catalogue`, module ShopOwnerOperations) and the customer pages (`/malls/{mall}/products`, `/products/{product}`, `/products/compare`) are the HTTP entry points.
