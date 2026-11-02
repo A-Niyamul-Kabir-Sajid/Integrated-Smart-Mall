@@ -6,9 +6,11 @@ use App\Core\Modules\ModuleServiceProvider;
 use App\Modules\SharedPlatform\Adapters\LogSmsGateway;
 use App\Modules\SharedPlatform\Contracts\NotificationPreferences;
 use App\Modules\SharedPlatform\Contracts\SmsGateway;
+use App\Modules\SharedPlatform\Http\Middleware\SetLocale;
 use App\Modules\SharedPlatform\Notifications\Channels\SmsChannel;
 use App\Modules\SharedPlatform\Services\DefaultNotificationPreferences;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +34,8 @@ class SharedPlatformServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $this->app->make(HttpKernel::class)->appendMiddlewareToGroup('web', SetLocale::class);
 
         $this->configureSecureDefaults();
         $this->configureRateLimiters();

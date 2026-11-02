@@ -27,3 +27,29 @@ Network firewall/WAF belongs to deployment infrastructure. No Firewall design-pa
 - **Authorize at the protected operation**: in the Form Request's `authorize()` for writes, or `Gate::authorize()` in the controller. Never decide access from data the browser sends (role names, shop IDs in hidden fields).
 - **Scope**: shop and mall permissions come from server-side memberships. When a user asks for a record of a shop or mall they do not belong to, respond 404 so the record's existence is not revealed; respond 403 when the record is in their scope but their role lacks the ability.
 - **Validation and errors**: writes use Form Requests; simple read filters may use `$request->validate()`. Domain rules throw `BusinessRuleViolation`. `api/*` and JSON requests always receive JSON errors. Production runs with `APP_DEBUG=false`, so responses never include stack traces. Never log passwords, tokens or credentials.
+
+## Abilities (EPIC-02, ISM-155)
+
+Modules check access by ability name, never by role: `Gate::allows(Ability::ManageShop, $shop)` or `->can('manage-shop', 'shop')` on a route. The names live in `App\Modules\SharedPlatform\Enums\Ability`; AccountsAccess defines them from roles and active memberships.
+
+| Ability | Granted to | Argument |
+|---|---|---|
+| `administer-platform` | `platform_admin` | — |
+| `administer-mall` | `mall_admin` with an active membership of that mall; platform admins | `Mall` |
+| `manage-shop` | `shop_owner` of that shop; platform admins | `Shop` |
+| `work-in-shop` | `shop_owner` or `shop_staff` of that shop; platform admins | `Shop` |
+
+Suspended or anonymised accounts hold no ability, and `EnsureAccountIsActive` (web group) signs them out on their next request. Revoked memberships grant nothing. `tests/Feature/Modules/AccountsAccess/AbilitiesTest.php` holds the full role-by-ability matrix, including denial for another mall or shop.
+
+## Session and password security (EPIC-02, ISM-159)
+
+| Event | Behaviour |
+|---|---|
+| Sign-in | Session id regenerated; only active accounts; `throttle:login` |
+| Sign-out | Session invalidated and CSRF token regenerated |
+| Password change (`/account/password`) | Current password required; `throttle:password-change` (5/min per user); remember-me token rotated; every other session deleted, the current one kept |
+| Password reset (`/forgot-password`) | Same answer for known and unknown emails; `throttle:password-reset` (3/min per IP) plus the broker's 60-second per-account delay; tokens expire after 60 minutes and work once; all sessions deleted |
+| Account suspended or anonymised | Signed out on the next request (`EnsureAccountIsActive`) |
+| Any password change or reset | `account.password_changed` / `account.password_reset` audited (no password data) and a `PasswordChanged` notice emailed |
+
+Session cookies are HttpOnly and SameSite=Lax (framework defaults) and live for `SESSION_LIFETIME` minutes. Production must set `SESSION_SECURE_COOKIE=true` so the cookie only travels over HTTPS. Accounts registered with a mobile number only cannot use the email reset; until an SMS reset exists, the information desk helps them.

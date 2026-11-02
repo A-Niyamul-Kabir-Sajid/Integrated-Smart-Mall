@@ -21,6 +21,16 @@
             </a>
 
             <div class="ml-auto flex items-center gap-2 text-sm">
+                <form method="POST" action="{{ route('locale.update') }}" class="flex rounded-lg border border-slate-200 p-0.5" aria-label="{{ __('Language') }}">
+                    @csrf
+                    @foreach (['en' => 'EN', 'bn' => 'বাং'] as $code => $label)
+                        <button type="submit" name="locale" value="{{ $code }}" lang="{{ $code }}" @class([
+                            'rounded-md px-2 py-1 text-xs font-medium',
+                            'bg-brand-600 text-white' => app()->getLocale() === $code,
+                            'text-slate-600 hover:bg-slate-100' => app()->getLocale() !== $code,
+                        ]) @if (app()->getLocale() === $code) aria-current="true" @endif>{{ $label }}</button>
+                    @endforeach
+                </form>
                 @auth
                     <a href="{{ route('account.show') }}" class="rounded-lg px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100">{{ auth()->user()->display_name }}</a>
                     <form method="POST" action="{{ route('logout') }}">

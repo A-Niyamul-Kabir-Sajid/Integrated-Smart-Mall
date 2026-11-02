@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\AccountsAccess\Providers\AccountsAccessServiceProvider;
+use App\Modules\FavouritesPreferences\Providers\FavouritesPreferencesServiceProvider;
 use App\Modules\SharedPlatform\Providers\SharedPlatformServiceProvider;
 
 return [
@@ -20,6 +21,7 @@ return [
     'providers' => [
         'SharedPlatform' => SharedPlatformServiceProvider::class,
         'AccountsAccess' => AccountsAccessServiceProvider::class,
+        'FavouritesPreferences' => FavouritesPreferencesServiceProvider::class,
     ],
 
 ];
