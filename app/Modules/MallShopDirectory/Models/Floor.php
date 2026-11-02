@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * FLOOR: a physical level of a mall, independent of any map version.
@@ -30,6 +31,14 @@ class Floor extends Model
     public function mall(): BelongsTo
     {
         return $this->belongsTo(Mall::class, 'mall_id');
+    }
+
+    /**
+     * @return HasMany<ShopUnit, $this>
+     */
+    public function shopUnits(): HasMany
+    {
+        return $this->hasMany(ShopUnit::class, 'floor_id');
     }
 
     #[Scope]

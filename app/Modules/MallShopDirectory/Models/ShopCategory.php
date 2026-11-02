@@ -42,6 +42,14 @@ class ShopCategory extends Model
         return $this->hasMany(self::class, 'parent_category_id')->orderBy('name');
     }
 
+    /**
+     * @return HasMany<Shop, $this>
+     */
+    public function shops(): HasMany
+    {
+        return $this->hasMany(Shop::class, 'shop_category_id');
+    }
+
     #[Scope]
     protected function topLevel(Builder $query): Builder
     {

@@ -37,6 +37,14 @@ class Mall extends Model
         return $this->hasMany(Floor::class, 'mall_id')->orderBy('sort_order');
     }
 
+    /**
+     * @return HasMany<Shop, $this>
+     */
+    public function shops(): HasMany
+    {
+        return $this->hasMany(Shop::class, 'mall_id');
+    }
+
     #[Scope]
     protected function active(Builder $query): Builder
     {
