@@ -20,5 +20,6 @@ class DemoMallSeederTest extends TestCase
         $this->assertSame(DemoMallSeeder::MALL_SLUG, $mall->slug);
         $this->assertSame(MallStatus::Active, $mall->status);
         $this->assertSame('Asia/Dhaka', $mall->timezone);
+        $this->assertSame(['G', 'F1'], $mall->floors()->pluck('code')->all());
     }
 }
