@@ -26,7 +26,11 @@ The reference ERD is a **proposed logical baseline**, not an implemented or full
 | Which tables/relationships already exist in the design? | [Database guide](06_DATABASE_GUIDE.md) |
 | Where should classes/patterns go? | [Architecture](03_ARCHITECTURE.md), [patterns](04_DESIGN_PATTERNS.md) |
 | What is implemented? | [Progress](PROGRESS.md), then source/tests |
-| What should be built first? | [Build order](10_BUILD_ORDER.md) |
+| What should be built first? | [Build order](10_BUILD_ORDER.md) and the Jira backlog (project ISM) |
+| How do I set up and run the project? | [README](../README.md) (requirements, setup, database, checks) |
+| How are branches, commits and reviews done? | [Contributing](../CONTRIBUTING.md) |
+| How is a module laid out and what may it depend on? | [Module conventions](../app/Modules/README.md), each `app/Modules/<Module>/README.md`, [Core boundary](../app/Core/README.md) |
+| Where is the detailed data design? | [ERD package](references/erd/README.md) via the [database guide](06_DATABASE_GUIDE.md) |
 | Why was a document moved? | [Reorganization audit](maintenance/REORGANIZATION.md) |
 
 Do not run the archived merge script: this tree links to preserved sources instead of copying their definitions into competing documents.

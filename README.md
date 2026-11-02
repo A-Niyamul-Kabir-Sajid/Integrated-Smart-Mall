@@ -56,3 +56,14 @@ composer audit            # dependency advisories
 
 - `Undefined array key "url"` from Composer: an older global Composer is running under PHP 8.5. Use the Composer installed by php.new (`%USERPROFILE%\.config\herd-lite\bin\composer`) or update Composer.
 - `Unable to locate file in Vite manifest`: run `npm run build`, or keep `npm run dev` running.
+
+## Documentation
+
+| Topic | Where |
+|---|---|
+| Reading order before any implementation | [DOCS/00_START_HERE.md](DOCS/00_START_HERE.md) |
+| Architecture and module map | [DOCS/03_ARCHITECTURE.md](DOCS/03_ARCHITECTURE.md), [DOCS/05_MODULE_MAP.md](DOCS/05_MODULE_MAP.md) |
+| Data design (ERD) | [DOCS/06_DATABASE_GUIDE.md](DOCS/06_DATABASE_GUIDE.md) |
+| Module and Core conventions | [app/Modules/README.md](app/Modules/README.md), [app/Core/README.md](app/Core/README.md) |
+| Branches, commits, reviews | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| What is implemented | [DOCS/PROGRESS.md](DOCS/PROGRESS.md) |
