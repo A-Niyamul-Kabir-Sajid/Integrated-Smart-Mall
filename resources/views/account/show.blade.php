@@ -2,7 +2,10 @@
     <div class="mx-auto max-w-2xl px-4 py-10">
         <div class="flex items-center justify-between gap-4">
             <h1 class="text-2xl font-semibold">{{ __('Your account') }}</h1>
-            <a href="{{ route('account.profile.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Edit profile') }}</a>
+            <div class="flex gap-2">
+                <a href="{{ route('account.preferences.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Preferences') }}</a>
+                <a href="{{ route('account.profile.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Edit profile') }}</a>
+            </div>
         </div>
 
         <dl class="mt-6 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
