@@ -4,9 +4,13 @@ namespace App\Modules\SharedPlatform\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 /**
  * Registers SharedPlatform: localization, notifications, audit and the shared security conventions.
@@ -17,7 +21,29 @@ class SharedPlatformServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
+        $this->configureSecureDefaults();
         $this->configureRateLimiters();
+    }
+
+    /**
+     * Framework-wide defaults: strong passwords, strict Eloquent outside production,
+     * HTTPS links and no destructive database commands in production.
+     */
+    private function configureSecureDefaults(): void
+    {
+        $isProduction = $this->app->isProduction();
+
+        Password::defaults(function () use ($isProduction): Password {
+            $rule = Password::min(8)->letters()->numbers();
+
+            return $isProduction ? $rule->uncompromised() : $rule;
+        });
+
+        Model::preventLazyLoading(! $isProduction);
+        Model::preventSilentlyDiscardingAttributes(! $isProduction);
+
+        URL::forceHttps($isProduction);
+        DB::prohibitDestructiveCommands($isProduction);
     }
 
     /**
