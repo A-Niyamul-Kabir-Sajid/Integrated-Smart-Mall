@@ -1,9 +1,12 @@
 # PurchaseVerification
 
-## Purpose
+Trusted purchase evidence, verification credentials and their redemption.
 
-Documentation and implementation details for this module will be added later.
+- Namespace: `App\Modules\PurchaseVerification`
+- Jira: EPIC-06 Purchase Verification
+- Requirements, business rules and ERD: [DOCS/modules/PurchaseVerification/README.md](../../../DOCS/modules/PurchaseVerification/README.md)
+- Folder layout and coupling rules: [app/Modules/README.md](../README.md)
 
 ## Status
 
-Folder architecture created. Implementation not started.
+Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).

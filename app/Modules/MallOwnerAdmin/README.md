@@ -1,9 +1,12 @@
 # MallOwnerAdmin
 
-## Purpose
+Mall-owner workspace: tenant administration, map/QR administration, moderation and operations.
 
-Documentation and implementation details for this module will be added later.
+- Namespace: `App\Modules\MallOwnerAdmin`
+- Jira: EPIC-11 Mall Owner Administration
+- Requirements, business rules and ERD: [DOCS/modules/MallOwnerAdmin/README.md](../../../DOCS/modules/MallOwnerAdmin/README.md)
+- Folder layout and coupling rules: [app/Modules/README.md](../README.md)
 
 ## Status
 
-Folder architecture created. Implementation not started.
+Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
