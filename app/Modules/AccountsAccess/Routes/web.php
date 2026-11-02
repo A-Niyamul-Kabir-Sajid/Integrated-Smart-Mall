@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\AccountsAccess\Http\Controllers\AccountController;
+use App\Modules\AccountsAccess\Http\Controllers\ProfileController;
 use App\Modules\AccountsAccess\Http\Controllers\RegisterController;
 use App\Modules\AccountsAccess\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
@@ -21,4 +22,6 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
 
     Route::get('/account', [AccountController::class, 'show'])->name('account.show');
+    Route::get('/account/profile', [ProfileController::class, 'edit'])->name('account.profile.edit');
+    Route::put('/account/profile', [ProfileController::class, 'update'])->name('account.profile.update');
 });
