@@ -4,6 +4,11 @@
             <p class="text-sm text-white/80">{{ $mall->address }}, {{ $mall->city }}</p>
             <h1 class="mt-1 text-3xl font-semibold">{{ __('Welcome to :mall', ['mall' => $mall->name]) }}</h1>
             <p class="mt-2 text-white/90">{{ __('Find shops and products, then get directions inside the mall.') }}</p>
+            <form method="GET" action="{{ route('shops.index', ['publicMall' => $mall->slug]) }}" class="mt-6 flex max-w-xl gap-2" role="search">
+                <label for="mall-q" class="sr-only">{{ __('Search shops') }}</label>
+                <input id="mall-q" name="q" type="search" maxlength="100" placeholder="{{ __('Find a shop, e.g. coffee') }}" class="min-w-0 flex-1 rounded-lg bg-white px-4 py-2.5 text-slate-900 ring-1 ring-white/40">
+                <button type="submit" class="rounded-lg bg-white px-4 py-2.5 font-medium text-brand-700 hover:bg-brand-50">{{ __('Search') }}</button>
+            </form>
             <div class="mt-6 flex flex-wrap gap-3 text-sm">
                 <a href="{{ route('shops.index', ['publicMall' => $mall->slug]) }}" class="inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 font-medium hover:bg-white/25">
                     <x-icon name="shops" class="size-4" />{{ __('All shops') }}

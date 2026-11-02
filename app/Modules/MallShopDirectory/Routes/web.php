@@ -8,5 +8,5 @@ Route::get('/', [MallController::class, 'index'])->name('home');
 
 Route::prefix('malls/{publicMall}')->group(function (): void {
     Route::get('/', [MallController::class, 'show'])->name('malls.show');
-    Route::get('/shops', [ShopDirectoryController::class, 'index'])->name('shops.index');
+    Route::get('/shops', [ShopDirectoryController::class, 'index'])->middleware('throttle:search')->name('shops.index');
 });

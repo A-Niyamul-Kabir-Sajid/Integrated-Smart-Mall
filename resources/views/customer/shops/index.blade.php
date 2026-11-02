@@ -2,7 +2,12 @@
     <div class="mx-auto max-w-6xl px-4 py-8">
         <h1 class="text-2xl font-semibold">{{ __('Shop directory') }}</h1>
 
-        <form method="GET" action="{{ route('shops.index', ['publicMall' => $mall->slug]) }}" class="mt-5 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <form method="GET" action="{{ route('shops.index', ['publicMall' => $mall->slug]) }}" class="mt-5 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-7" role="search">
+            <div class="sm:col-span-2">
+                <label for="shop-q" class="text-xs font-medium text-slate-600">{{ __('Search shops') }}</label>
+                <input id="shop-q" name="q" type="search" value="{{ $filters['q'] ?? '' }}" maxlength="100" placeholder="{{ __('e.g. coffee, phone repair') }}"
+                    class="mt-1 w-full rounded-lg px-3 py-2 ring-1 ring-slate-300 focus:ring-2 focus:ring-brand-500">
+            </div>
             <div>
                 <label for="shop-floor" class="text-xs font-medium text-slate-600">{{ __('Floor') }}</label>
                 <select id="shop-floor" name="floor" class="mt-1 w-full rounded-lg px-3 py-2 ring-1 ring-slate-300 focus:ring-2 focus:ring-brand-500">
@@ -18,6 +23,14 @@
                     <option value="">{{ __('All categories') }}</option>
                     @foreach ($categories as $category)
                         <option value="{{ $category->slug }}" @selected(($filters['category'] ?? null) === $category->slug)>{{ __($category->name) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="shop-sort" class="text-xs font-medium text-slate-600">{{ __('Sort by') }}</label>
+                <select id="shop-sort" name="sort" class="mt-1 w-full rounded-lg px-3 py-2 ring-1 ring-slate-300 focus:ring-2 focus:ring-brand-500">
+                    @foreach (['name' => __('Name A–Z'), 'name_desc' => __('Name Z–A'), 'newest' => __('Newest')] as $sort => $label)
+                        <option value="{{ $sort }}" @selected(($filters['sort'] ?? 'name') === $sort)>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>

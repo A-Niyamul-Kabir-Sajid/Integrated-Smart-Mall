@@ -7,6 +7,7 @@ use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\ShopCategory;
 use App\Modules\MallShopDirectory\Services\DirectoryService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ShopDirectoryController extends Controller
@@ -14,6 +15,8 @@ class ShopDirectoryController extends Controller
     public function index(Request $request, Mall $publicMall, DirectoryService $directory): View
     {
         $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'sort' => ['nullable', Rule::in(DirectoryService::SORTS)],
             'category' => ['nullable', 'string', 'max:80'],
             'floor' => ['nullable', 'string', 'max:20'],
             'open_now' => ['nullable', 'boolean'],

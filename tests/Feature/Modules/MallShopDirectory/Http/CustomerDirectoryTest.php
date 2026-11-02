@@ -88,6 +88,40 @@ class CustomerDirectoryTest extends TestCase
             ->assertSee('No shops match these filters.');
     }
 
+    public function test_search_keeps_its_terms_and_sort_across_pages(): void
+    {
+        $mall = Mall::factory()->create();
+        foreach (range(1, 13) as $number) {
+            Shop::factory()->for($mall)->create(['name' => sprintf('Coffee %02d', $number)]);
+        }
+        Shop::factory()->for($mall)->create(['name' => 'Gadget Hub']);
+
+        $this->get(route('shops.index', ['publicMall' => $mall->slug, 'q' => 'coffee', 'sort' => 'name_desc']))
+            ->assertOk()
+            ->assertSee('13 shops found')
+            ->assertSee('value="coffee"', false)
+            ->assertSee('value="name_desc" selected', false)
+            ->assertSeeInOrder(['Coffee 13', 'Coffee 12'])
+            ->assertDontSee('Gadget Hub')
+            ->assertSee('q=coffee&amp;sort=name_desc&amp;page=2', false);
+    }
+
+    public function test_unknown_sort_orders_are_rejected(): void
+    {
+        $mall = Mall::factory()->create();
+
+        $this->get(route('shops.index', ['publicMall' => $mall->slug, 'sort' => 'price']))->assertSessionHasErrors('sort');
+    }
+
+    public function test_mall_home_offers_a_shop_search(): void
+    {
+        $mall = Mall::factory()->create();
+
+        $this->get(route('malls.show', ['publicMall' => $mall->slug]))
+            ->assertSee('action="'.route('shops.index', ['publicMall' => $mall->slug]).'"', false)
+            ->assertSee('name="q"', false);
+    }
+
     public function test_invalid_filter_values_are_rejected(): void
     {
         $mall = Mall::factory()->create();
