@@ -4,8 +4,10 @@ namespace App\Modules\SharedPlatform\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
 use App\Modules\SharedPlatform\Adapters\LogSmsGateway;
+use App\Modules\SharedPlatform\Contracts\NotificationPreferences;
 use App\Modules\SharedPlatform\Contracts\SmsGateway;
 use App\Modules\SharedPlatform\Notifications\Channels\SmsChannel;
+use App\Modules\SharedPlatform\Services\DefaultNotificationPreferences;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -24,6 +26,7 @@ class SharedPlatformServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->bind(SmsGateway::class, LogSmsGateway::class);
+        $this->app->bind(NotificationPreferences::class, DefaultNotificationPreferences::class);
     }
 
     public function boot(): void
