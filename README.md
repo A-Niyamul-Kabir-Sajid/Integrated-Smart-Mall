@@ -1,58 +1,69 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Integrated Smart Mall (3 2 SyStem)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A browser-based platform for a shopping mall with three interfaces on one Laravel backend: customers (directory, product search, indoor navigation), shop owners and mall administrators. KUET CSE system-design project.
 
-## About Laravel
+Before changing code, read [DOCS/00_START_HERE.md](DOCS/00_START_HERE.md).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Requirements
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Tool | Version | Notes |
+|---|---|---|
+| PHP | 8.3 or newer (verified on 8.5.12) with `pdo_pgsql` | Laravel 13 does not run on PHP 8.2, so XAMPP's bundled PHP is too old. The official Windows build from [windows.php.net](https://windows.php.net/download) includes `pdo_pgsql` (enable it in `php.ini`); php.new's build does not. |
+| Composer | 2.8 or newer (verified on 2.8.12) | |
+| Node.js / npm | 22 / 10 (verified on 22.16.0 / 10.9.2) | Builds the Vite assets. |
+| Docker | Docker Desktop (verified on engine 29.9.2) | Runs PostgreSQL 17 from `compose.yaml`. |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Verified baseline on 2026-11-03: Laravel 13.34.0, `php artisan about` boots, `composer audit` is clean and `php artisan test` passes.
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Local setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env          # then set DB_PASSWORD to any local value
+php artisan key:generate
+docker compose up -d          # PostgreSQL on 127.0.0.1:5432
+php artisan migrate
+npm install
+npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Database
 
-## Contributing
+PostgreSQL is the project database (`DB_CONNECTION=pgsql`). The compose service reads `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` from `.env`, keeps data in the `ism-pgsql` volume and creates a separate `ism_testing` database on first start.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Task | Command |
+|---|---|
+| Start / stop PostgreSQL | `docker compose up -d` / `docker compose stop` |
+| Check the connection | `php artisan db:show` |
+| Rebuild the schema with demo data | `php artisan migrate:fresh --seed` |
+| Delete all local data, including `ism_testing` | `docker compose down -v`, then `docker compose up -d` and `php artisan migrate` |
+| Open a SQL shell | `docker compose exec pgsql psql -U ism -d ism` |
 
-## Code of Conduct
+`DB_PASSWORD` is read only when the volume is first created; after changing it, recreate the volume.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Start the application with `composer run dev` (server, queue, logs and Vite together) or `php artisan serve`.
 
-## Security Vulnerabilities
+## Checks
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan test          # test suite on in-memory SQLite (fast, default)
+composer test:pgsql       # the same suite on PostgreSQL (database ism_testing)
+vendor/bin/pint --test    # code style
+composer audit            # dependency advisories
+```
 
-## License
+## Troubleshooting
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- `Undefined array key "url"` from Composer: an older global Composer is running under PHP 8.5. Use the Composer installed by php.new (`%USERPROFILE%\.config\herd-lite\bin\composer`) or update Composer.
+- `Unable to locate file in Vite manifest`: run `npm run build`, or keep `npm run dev` running.
+
+## Documentation
+
+| Topic | Where |
+|---|---|
+| Reading order before any implementation | [DOCS/00_START_HERE.md](DOCS/00_START_HERE.md) |
+| Architecture and module map | [DOCS/03_ARCHITECTURE.md](DOCS/03_ARCHITECTURE.md), [DOCS/05_MODULE_MAP.md](DOCS/05_MODULE_MAP.md) |
+| Data design (ERD) | [DOCS/06_DATABASE_GUIDE.md](DOCS/06_DATABASE_GUIDE.md) |
+| Module and Core conventions | [app/Modules/README.md](app/Modules/README.md), [app/Core/README.md](app/Core/README.md) |
+| Branches, commits, reviews | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| What is implemented | [DOCS/PROGRESS.md](DOCS/PROGRESS.md) |

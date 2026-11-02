@@ -1,0 +1,23 @@
+# Local PostgreSQL for development: `docker compose up -d`.
+# Credentials come from the project's .env (DB_DATABASE, DB_USERNAME, DB_PASSWORD).
+services:
+  pgsql:
+    image: postgres:17
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FORWARD_DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: "${DB_DATABASE:-ism}"
+      POSTGRES_USER: "${DB_USERNAME:-ism}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
+    volumes:
+      - ism-pgsql:/var/lib/postgresql/data
+      - ./docker/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "${DB_DATABASE:-ism}", "-U", "${DB_USERNAME:-ism}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ism-pgsql:

@@ -1,9 +1,12 @@
 # ChatbotRag
 
-## Purpose
+Grounded customer assistant, retrieval over approved sources and the authorized admin assistant.
 
-Documentation and implementation details for this module will be added later.
+- Namespace: `App\Modules\ChatbotRag`
+- Jira: EPIC-13 Chatbot / RAG
+- Requirements, business rules and ERD: [DOCS/modules/ChatbotRag/README.md](../../../DOCS/modules/ChatbotRag/README.md)
+- Folder layout and coupling rules: [app/Modules/README.md](../README.md)
 
 ## Status
 
-Folder architecture created. Implementation not started.
+Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
