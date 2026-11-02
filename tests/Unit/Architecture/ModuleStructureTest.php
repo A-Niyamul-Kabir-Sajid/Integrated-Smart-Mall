@@ -54,6 +54,10 @@ class ModuleStructureTest extends TestCase
 
             $source = file_get_contents($file->getPathname());
 
+            if (preg_match('/^(?:(?:final|abstract|readonly)\s+)*(?:class|interface|trait|enum)\s+\w+/m', $source) !== 1) {
+                continue; // Route files and other scripts declare no class and need no namespace.
+            }
+
             $this->assertMatchesRegularExpression(
                 '/^namespace '.preg_quote($expectedNamespace, '/').';$/m',
                 $source,
