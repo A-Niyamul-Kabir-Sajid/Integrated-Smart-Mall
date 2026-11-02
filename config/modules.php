@@ -2,6 +2,7 @@
 
 use App\Modules\AccountsAccess\Providers\AccountsAccessServiceProvider;
 use App\Modules\FavouritesPreferences\Providers\FavouritesPreferencesServiceProvider;
+use App\Modules\MallShopDirectory\Providers\MallShopDirectoryServiceProvider;
 use App\Modules\SharedPlatform\Providers\SharedPlatformServiceProvider;
 
 return [
@@ -21,6 +22,7 @@ return [
     'providers' => [
         'SharedPlatform' => SharedPlatformServiceProvider::class,
         'AccountsAccess' => AccountsAccessServiceProvider::class,
+        'MallShopDirectory' => MallShopDirectoryServiceProvider::class,
         'FavouritesPreferences' => FavouritesPreferencesServiceProvider::class,
     ],
 

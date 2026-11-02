@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* The interface has no dark theme yet: dark: utilities (e.g. in Laravel's pagination view) apply only inside .dark. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 

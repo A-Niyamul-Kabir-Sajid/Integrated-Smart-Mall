@@ -55,6 +55,18 @@ Evidence: full suite on SQLite and PostgreSQL green; role-by-ability matrix test
 
 Known limitations: phone-only accounts have no self-service password reset yet (information desk); email/phone verification flows are not built (fields exist); EPIC-08 ISM-89 overlaps D-010.
 
+## 2026-11-03: EPIC-03 mall and shop directory (ISM-27)
+
+Branches `feature/epic-03-directory-data` and `feature/epic-03-directory-customer`, stories ISM-28 to ISM-37.
+
+- Data layer per ERD domain 02: malls, floors, shop categories (acyclic), shops, units (floor must be in the shop's mall), weekly opening hours (no overlaps, overnight and 24-hour intervals); services with audited lifecycles; Demo City Mall seed (2 floors, 7 categories, 14 shops).
+- Customer pages: mall home, paginated directory with keyword search, category/floor/open-now filters and sorting, shop detail with weekly hours in the mall timezone.
+- `DirectoryLookup` contract for ProductsCatalogue, MapsNavigation and the workspaces.
+
+Evidence: suites on SQLite and PostgreSQL green; opening-hour boundary cases; search escaping; query-count guard (directory and mall home run a constant number of queries); route-protection guard; screenshots of the directory and detail pages.
+
+Review notes: keyword search uses `lower(column) like` and cannot use an index, acceptable at mall scale (tens to hundreds of shops); add a trigram or full-text index if a mall grows far beyond that. The ERD needed no change. FACILITY (washrooms, prayer rooms, exits) is not created yet: it is built with the facility directory stories of EPIC-09 (ISM-92/ISM-93).
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.

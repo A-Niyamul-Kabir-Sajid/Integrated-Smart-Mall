@@ -9,7 +9,7 @@ Malls, floors, shop categories, shops, shop units, opening hours and facilities;
 
 ## Status
 
-Domain reviewed (story 3.1). Data layer follows in stories 3.2 to 3.5, customer pages and contracts in 3.6 to 3.9. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
+Implemented: data layer (3.2 to 3.5), customer directory, search and shop pages (3.6 to 3.8), contracts (3.9). Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
 
 ## Domain
 
@@ -48,4 +48,15 @@ Rules a foreign key cannot express (unit floor in the shop's mall, acyclic categ
 | ShopOwnerOperations, MallOwnerAdmin | Shop profile, units, hours and status changes through this module's services |
 | ParkingFacilities | Facilities and floors |
 
-These needs become the stable lookup contracts of story 3.9.
+Reads go through `Contracts\DirectoryLookup` (bound to `Services\DirectoryLookupService`):
+
+| Method | Promise | Used by |
+|---|---|---|
+| `activeMallBySlug(slug)` | Active malls only; null otherwise | All public pages |
+| `shop(id)` | Any status | ShopOwnerOperations, MallOwnerAdmin |
+| `isShopOperational(id)` | True only for active shops | ProductsCatalogue (who may sell) |
+| `listedShopIds(mallId)` | Active and closed shops of the mall | ProductsCatalogue (public search scope) |
+| `floorsOf(mallId)` | Active floors in display order | MapsNavigation |
+| `locationsOf(shopId)` | Non-archived units with their floor loaded | MapsNavigation (entrances) |
+
+Writes go through `ShopService`, `MallService` and `FloorService`. `ShopStatusChanged` is dispatched after commit whenever a shop changes status.

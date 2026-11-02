@@ -1,11 +1,11 @@
-@props(['title' => null])
+@props(['title' => null, 'mall' => null])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ? $title.' · ' : '' }}{{ config('app.name') }}</title>
+    <title>{{ $title ? $title.' · ' : '' }}{{ $mall?->name ?? config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-dvh bg-slate-50 font-sans text-slate-900 antialiased">
@@ -15,10 +15,16 @@
 
     <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-            <a href="{{ url('/') }}" class="flex items-center gap-2 font-semibold">
+            <a href="{{ $mall ? route('malls.show', ['publicMall' => $mall->slug]) : route('home') }}" class="flex items-center gap-2 font-semibold">
                 <span class="grid size-8 place-items-center rounded-lg bg-brand-600 text-sm font-bold text-white" aria-hidden="true">32</span>
-                <span>{{ config('app.name') }}</span>
+                <span>{{ $mall?->name ?? config('app.name') }}</span>
             </a>
+
+            @if ($mall)
+                <nav class="hidden items-center gap-1 text-sm sm:flex" aria-label="{{ __('Main') }}">
+                    <x-nav-link :href="route('shops.index', ['publicMall' => $mall->slug])" :active="request()->routeIs('shops.*')">{{ __('Shops') }}</x-nav-link>
+                </nav>
+            @endif
 
             <div class="ml-auto flex items-center gap-2 text-sm">
                 <form method="POST" action="{{ route('locale.update') }}" class="flex rounded-lg border border-slate-200 p-0.5" aria-label="{{ __('Language') }}">
