@@ -2,54 +2,8 @@
 
 Before implementation, read [DOCS/00_START_HERE.md](DOCS/00_START_HERE.md), follow its reading order, and open `DOCS/modules/<ExactAppModuleName>/README.md`. Check `DOCS/CONFLICTS.md` before changing affected architecture or data ownership. `DOCS/references/` preserves source specifications; `DOCS/archive/` contains historical templates, not current implementation instructions. Follow the latest explicit user scope, including documentation-only or no-package tasks.
 
-# Project documentation
+Setup, database and check commands: [README.md](README.md). Branch and commit conventions: [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Before implementation, read [DOCS/00_START_HERE.md](DOCS/00_START_HERE.md), follow its reading order, and open `DOCS/modules/<ExactAppModuleName>/README.md`. Check `DOCS/CONFLICTS.md` before changing affected architecture or data ownership. `DOCS/references/` preserves source specifications; `DOCS/archive/` contains historical templates, not current implementation instructions. Follow the latest explicit user scope, including documentation-only or no-package tasks.
+# Laravel guidelines
 
-<laravel-boost-guidelines>
-# Laravel Application
-
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
-
-## Prerequisites
-
-Verify that PHP and Composer are available:
-
-```sh
-php -v
-composer -V
-```
-
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
-
-macOS:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+Laravel Boost is installed as a dev dependency. Its framework guidelines and skills are generated into `CLAUDE.md` and `.claude/skills`; follow them as well. To generate the same guidelines for another agent, run `php artisan boost:install` and select it.
