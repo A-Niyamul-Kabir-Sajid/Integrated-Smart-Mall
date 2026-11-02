@@ -25,6 +25,22 @@ Evidence: `php artisan test` 25 passed (SQLite); `composer test:pgsql` 25 passed
 
 Known structural issues: module service providers and route loading are not implemented yet (EPIC-01 story 1.1); `validate_docs.py` reports a preserved-source hash mismatch for `archive/project-guide/legacy-inventory/CURRENT_DIRECTORY_INVENTORY.txt` that already exists on `main` (line-ending normalisation), left for a team decision.
 
+## 2026-11-03: EPIC-01 shared platform foundation (ISM-9)
+
+Branch `feature/epic-01-shared-platform`, stories ISM-10 to ISM-16.
+
+- Module bootstrapping: `ModuleServiceProvider` base (routes, `$listen` listeners) and the `config/modules.php` manifest; discovery tests.
+- Contracts and dependency rules: `DOCS/11_MODULE_CONTRACTS.md` with architecture tests for the HTTP-layer and orchestrator rules.
+- Security baseline: security headers, named rate limiters, password and Eloquent strictness defaults, production guards; conventions in `08_SECURITY.md`.
+- Events: listener registration per module and an after-commit example flow.
+- Notifications: `notifications` table, type enum, preferences contract, SMS adapter boundary, `SystemNotice`.
+- Logging and audit: request ids on every request and log line; append-only `audit_logs` with `AuditLogger`.
+- Testing: layout and database strategy, `composer ci`, GitHub Actions on SQLite and PostgreSQL, Definition of Done.
+
+Evidence: `composer ci` passed (Pint clean, 70 tests on SQLite); `composer test:pgsql` passed (70 tests on PostgreSQL 17).
+
+Decisions applied (approved by the user, to be recorded in DECISIONS.md with EPIC-02): the `notifications` and `audit_logs` tables are SharedPlatform additions outside the ERD; notifiable and actor ids are strings so they hold the UUID account keys planned for APP_USER.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
