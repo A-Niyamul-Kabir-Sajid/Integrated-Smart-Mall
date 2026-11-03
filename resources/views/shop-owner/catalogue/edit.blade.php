@@ -44,7 +44,10 @@
                             </select>
                         </div>
                     </div>
-                    <textarea name="description" rows="3" maxlength="2000" aria-label="{{ __('Description') }}" class="w-full rounded-lg px-3 py-2 ring-1 ring-slate-300 focus:ring-2 focus:ring-brand-500">{{ old('description', $product->description) }}</textarea>
+                    <div>
+                        <label for="description" class="block text-sm font-medium">{{ __('Description') }}</label>
+                        <textarea id="description" name="description" rows="3" maxlength="2000" class="mt-1 w-full rounded-lg px-3 py-2 ring-1 ring-slate-300 focus:ring-2 focus:ring-brand-500">{{ old('description', $product->description) }}</textarea>
+                    </div>
                     <button type="submit" class="rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">{{ __('Save product details') }}</button>
                 </form>
 
