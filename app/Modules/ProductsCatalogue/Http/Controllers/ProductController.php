@@ -57,6 +57,11 @@ class ProductController extends Controller
         $ids = $request->validate([
             'listings' => ['required', 'array', 'min:1', 'max:'.self::MAX_COMPARED],
             'listings.*' => ['uuid'],
+        ], [
+            'listings.required' => __('Tick at least one shop to compare.'),
+            'listings.min' => __('Tick at least one shop to compare.'),
+            'listings.max' => __('You can compare up to :max offers at a time.'),
+            'listings.*.uuid' => __('That offer could not be found.'),
         ])['listings'];
 
         return view('customer.products.compare', [

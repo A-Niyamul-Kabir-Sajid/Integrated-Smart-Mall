@@ -101,6 +101,29 @@ class CustomerProductPagesTest extends TestCase
         $this->get($url.'?'.http_build_query(['listings' => ['nope']]))->assertSessionHasErrors('listings.0');
     }
 
+    public function test_comparing_nothing_returns_to_the_product_page_with_a_message(): void
+    {
+        $this->from($this->productUrl($this->water->getKey()))
+            ->followingRedirects()
+            ->get(route('products.compare', ['publicMall' => $this->mall->slug]))
+            ->assertOk()
+            ->assertSee('Sold by 2 shops')
+            ->assertSee('Tick at least one shop to compare.');
+    }
+
+    public function test_comparing_too_many_offers_explains_the_limit_and_keeps_the_ticks(): void
+    {
+        $url = route('products.compare', ['publicMall' => $this->mall->slug]).'?'.http_build_query(['listings' => array_fill(0, 5, $this->cheap->getKey())]);
+
+        $this->from($this->productUrl($this->water->getKey()))
+            ->followingRedirects()
+            ->get($url)
+            ->assertOk()
+            ->assertSee('You can compare up to 4 offers at a time.')
+            ->assertSee('value="'.$this->cheap->getKey().'" checked', false)
+            ->assertDontSee('value="'.$this->dear->getKey().'" checked', false);
+    }
+
     public function test_navigation_and_shop_pages_lead_to_products(): void
     {
         $this->get(route('shops.show', ['publicMall' => $this->mall->slug, 'publicShop' => 'fresh-mart']))

@@ -131,7 +131,9 @@ class CatalogueWorkspaceTest extends TestCase
         $listing = ShopProduct::factory()->for($this->shop)->create();
         $product = $listing->variant->product;
 
-        $this->actingAs($this->staff)->get(route('workspace.catalogue.edit', [$this->shop, $listing]))->assertSee('Save product details');
+        $this->actingAs($this->staff)->get(route('workspace.catalogue.edit', [$this->shop, $listing]))
+            ->assertSee('Save product details')
+            ->assertSee('<label for="description"', false);
         $this->actingAs($this->staff)
             ->put(route('workspace.catalogue.product.update', [$this->shop, $listing]), ['name' => 'Better Name', 'product_category_id' => $product->product_category_id])
             ->assertRedirect();

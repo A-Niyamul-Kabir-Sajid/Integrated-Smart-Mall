@@ -22,11 +22,13 @@
                 <h2 class="text-lg font-semibold">{{ trans_choice('Sold by :count shop|Sold by :count shops', $offers->pluck('shop_id')->unique()->count(), ['count' => $offers->pluck('shop_id')->unique()->count()]) }}</h2>
                 <button type="submit" class="rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">{{ __('Compare selected (up to 4)') }}</button>
             </div>
+            @error('listings') <p class="mt-3 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{{ $message }}</p> @enderror
+            @error('listings.*') <p class="mt-3 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{{ $message }}</p> @enderror
             <ul class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
                 @foreach ($offers as $offer)
                     @php($unit = $offer->shop->units->where('status', '!=', 'archived')->first())
                     <li class="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
-                        <input type="checkbox" name="listings[]" value="{{ $offer->shop_product_id }}" class="size-4 accent-brand-600" aria-label="{{ __('Compare :shop', ['shop' => $offer->shop->name]) }}">
+                        <input type="checkbox" name="listings[]" value="{{ $offer->shop_product_id }}" @checked(in_array($offer->shop_product_id, (array) old('listings', []), true)) class="size-4 accent-brand-600" aria-label="{{ __('Compare :shop', ['shop' => $offer->shop->name]) }}">
                         <div class="min-w-40 flex-1">
                             <a href="{{ route('shops.show', ['publicMall' => $mall->slug, 'publicShop' => $offer->shop->slug]) }}" class="font-medium text-brand-700 hover:underline">{{ $offer->shop->name }}</a>
                             <p class="text-xs text-slate-500">{{ $offer->variant->label }}@if ($unit) · {{ __($unit->floor->name) }} · {{ $unit->unit_code }}@endif</p>
