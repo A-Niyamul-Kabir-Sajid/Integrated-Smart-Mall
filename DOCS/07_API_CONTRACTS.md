@@ -15,3 +15,5 @@ For every new service/API contract record:
 Priority flows: directory -> navigation destination; shop operation -> recorded purchase -> token redemption -> review evidence; catalogue/reviews -> customer assistant; domain records -> analytics; admin command -> validated map publication.
 
 Do not infer event execution order from a list of listeners. Required atomic behavior belongs in a defined transaction; independent reactions can use Laravel events/jobs with deliberate after-commit behavior.
+
+Naming, DTO and event conventions plus the allowed cross-module dependencies are defined in [module contracts and dependency rules](11_MODULE_CONTRACTS.md).

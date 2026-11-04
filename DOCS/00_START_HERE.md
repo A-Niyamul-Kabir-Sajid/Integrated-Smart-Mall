@@ -29,7 +29,7 @@ The reference ERD is a **proposed logical baseline**, not an implemented or full
 | What should be built first? | [Build order](10_BUILD_ORDER.md) and the Jira backlog (project ISM) |
 | How do I set up and run the project? | [README](../README.md) (requirements, setup, database, checks) |
 | How are branches, commits and reviews done? | [Contributing](../CONTRIBUTING.md) |
-| How is a module laid out and what may it depend on? | [Module conventions](../app/Modules/README.md), each `app/Modules/<Module>/README.md`, [Core boundary](../app/Core/README.md) |
+| How is a module laid out and what may it depend on? | [Module conventions](../app/Modules/README.md), [module contracts and dependency rules](11_MODULE_CONTRACTS.md), each `app/Modules/<Module>/README.md`, [Core boundary](../app/Core/README.md) |
 | Where is the detailed data design? | [ERD package](references/erd/README.md) via the [database guide](06_DATABASE_GUIDE.md) |
 | Why was a document moved? | [Reorganization audit](maintenance/REORGANIZATION.md) |
 

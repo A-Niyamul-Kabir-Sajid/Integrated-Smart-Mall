@@ -67,6 +67,11 @@
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
+        "ci": [
+            "@php vendor/bin/pint --test",
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ],
         "test:pgsql": [
             "@php artisan config:clear --ansi",
             "@putenv DB_CONNECTION=pgsql",
