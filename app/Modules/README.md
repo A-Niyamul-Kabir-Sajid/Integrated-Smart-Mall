@@ -12,7 +12,9 @@ Create a folder only when the module needs it.
 
 ```text
 app/Modules/<Module>/
+  Adapters/           Implementations of contracts that talk to external systems
   Contracts/          Interfaces other modules may depend on
+  Enums/              Backed enums for this module's fixed value sets
   Events/             Domain events this module dispatches (past tense: ShopStatusChanged)
   Http/Controllers/   Thin controllers: validate, authorize, call a service, return a response
   Http/Middleware/    Middleware specific to this module
@@ -21,7 +23,7 @@ app/Modules/<Module>/
   Models/             Eloquent models for the tables this module owns
   Notifications/      Notifications sent by this module
   Policies/           Authorization policies for this module's models
-  Providers/          The module's service provider (route loading, bindings, listeners)
+  Providers/          The module service provider, listed in config/modules.php
   Routes/             web.php / api.php for this module's endpoints
   Services/           Business workflows
   README.md           Ownership summary and status
@@ -36,6 +38,15 @@ Kept at the Laravel defaults rather than inside modules:
 | Views | `resources/views/<area>` (`customer`, `shop-owner`, `mall-admin`, shared `components`) |
 | Tests | `tests/Feature/Modules/<Module>`, `tests/Unit/...` |
 | Generic technical code | `app/Core` (no domain rules) |
+
+## Registering a module
+
+1. Create `app/Modules/<Module>/Providers/<Module>ServiceProvider.php` extending `App\Core\Modules\ModuleServiceProvider`.
+2. Add it to `config/modules.php`. `App\Core\Modules\ModulesServiceProvider` registers every listed provider.
+3. Put routes in `Routes/web.php` (loaded with the `web` middleware group) or `Routes/api.php` (loaded under `/api` with the `api` group). The base provider loads them; do not register route files elsewhere.
+4. Register container bindings in the provider's `register()`; listeners, policies and route model bindings in `boot()` after calling `parent::boot()`.
+
+The discovery tests fail when a provider exists without a manifest entry or a manifest entry points at a missing module.
 
 ## Coupling rules
 

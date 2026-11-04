@@ -25,6 +25,61 @@ Evidence: `php artisan test` 25 passed (SQLite); `composer test:pgsql` 25 passed
 
 Known structural issues: module service providers and route loading are not implemented yet (EPIC-01 story 1.1); `validate_docs.py` reports a preserved-source hash mismatch for `archive/project-guide/legacy-inventory/CURRENT_DIRECTORY_INVENTORY.txt` that already exists on `main` (line-ending normalisation), left for a team decision.
 
+## 2026-11-03: EPIC-01 shared platform foundation (ISM-9)
+
+Branch `feature/epic-01-shared-platform`, stories ISM-10 to ISM-16.
+
+- Module bootstrapping: `ModuleServiceProvider` base (routes, `$listen` listeners) and the `config/modules.php` manifest; discovery tests.
+- Contracts and dependency rules: `DOCS/11_MODULE_CONTRACTS.md` with architecture tests for the HTTP-layer and orchestrator rules.
+- Security baseline: security headers, named rate limiters, password and Eloquent strictness defaults, production guards; conventions in `08_SECURITY.md`.
+- Events: listener registration per module and an after-commit example flow.
+- Notifications: `notifications` table, type enum, preferences contract, SMS adapter boundary, `SystemNotice`.
+- Logging and audit: request ids on every request and log line; append-only `audit_logs` with `AuditLogger`.
+- Testing: layout and database strategy, `composer ci`, GitHub Actions on SQLite and PostgreSQL, Definition of Done.
+
+Evidence: `composer ci` passed (Pint clean, 70 tests on SQLite); `composer test:pgsql` passed (70 tests on PostgreSQL 17).
+
+Decisions applied (approved by the user, to be recorded in DECISIONS.md with EPIC-02): the `notifications` and `audit_logs` tables are SharedPlatform additions outside the ERD; notifiable and actor ids are strings so they hold the UUID account keys planned for APP_USER.
+
+## 2026-11-03: EPIC-02 accounts and access (ISM-17)
+
+Branches `feature/epic-02-accounts-core` and `feature/epic-02-access-control`, stories ISM-18 to ISM-26.
+
+- Identity (D-008): `users` is the physical APP_USER with UUID keys, normalised email/phone and `password_hash`; Laravel database sessions replace AUTH_SESSION.
+- Roles and memberships per the ERD; four abilities (`administer-platform`, `administer-mall`, `manage-shop`, `work-in-shop`) defined as gates; deactivated accounts are signed out.
+- Registration, sign-in/out with email or mobile, own profile, password change and email reset with session invalidation and throttles.
+- Preferences (D-010) in FavouritesPreferences: language (EN/BN switch), usual mall, route mode, AR, notification switches feeding the notification channels.
+- Demo accounts per role (`DemoAccountsSeeder`).
+
+Evidence: full suite on SQLite and PostgreSQL green; role-by-ability matrix test; route-protection guard test; screenshots of registration and sign-in checked.
+
+Known limitations: phone-only accounts have no self-service password reset yet (information desk); email/phone verification flows are not built (fields exist); EPIC-08 ISM-89 overlaps D-010.
+
+## 2026-11-03: EPIC-03 mall and shop directory (ISM-27)
+
+Branches `feature/epic-03-directory-data` and `feature/epic-03-directory-customer`, stories ISM-28 to ISM-37.
+
+- Data layer per ERD domain 02: malls, floors, shop categories (acyclic), shops, units (floor must be in the shop's mall), weekly opening hours (no overlaps, overnight and 24-hour intervals); services with audited lifecycles; Demo City Mall seed (2 floors, 7 categories, 14 shops).
+- Customer pages: mall home, paginated directory with keyword search, category/floor/open-now filters and sorting, shop detail with weekly hours in the mall timezone.
+- `DirectoryLookup` contract for ProductsCatalogue, MapsNavigation and the workspaces.
+
+Evidence: suites on SQLite and PostgreSQL green; opening-hour boundary cases; search escaping; query-count guard (directory and mall home run a constant number of queries); route-protection guard; screenshots of the directory and detail pages.
+
+Review notes: keyword search uses `lower(column) like` and cannot use an index, acceptable at mall scale (tens to hundreds of shops); add a trigram or full-text index if a mall grows far beyond that. The ERD needed no change. FACILITY (washrooms, prayer rooms, exits) is not created yet: it is built with the facility directory stories of EPIC-09 (ISM-92/ISM-93).
+
+## 2026-11-03: EPIC-04 products catalogue (ISM-38)
+
+Branch `feature/epic-04-products-catalogue`, stories ISM-48, ISM-51 and ISM-54.
+
+- Decision D-011 resolves C-06: shared products and variants, shop-owned listings, shared details editable by the sole lister or the mall administrator.
+- Data layer per ERD domain 03 (categories, products, variants, images, listings; PostgreSQL price check) and a demo catalogue of 19 products across the demo shops.
+- Shop workspace (`work-in-shop`): add, edit, archive and restore listings, shared details and photos as sole lister, CSV import with row-level preview and all-or-nothing commit.
+- Customer pages: product search (keyword, category, shop, price range, in stock, sort), product offers across shops, comparison of up to four offers; `CatalogueLookup` contract for favourites, navigation and the assistant.
+
+Evidence: suites on SQLite and PostgreSQL green; cross-shop 403/404 tests; import error and token tests; visibility tests (archived, closed or draft shops, other malls); screenshot of a product page with four offers.
+
+Limitations: no inventory ledger (availability is owner-maintained); mall-administrator curation of shared products has no screen yet (EPIC-11); images use the public disk without resizing; workspace pages are English only.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
