@@ -4,7 +4,7 @@
 
 Trusted purchase evidence, credentials and redemption. Source folder: [app/Modules/PurchaseVerification](../../../app/Modules/PurchaseVerification/).
 
-Status: folder architecture only; this page routes to existing requirements, not implemented APIs.
+Status: service layer implemented (EPIC-06): purchase records, credential lifecycle and redemption. See the [module README](../../../app/Modules/PurchaseVerification/README.md) for what exists and its limits; screens and routes come with EPIC-07 and EPIC-10.
 
 ## Read before implementation
 

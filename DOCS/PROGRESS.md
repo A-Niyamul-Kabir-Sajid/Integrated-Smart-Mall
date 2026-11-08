@@ -80,6 +80,18 @@ Evidence: suites on SQLite and PostgreSQL green; cross-shop 403/404 tests; impor
 
 Limitations: no inventory ledger (availability is owner-maintained); mall-administrator curation of shared products has no screen yet (EPIC-11); images use the public disk without resizing; workspace pages are English only.
 
+## 2026-11-08: EPIC-06 purchase verification (ISM-40)
+
+Branch `feature/epic-06-purchase-verification`, stories ISM-66, ISM-68 and ISM-71 (one commit per story).
+
+- ISM-66 purchase records: `purchases` and `purchase_items` (ERD domain 05) with `PurchaseService`. Authorised shop staff (`work-in-shop`) record completed sales; the service computes amounts, validates a supplied total, snapshots product labels and prices, and keeps header and lines in one transaction. Recorded sales and lines are immutable (only completed to voided or refunded is allowed); lists are scoped per shop for staff and per buyer for customers.
+- ISM-68 credentials: `verification_tokens` with `VerificationCredentialService` and `CredentialSecrets`. One credential per purchase line from 256 random bits; only the SHA-256 digest is stored; 90 day default expiry (at most one year); reissue rotates the secret; revoke; all audited. The raw secret is returned once and kept out of serialisation, dumps, logs and audit metadata.
+- ISM-71 redemption: `token_redemptions` (primary key is the token id) and the `PurchaseVerifier` contract (`checkEligibility`, `redeem`) bound in the new `PurchaseVerificationServiceProvider`. Enforces buyer ownership, listing scope, expiry, revocation, completed sale and replay; unknown, malformed and foreign secrets are indistinguishable.
+
+Evidence: `php artisan test` 375 tests (373 passed, 2 skipped, none failed) on SQLite after Pint; 46 new tests in `tests/Feature/Modules/PurchaseVerification` cover authorisation, scoping, immutability, secret leakage and the lost-race path.
+
+Limitations: the PostgreSQL run (`composer test:pgsql`) was not done because Docker was not running, so the PostgreSQL CHECK constraints (non-negative totals, line arithmetic, expiry after issue) are written but unverified; true parallel redemption needs the PostgreSQL run (the lock plus the primary key are the guards, and the single-connection test only simulates the lost race). No routes or screens yet (EPIC-07, EPIC-10); no redemption rate limiter until the HTTP entry point exists; refunds are a status change only (C-02); only product-listing reviews can be verified (C-03).
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
