@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use LogicException;
 
 /**
@@ -55,6 +56,14 @@ class VerificationToken extends Model
     public function issuer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'issued_by_user_id');
+    }
+
+    /**
+     * @return HasOne<TokenRedemption, $this>
+     */
+    public function redemption(): HasOne
+    {
+        return $this->hasOne(TokenRedemption::class, 'verification_token_id');
     }
 
     public function isRevoked(): bool

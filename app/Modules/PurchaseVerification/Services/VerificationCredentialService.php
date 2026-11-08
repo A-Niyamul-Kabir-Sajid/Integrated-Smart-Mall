@@ -7,6 +7,7 @@ use App\Modules\AccountsAccess\Models\User;
 use App\Modules\PurchaseVerification\DTOs\IssuedCredentialData;
 use App\Modules\PurchaseVerification\Enums\PurchaseStatus;
 use App\Modules\PurchaseVerification\Models\PurchaseItem;
+use App\Modules\PurchaseVerification\Models\TokenRedemption;
 use App\Modules\PurchaseVerification\Models\VerificationToken;
 use App\Modules\SharedPlatform\Enums\Ability;
 use App\Modules\SharedPlatform\Services\AuditLogger;
@@ -74,7 +75,7 @@ class VerificationCredentialService
     }
 
     /**
-     * Replaces the secret of a credential. The old secret stops
+     * Replaces the secret of a credential that has not been redeemed. The old secret stops
      * working immediately, the expiry restarts, and a revoked credential becomes usable again.
      */
     public function reissueCredential(User $issuer, VerificationToken $token, ?CarbonInterface $expiresAt = null): IssuedCredentialData
@@ -90,6 +91,8 @@ class VerificationCredentialService
 
         DB::transaction(function () use ($token, $issuer, $secret, $expiry): void {
             $locked = VerificationToken::query()->lockForUpdate()->findOrFail($token->getKey());
+            $this->ensureNotRedeemed($locked);
+
             $locked->forceFill([
                 'token_digest' => $this->secrets->digest($secret),
                 'issued_by_user_id' => $issuer->getKey(),
@@ -110,7 +113,7 @@ class VerificationCredentialService
     }
 
     /**
-     * Invalidates a credential. Revoking twice changes nothing.
+     * Invalidates a credential that has not been redeemed. Revoking twice changes nothing.
      */
     public function revokeCredential(User $actor, VerificationToken $token): VerificationToken
     {
@@ -121,6 +124,7 @@ class VerificationCredentialService
 
         DB::transaction(function () use ($token, &$revoked): void {
             $locked = VerificationToken::query()->lockForUpdate()->findOrFail($token->getKey());
+            $this->ensureNotRedeemed($locked);
 
             if ($locked->revoked_at === null) {
                 $locked->forceFill(['revoked_at' => now()])->save();
@@ -140,6 +144,16 @@ class VerificationCredentialService
     {
         if ($status !== PurchaseStatus::Completed) {
             throw new BusinessRuleViolation('verification.purchase_not_completed', __('Credentials are only issued for completed sales.'));
+        }
+    }
+
+    /**
+     * A redeemed credential is spent: it backs a verified review, so its secret can no longer be replaced or revoked.
+     */
+    private function ensureNotRedeemed(VerificationToken $token): void
+    {
+        if (TokenRedemption::query()->whereKey($token->getKey())->exists()) {
+            throw new BusinessRuleViolation('verification.already_redeemed', __('This credential was already redeemed and can no longer be changed.'));
         }
     }
 
