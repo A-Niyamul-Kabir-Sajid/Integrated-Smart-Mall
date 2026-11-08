@@ -32,7 +32,8 @@ APP_USER 0..1──* PURCHASE (buyer)        SHOP_PRODUCT 1──* PURCHASE_ITEM
 | `Services\PurchaseService` | Staff (`work-in-shop`) record a completed sale; amounts are computed and checked server-side, void or refund a sale, list a shop's sales (staff only) and a customer's own purchases |
 | `Services\VerificationCredentialService` | Issue one credential per line of a completed sale (default 90 days, at most one year), reissue (rotates the secret, restarts expiry, reactivates a revoked credential), revoke. The raw secret is returned once in `DTOs\IssuedCredentialData` and is never stored, logged or audited |
 | `Services\CredentialSecrets` | Generates `ismv_` + 43 URL-safe characters from `random_bytes(32)`; digests and format check |
-| `Contracts\PurchaseVerifier` → `Services\TokenVerificationService` | `checkEligibility()` (does not consume) and `redeem()` (atomic, once) for ReviewsModeration |
+| `Contracts\PurchaseVerifier` → `Services\TokenVerificationService` | `checkEligibility()` (does not consume), `redeem()` (atomic, once) and `redeemedTokenIdsForPurchase()` for ReviewsModeration |
+| `Events\PurchaseStatusChanged` | Dispatched after a sale is voided or refunded; ReviewsModeration revokes the verified badge of the reviews it backed |
 
 ### Verification rules (ISM-71)
 
@@ -60,7 +61,7 @@ $result = app(PurchaseVerifier::class)->redeem($user->getKey(), $secretFromForm,
 
 ## Limitations
 
-- No routes, screens, notifications or events yet; services are called by the workspace and review modules when they are built.
+- No routes or screens yet: the review module redeems credentials through the contract (EPIC-07); shop staff will record sales and print credentials from the workspace (EPIC-10).
 - Orders, reservations, returns and rewards stay out of scope (C-02). Refunds are a status change only: no partial refund amounts.
 - Verified shop or mall reviews (C-03) are not supported: a credential verifies one purchased listing.
 - Amounts are single-currency per sale (a sale's lines must share one currency) and use two decimals.
