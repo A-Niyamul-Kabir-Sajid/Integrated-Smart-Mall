@@ -33,4 +33,12 @@ interface PurchaseVerifier
      * @throws BusinessRuleViolation with rule `verification.<failure>` when the credential cannot be claimed
      */
     public function redeem(string $customerId, #[SensitiveParameter] string $secret, ?string $shopProductId = null): VerificationResultData;
+
+    /**
+     * Ids of the credentials of one sale that were already redeemed. A module that bound
+     * such a credential to its own record uses this when the sale is voided or refunded.
+     *
+     * @return list<string>
+     */
+    public function redeemedTokenIdsForPurchase(string $purchaseId): array;
 }

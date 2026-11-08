@@ -8,6 +8,7 @@ use App\Modules\PurchaseVerification\Contracts\PurchaseVerifier;
 use App\Modules\PurchaseVerification\DTOs\VerificationResultData;
 use App\Modules\PurchaseVerification\Enums\PurchaseStatus;
 use App\Modules\PurchaseVerification\Enums\VerificationFailure;
+use App\Modules\PurchaseVerification\Models\PurchaseItem;
 use App\Modules\PurchaseVerification\Models\TokenRedemption;
 use App\Modules\PurchaseVerification\Models\VerificationToken;
 use App\Modules\SharedPlatform\Services\AuditLogger;
@@ -67,6 +68,16 @@ class TokenVerificationService implements PurchaseVerifier
         } catch (UniqueConstraintViolationException) {
             throw $this->violation(VerificationFailure::AlreadyRedeemed);
         }
+    }
+
+    public function redeemedTokenIdsForPurchase(string $purchaseId): array
+    {
+        return TokenRedemption::query()
+            ->whereIn('verification_token_id', VerificationToken::query()
+                ->select('verification_token_id')
+                ->whereIn('purchase_item_id', PurchaseItem::query()->select('purchase_item_id')->where('purchase_id', $purchaseId)))
+            ->pluck('verification_token_id')
+            ->all();
     }
 
     /**

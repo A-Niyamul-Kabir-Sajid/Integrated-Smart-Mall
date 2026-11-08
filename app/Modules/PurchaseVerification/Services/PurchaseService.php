@@ -8,6 +8,7 @@ use App\Modules\MallShopDirectory\Contracts\DirectoryLookup;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use App\Modules\PurchaseVerification\Enums\PurchaseStatus;
+use App\Modules\PurchaseVerification\Events\PurchaseStatusChanged;
 use App\Modules\PurchaseVerification\Models\Purchase;
 use App\Modules\SharedPlatform\Enums\Ability;
 use App\Modules\SharedPlatform\Services\AuditLogger;
@@ -121,6 +122,7 @@ class PurchaseService
         $purchase->update(['status' => $to]);
 
         $this->audit->record('purchase.status_changed', $purchase, ['from' => $from->value, 'to' => $to->value], $shop->mall_id, $shop->getKey());
+        PurchaseStatusChanged::dispatch($purchase->getKey(), $shop->getKey(), $from, $to);
 
         return $purchase;
     }
