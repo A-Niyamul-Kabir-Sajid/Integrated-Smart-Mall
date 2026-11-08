@@ -2,6 +2,7 @@
 
 use App\Modules\ShopOwnerOperations\Http\Controllers\CatalogueController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CatalogueImportController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'can:work-in-shop,shop'])
@@ -20,4 +21,14 @@ Route::middleware(['auth', 'can:work-in-shop,shop'])
         Route::post('/{shopListing}/restore', [CatalogueController::class, 'restore'])->name('restore');
         Route::put('/{shopListing}/product', [CatalogueController::class, 'updateProduct'])->name('product.update');
         Route::post('/{shopListing}/images', [CatalogueController::class, 'storeImage'])->name('images.store');
+    });
+
+Route::middleware(['auth', 'can:work-in-shop,shop'])
+    ->prefix('workspace/shops/{shop}/reviews')
+    ->name('workspace.reviews.')
+    ->group(function (): void {
+        Route::get('/', [ReviewController::class, 'index'])->name('index');
+        Route::post('/{review}/reply', [ReviewController::class, 'reply'])->middleware('throttle:review-submissions')->name('reply');
+        Route::put('/replies/{reply}', [ReviewController::class, 'updateReply'])->name('replies.update');
+        Route::post('/replies/{reply}/hide', [ReviewController::class, 'hideReply'])->name('replies.hide');
     });

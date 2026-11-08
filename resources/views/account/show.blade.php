@@ -38,9 +38,14 @@
                     @foreach ($shopMemberships as $membership)
                         <li class="flex items-center justify-between gap-4 px-5 py-3">
                             <span><span class="font-medium">{{ $membership->shop->name }}</span> <span class="text-sm text-slate-500">· {{ __($membership->role->name) }}</span></span>
-                            @if (Route::has('workspace.catalogue.index'))
-                                <a href="{{ route('workspace.catalogue.index', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Manage catalogue') }}</a>
-                            @endif
+                            <span class="flex gap-4">
+                                @if (Route::has('workspace.reviews.index'))
+                                    <a href="{{ route('workspace.reviews.index', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Reviews') }}</a>
+                                @endif
+                                @if (Route::has('workspace.catalogue.index'))
+                                    <a href="{{ route('workspace.catalogue.index', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Manage catalogue') }}</a>
+                                @endif
+                            </span>
                         </li>
                     @endforeach
                 </ul>
