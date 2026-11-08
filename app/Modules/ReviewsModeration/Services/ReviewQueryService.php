@@ -62,7 +62,7 @@ class ReviewQueryService
     {
         return Review::query()
             ->where('author_user_id', $author->getKey())
-            ->with(['shop:shop_id,mall_id,slug,name', 'listing.variant.product', 'verification', 'replies' => fn ($replies) => $replies->published()])
+            ->with(['author:user_id,display_name', 'shop.mall:mall_id,slug', 'listing.variant.product', 'verification', 'replies' => fn ($replies) => $replies->published()])
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }
