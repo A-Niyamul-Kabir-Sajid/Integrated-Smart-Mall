@@ -323,5 +323,19 @@
     "This purchase code is no longer valid.": "এই ক্রয় কোড আর বৈধ নয়।",
     "This purchase code has already been used.": "এই ক্রয় কোড ইতিমধ্যে ব্যবহার করা হয়েছে।",
     "The purchase behind this code is not completed.": "এই কোডের ক্রয়টি সম্পন্ন নয়।",
-    "Your account cannot use purchase codes.": "আপনার অ্যাকাউন্ট দিয়ে ক্রয় কোড ব্যবহার করা যাবে না।"
+    "Your account cannot use purchase codes.": "আপনার অ্যাকাউন্ট দিয়ে ক্রয় কোড ব্যবহার করা যাবে না।",
+    "Report this review": "এই রিভিউ রিপোর্ট করুন",
+    "What is wrong with it?": "এতে কী সমস্যা?",
+    "Details (optional)": "বিস্তারিত (ঐচ্ছিক)",
+    "Send report": "রিপোর্ট পাঠান",
+    "Spam or advertising": "স্প্যাম বা বিজ্ঞাপন",
+    "Abusive or offensive": "আপত্তিকর বা অপমানজনক",
+    "Conflict of interest": "স্বার্থের সংঘাত",
+    "Something else": "অন্য কিছু",
+    "Thank you. A moderator will look at this review.": "ধন্যবাদ। একজন মডারেটর এই রিভিউটি দেখবেন।",
+    "You cannot report your own review. Withdraw it instead.": "আপনি নিজের রিভিউ রিপোর্ট করতে পারবেন না। বরং এটি তুলে নিন।",
+    "This review is not visible, so it cannot be reported.": "এই রিভিউ দৃশ্যমান নয়, তাই রিপোর্ট করা যাবে না।",
+    "Keep the explanation under :max characters.": "ব্যাখ্যা :max অক্ষরের মধ্যে রাখুন।",
+    "Please tell us what is wrong with this review.": "এই রিভিউয়ে কী সমস্যা তা অনুগ্রহ করে জানান।",
+    "You already reported this review. A moderator will look at it.": "আপনি ইতিমধ্যে এই রিভিউ রিপোর্ট করেছেন। একজন মডারেটর এটি দেখবেন।"
 }

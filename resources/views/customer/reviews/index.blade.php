@@ -16,6 +16,11 @@
             <h1 class="text-2xl font-semibold">{{ $targetName }}</h1>
         </header>
 
+        @if ($errors->has('business'))
+            <p class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{{ $errors->first('business') }}</p>
+        @endif
+        @error('reason_code') <p class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{{ $message }}</p> @enderror
+
         <section class="mt-6 rounded-xl border border-slate-200 bg-white p-6" aria-label="{{ __('Rating summary') }}">
             <x-rating-summary :summary="$summary" />
             @unless ($isListing)
@@ -70,7 +75,27 @@
             @else
                 <div class="mt-3 space-y-4">
                     @foreach ($reviews as $review)
-                        <x-review-card :review="$review" :shop-name="$shop->name" />
+                        <x-review-card :review="$review" :shop-name="$shop->name">
+                            @auth
+                                @if ($review->author_user_id !== auth()->id())
+                                    <details class="mt-3 text-sm">
+                                        <summary class="cursor-pointer text-slate-500 hover:text-slate-800">{{ __('Report this review') }}</summary>
+                                        <form method="POST" action="{{ route('reviews.report', $review) }}" class="mt-2 space-y-2">
+                                            @csrf
+                                            <label for="reason-{{ $review->getKey() }}" class="block font-medium">{{ __('What is wrong with it?') }}</label>
+                                            <select id="reason-{{ $review->getKey() }}" name="reason_code" required class="w-full rounded-lg bg-white px-3 py-2 ring-1 ring-slate-300 focus:ring-2 focus:ring-brand-500">
+                                                @foreach ($reasons as $reason)
+                                                    <option value="{{ $reason->value }}">{{ $reason->label() }}</option>
+                                                @endforeach
+                                            </select>
+                                            <label for="details-{{ $review->getKey() }}" class="sr-only">{{ __('Details (optional)') }}</label>
+                                            <textarea id="details-{{ $review->getKey() }}" name="details" rows="2" maxlength="1000" placeholder="{{ __('Details (optional)') }}" class="w-full rounded-lg bg-white px-3 py-2 ring-1 ring-slate-300 focus:ring-2 focus:ring-brand-500"></textarea>
+                                            <button type="submit" class="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50">{{ __('Send report') }}</button>
+                                        </form>
+                                    </details>
+                                @endif
+                            @endauth
+                        </x-review-card>
                     @endforeach
                 </div>
                 <div class="mt-4">{{ $reviews->links() }}</div>

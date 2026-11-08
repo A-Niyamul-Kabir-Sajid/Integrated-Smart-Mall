@@ -31,6 +31,20 @@
             </div>
         </dl>
 
+        @if (isset($moderatedMalls) && $moderatedMalls->isNotEmpty() && Route::has('moderation.index'))
+            <section class="mt-8" aria-labelledby="moderation-heading">
+                <h2 id="moderation-heading" class="text-lg font-semibold">{{ __('Malls you administer') }}</h2>
+                <ul class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+                    @foreach ($moderatedMalls as $mall)
+                        <li class="flex items-center justify-between gap-4 px-5 py-3">
+                            <span class="font-medium">{{ $mall->name }}</span>
+                            <a href="{{ route('moderation.index', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Review moderation') }}</a>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         @if ($shopMemberships->isNotEmpty())
             <section class="mt-8" aria-labelledby="shops-heading">
                 <h2 id="shops-heading" class="text-lg font-semibold">{{ __('Shops you work in') }}</h2>

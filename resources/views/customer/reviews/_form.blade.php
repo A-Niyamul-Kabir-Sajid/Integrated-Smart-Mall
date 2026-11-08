@@ -3,10 +3,6 @@
 <form method="POST" action="{{ $action }}" class="mt-3 space-y-4 rounded-xl border border-slate-200 bg-white p-5">
     @csrf
 
-    @if ($errors->has('business'))
-        <p class="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{{ $errors->first('business') }}</p>
-    @endif
-
     <fieldset>
         <legend class="text-sm font-medium">{{ __('Your rating') }}</legend>
         <div class="mt-1 flex flex-wrap gap-3">

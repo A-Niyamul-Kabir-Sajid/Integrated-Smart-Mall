@@ -9,9 +9,11 @@ use App\Modules\PurchaseVerification\Events\PurchaseStatusChanged;
 use App\Modules\ReviewsModeration\Contracts\ReviewSummaryLookup;
 use App\Modules\ReviewsModeration\Listeners\RevokeVerificationWhenPurchaseEnds;
 use App\Modules\ReviewsModeration\Services\RatingSummaryService;
+use App\Modules\SharedPlatform\Enums\Ability;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route as RoutingRoute;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -69,6 +71,15 @@ class ReviewsModerationServiceProvider extends ModuleServiceProvider
 
             if ($shop !== null) {
                 $view->with('ratingSummary', app(ReviewSummaryLookup::class)->forShop($shop->getKey()));
+            }
+        });
+
+        View::composer('account.show', function (ViewInstance $view): void {
+            $user = auth()->user();
+
+            if ($user !== null) {
+                $view->with('moderatedMalls', Mall::query()->active()->orderBy('name')->limit(20)->get()
+                    ->filter(fn (Mall $mall): bool => Gate::forUser($user)->allows(Ability::AdministerMall->value, $mall))->values());
             }
         });
 
