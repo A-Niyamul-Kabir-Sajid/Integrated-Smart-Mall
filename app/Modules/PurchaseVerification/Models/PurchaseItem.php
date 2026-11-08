@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use LogicException;
 
 /**
@@ -50,6 +51,14 @@ class PurchaseItem extends Model
     public function listing(): BelongsTo
     {
         return $this->belongsTo(ShopProduct::class, 'shop_product_id');
+    }
+
+    /**
+     * @return HasOne<VerificationToken, $this>
+     */
+    public function verificationToken(): HasOne
+    {
+        return $this->hasOne(VerificationToken::class, 'purchase_item_id');
     }
 
     protected function casts(): array
