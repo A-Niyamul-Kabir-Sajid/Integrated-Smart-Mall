@@ -4,6 +4,9 @@
             <h1 class="text-2xl font-semibold">{{ __('Your account') }}</h1>
             <div class="flex gap-2">
                 <a href="{{ route('account.password.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Change password') }}</a>
+                @if (Route::has('account.reviews'))
+                    <a href="{{ route('account.reviews') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Your reviews') }}</a>
+                @endif
                 <a href="{{ route('account.preferences.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Preferences') }}</a>
                 <a href="{{ route('account.profile.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Edit profile') }}</a>
             </div>
@@ -28,6 +31,20 @@
             </div>
         </dl>
 
+        @if (isset($moderatedMalls) && $moderatedMalls->isNotEmpty() && Route::has('moderation.index'))
+            <section class="mt-8" aria-labelledby="moderation-heading">
+                <h2 id="moderation-heading" class="text-lg font-semibold">{{ __('Malls you administer') }}</h2>
+                <ul class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+                    @foreach ($moderatedMalls as $mall)
+                        <li class="flex items-center justify-between gap-4 px-5 py-3">
+                            <span class="font-medium">{{ $mall->name }}</span>
+                            <a href="{{ route('moderation.index', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Review moderation') }}</a>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         @if ($shopMemberships->isNotEmpty())
             <section class="mt-8" aria-labelledby="shops-heading">
                 <h2 id="shops-heading" class="text-lg font-semibold">{{ __('Shops you work in') }}</h2>
@@ -35,9 +52,14 @@
                     @foreach ($shopMemberships as $membership)
                         <li class="flex items-center justify-between gap-4 px-5 py-3">
                             <span><span class="font-medium">{{ $membership->shop->name }}</span> <span class="text-sm text-slate-500">· {{ __($membership->role->name) }}</span></span>
-                            @if (Route::has('workspace.catalogue.index'))
-                                <a href="{{ route('workspace.catalogue.index', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Manage catalogue') }}</a>
-                            @endif
+                            <span class="flex gap-4">
+                                @if (Route::has('workspace.reviews.index'))
+                                    <a href="{{ route('workspace.reviews.index', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Reviews') }}</a>
+                                @endif
+                                @if (Route::has('workspace.catalogue.index'))
+                                    <a href="{{ route('workspace.catalogue.index', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Manage catalogue') }}</a>
+                                @endif
+                            </span>
                         </li>
                     @endforeach
                 </ul>

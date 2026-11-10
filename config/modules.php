@@ -4,6 +4,8 @@ use App\Modules\AccountsAccess\Providers\AccountsAccessServiceProvider;
 use App\Modules\FavouritesPreferences\Providers\FavouritesPreferencesServiceProvider;
 use App\Modules\MallShopDirectory\Providers\MallShopDirectoryServiceProvider;
 use App\Modules\ProductsCatalogue\Providers\ProductsCatalogueServiceProvider;
+use App\Modules\PurchaseVerification\Providers\PurchaseVerificationServiceProvider;
+use App\Modules\ReviewsModeration\Providers\ReviewsModerationServiceProvider;
 use App\Modules\SharedPlatform\Providers\SharedPlatformServiceProvider;
 use App\Modules\ShopOwnerOperations\Providers\ShopOwnerOperationsServiceProvider;
 
@@ -26,6 +28,8 @@ return [
         'AccountsAccess' => AccountsAccessServiceProvider::class,
         'MallShopDirectory' => MallShopDirectoryServiceProvider::class,
         'ProductsCatalogue' => ProductsCatalogueServiceProvider::class,
+        'PurchaseVerification' => PurchaseVerificationServiceProvider::class,
+        'ReviewsModeration' => ReviewsModerationServiceProvider::class,
         'ShopOwnerOperations' => ShopOwnerOperationsServiceProvider::class,
         'FavouritesPreferences' => FavouritesPreferencesServiceProvider::class,
     ],

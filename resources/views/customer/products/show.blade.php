@@ -33,6 +33,13 @@
                             <a href="{{ route('shops.show', ['publicMall' => $mall->slug, 'publicShop' => $offer->shop->slug]) }}" class="font-medium text-brand-700 hover:underline">{{ $offer->shop->name }}</a>
                             <p class="text-xs text-slate-500">{{ $offer->variant->label }}@if ($unit) · {{ __($unit->floor->name) }} · {{ $unit->unit_code }}@endif</p>
                         </div>
+                        @if (isset($listingRatings[$offer->shop_product_id]))
+                            @php($rating = $listingRatings[$offer->shop_product_id])
+                            <a href="{{ route('listings.reviews.index', ['publicMall' => $mall->slug, 'publicListing' => $offer->shop_product_id]) }}" class="flex items-center gap-1 text-xs text-slate-600 hover:underline">
+                                <x-rating-stars :rating="$rating->averageRating" />
+                                <span>{{ $rating->reviewCount > 0 ? '('.$rating->reviewCount.')' : __('Reviews') }}</span>
+                            </a>
+                        @endif
                         <span @class([
                             'rounded-full px-2 py-0.5 text-xs font-medium',
                             'bg-emerald-50 text-emerald-700' => $offer->availability_status === 'available',

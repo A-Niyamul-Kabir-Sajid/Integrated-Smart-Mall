@@ -6,6 +6,9 @@
                 <h1 class="text-2xl font-semibold">{{ $shop->name }} · {{ __('Catalogue') }}</h1>
             </div>
             <div class="flex gap-2">
+                @if (Route::has('workspace.reviews.index'))
+                    <a href="{{ route('workspace.reviews.index', $shop) }}" class="rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-50">{{ __('Reviews') }}</a>
+                @endif
                 @if (Route::has('workspace.catalogue.import.create'))
                     <a href="{{ route('workspace.catalogue.import.create', $shop) }}" class="rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-50">{{ __('Import CSV') }}</a>
                 @endif

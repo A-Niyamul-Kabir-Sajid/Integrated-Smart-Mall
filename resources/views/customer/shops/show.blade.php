@@ -61,6 +61,16 @@
             </section>
         </div>
 
+        @isset($ratingSummary)
+            <section class="mt-6 rounded-xl border border-slate-200 bg-white p-6" aria-labelledby="reviews-heading" data-integration="reviews">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h2 id="reviews-heading" class="font-semibold">{{ __('Reviews') }}</h2>
+                    <a href="{{ route('shops.reviews.index', ['publicMall' => $mall->slug, 'publicShop' => $shop->slug]) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ $ratingSummary->reviewCount > 0 ? __('Read all reviews') : __('Be the first to review') }}</a>
+                </div>
+                <x-rating-summary :summary="$ratingSummary" class="mt-4" />
+            </section>
+        @endisset
+
         <div class="mt-6 grid gap-6 lg:grid-cols-2">
             <section class="rounded-xl border border-dashed border-slate-300 bg-white p-6" aria-labelledby="products-heading" data-integration="products">
                 <h2 id="products-heading" class="font-semibold">{{ __('Products at this shop') }}</h2>

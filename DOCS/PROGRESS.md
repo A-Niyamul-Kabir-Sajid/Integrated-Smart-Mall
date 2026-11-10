@@ -80,6 +80,32 @@ Evidence: suites on SQLite and PostgreSQL green; cross-shop 403/404 tests; impor
 
 Limitations: no inventory ledger (availability is owner-maintained); mall-administrator curation of shared products has no screen yet (EPIC-11); images use the public disk without resizing; workspace pages are English only.
 
+## 2026-11-08: EPIC-06 purchase verification (ISM-40)
+
+Branch `feature/epic-06-purchase-verification`, stories ISM-66, ISM-68 and ISM-71 (one commit per story).
+
+- ISM-66 purchase records: `purchases` and `purchase_items` (ERD domain 05) with `PurchaseService`. Authorised shop staff (`work-in-shop`) record completed sales; the service computes amounts, validates a supplied total, snapshots product labels and prices, and keeps header and lines in one transaction. Recorded sales and lines are immutable (only completed to voided or refunded is allowed); lists are scoped per shop for staff and per buyer for customers.
+- ISM-68 credentials: `verification_tokens` with `VerificationCredentialService` and `CredentialSecrets`. One credential per purchase line from 256 random bits; only the SHA-256 digest is stored; 90 day default expiry (at most one year); reissue rotates the secret; revoke; all audited. The raw secret is returned once and kept out of serialisation, dumps, logs and audit metadata.
+- ISM-71 redemption: `token_redemptions` (primary key is the token id) and the `PurchaseVerifier` contract (`checkEligibility`, `redeem`) bound in the new `PurchaseVerificationServiceProvider`. Enforces buyer ownership, listing scope, expiry, revocation, completed sale and replay; unknown, malformed and foreign secrets are indistinguishable.
+
+Evidence: `php artisan test` 375 tests (373 passed, 2 skipped, none failed) on SQLite after Pint; 46 new tests in `tests/Feature/Modules/PurchaseVerification` cover authorisation, scoping, immutability, secret leakage and the lost-race path.
+
+Limitations: the PostgreSQL run (`composer test:pgsql`) was not done because Docker was not running, so the PostgreSQL CHECK constraints (non-negative totals, line arithmetic, expiry after issue) are written but unverified; true parallel redemption needs the PostgreSQL run (the lock plus the primary key are the guards, and the single-connection test only simulates the lost race). No routes or screens yet (EPIC-07, EPIC-10); no redemption rate limiter until the HTTP entry point exists; refunds are a status change only (C-02); only product-listing reviews can be verified (C-03).
+
+## 2026-11-08: EPIC-07 reviews and moderation (ISM-41)
+
+Branch `feature/epic-07-reviews-moderation` (built on the EPIC-06 branch), stories ISM-74, ISM-77 and ISM-80 (one or more commits per story).
+
+- ISM-74 data layer: `reviews`, `review_verifications`, `review_replies`, `review_reports` and `moderation_actions` (ERD domain 06) with models, enums and factories. One review per user and target (partial unique indexes), listing must belong to the reviewed shop (composite foreign key), author, target, history and evidence are immutable, and the verified badge is derived from the binding. `ReviewPolicy` holds the edit window and the staff self-review rule; `RatingSummaryService` (contract `ReviewSummaryLookup`) calculates summaries from published reviews only, separately for shops and listings.
+- ISM-77 customer reviews and replies: `ReviewService` (submit, edit in place within 30 days, withdraw, verify), `ReviewReplyService`, `ReviewQueryService`, public review pages with summary and verified filter, `GET /account/reviews`, and the shop review inbox in the workspace. A product review is verified only by redeeming a purchase code through `PurchaseVerifier` in the same transaction; the form and services have no verified input. `PurchaseStatusChanged` (new event in PurchaseVerification) revokes the badge when a sale is voided or refunded. Rating summaries appear on the shop page and product offers through view composers. Bengali strings added for the customer pages.
+- ISM-80 reporting and moderation: `ReviewReportService`, `ModerationService` and the mall moderation desk (`/admin/malls/{mall}/moderation`) with reported and hidden queues and the decisions hide, restore, publish, dismiss and remove the verified badge, each with a written reason and an append-only history entry in the same transaction. Reporters are never shown. Mall administrators reach the desk from their account page.
+
+Evidence: `php artisan test` 459 tests (457 passed, 2 skipped, none failed) on SQLite after Pint; 84 new tests in `tests/Feature/Modules/ReviewsModeration` and `tests/Feature/Modules/ShopOwnerOperations/ReviewWorkspaceTest.php` cover constraints, immutability, aggregate maths, permissions for every role against another shop or mall, forged verified flags, rate limits, reporter privacy and moderation consistency with aggregates.
+
+Decisions taken as defaults (need team confirmation): reviews publish at once; 30 day edit window; shop staff cannot review their own shop; one public reply per review; verification for product-listing reviews only (C-03 unchanged).
+
+Limitations: the PostgreSQL run was not done (Docker was not running), so the rating CHECK constraint and the partial unique indexes were only exercised on SQLite; `npm run build` was not run (no node modules installed here), so new Tailwind classes need a build before they show; no review edit history; shop list cards do not show ratings yet; no notifications for reports or decisions; sentiment analysis not built.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.

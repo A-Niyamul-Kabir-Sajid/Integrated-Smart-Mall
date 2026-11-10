@@ -4,7 +4,7 @@
 
 Reviews, ratings, evidence binding, replies and moderation. Source folder: [app/Modules/ReviewsModeration](../../../app/Modules/ReviewsModeration/).
 
-Status: folder architecture only; this page routes to existing requirements, not implemented APIs.
+Status: implemented (EPIC-07): reviews, rating summaries, shop replies, reports and the mall moderation desk. See the [module README](../../../app/Modules/ReviewsModeration/README.md) for what exists, the policy defaults chosen and the limits.
 
 ## Read before implementation
 
