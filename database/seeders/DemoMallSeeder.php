@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
  */
 class DemoMallSeeder extends Seeder
 {
-    public const MALL_SLUG = 'demo-city-mall';
+    public const MALL_SLUG = 'niagara-city-mall';
 
     /**
      * Shop category slug => name.
@@ -49,7 +49,7 @@ class DemoMallSeeder extends Seeder
     {
         $mall = Mall::query()->create([
             'slug' => self::MALL_SLUG,
-            'name' => 'Demo City Mall',
+            'name' => 'Niagara City Mall',
             'address' => 'Demo Road 32, Sonadanga',
             'city' => 'Khulna',
             'timezone' => 'Asia/Dhaka',
