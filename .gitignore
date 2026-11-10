@@ -28,3 +28,6 @@ Thumbs.db
 
 # Personal AI agent settings (shared skills in .claude/skills stay tracked)
 /.claude/settings.local.json
+
+# Local demo credentials
+/demo-logins.txt
