@@ -3,6 +3,7 @@
 use App\Modules\AccountsAccess\Providers\AccountsAccessServiceProvider;
 use App\Modules\FavouritesPreferences\Providers\FavouritesPreferencesServiceProvider;
 use App\Modules\MallShopDirectory\Providers\MallShopDirectoryServiceProvider;
+use App\Modules\ParkingFacilities\Providers\ParkingFacilitiesServiceProvider;
 use App\Modules\ProductsCatalogue\Providers\ProductsCatalogueServiceProvider;
 use App\Modules\PurchaseVerification\Providers\PurchaseVerificationServiceProvider;
 use App\Modules\ReviewsModeration\Providers\ReviewsModerationServiceProvider;
@@ -32,6 +33,7 @@ return [
         'ReviewsModeration' => ReviewsModerationServiceProvider::class,
         'ShopOwnerOperations' => ShopOwnerOperationsServiceProvider::class,
         'FavouritesPreferences' => FavouritesPreferencesServiceProvider::class,
+        'ParkingFacilities' => ParkingFacilitiesServiceProvider::class,
     ],
 
 ];

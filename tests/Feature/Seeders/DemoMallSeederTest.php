@@ -3,6 +3,7 @@
 namespace Tests\Feature\Seeders;
 
 use App\Modules\MallShopDirectory\Enums\MallStatus;
+use App\Modules\MallShopDirectory\Models\Facility;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\MallShopDirectory\Models\ShopCategory;
@@ -25,7 +26,9 @@ class DemoMallSeederTest extends TestCase
         $this->assertSame(DemoMallSeeder::MALL_SLUG, $mall->slug);
         $this->assertSame(MallStatus::Active, $mall->status);
         $this->assertSame('Asia/Dhaka', $mall->timezone);
-        $this->assertSame(['G', 'F1'], $mall->floors()->pluck('code')->all());
+        $this->assertSame(['B1', 'G', 'F1'], $mall->floors()->pluck('code')->all());
+        $this->assertSame(11, Facility::query()->count());
+        $this->assertSame(1, Facility::query()->where('status', 'temporarily_closed')->count());
         $this->assertEqualsCanonicalizing(array_keys(DemoMallSeeder::SHOP_CATEGORIES), ShopCategory::query()->pluck('slug')->all());
     }
 

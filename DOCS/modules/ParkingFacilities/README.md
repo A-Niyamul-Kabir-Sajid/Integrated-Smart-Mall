@@ -4,7 +4,7 @@
 
 Saved parking, visitor support, events and facility-facing flows. Source folder: [app/Modules/ParkingFacilities](../../../app/Modules/ParkingFacilities/).
 
-Status: folder architecture only; this page routes to existing requirements, not implemented APIs.
+Status: implemented in EPIC-09 (facility finder and administration, parking zones, saved parking with floor-by-floor directions, simulated occupancy); see the [module README](../../../app/Modules/ParkingFacilities/README.md). Records outside the ERD and the simulation rules are decision D-013. Map anchors and routed return paths wait for MapsNavigation (EPIC-05).
 
 ## Read before implementation
 

@@ -4,11 +4,13 @@ namespace Database\Seeders;
 
 use App\Modules\MallShopDirectory\Enums\MallStatus;
 use App\Modules\MallShopDirectory\Enums\ShopStatus;
+use App\Modules\MallShopDirectory\Models\Facility;
 use App\Modules\MallShopDirectory\Models\Floor;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\MallShopDirectory\Models\ShopCategory;
 use App\Modules\MallShopDirectory\Models\ShopOpeningHour;
+use App\Modules\ParkingFacilities\Models\ParkingZone;
 use App\Modules\ProductsCatalogue\Models\Product;
 use App\Modules\ProductsCatalogue\Models\ProductCategory;
 use App\Modules\ProductsCatalogue\Models\ShopProduct;
@@ -57,9 +59,28 @@ class DemoMallSeeder extends Seeder
         ]);
 
         $this->seedFloors($mall);
+        $this->seedFacilities();
+        $this->seedParkingZones($mall);
         $this->seedShopCategories();
         $this->seedShops($mall);
         $this->seedCatalogue();
+    }
+
+    /**
+     * Two zones of the basement car park (decision D-013).
+     */
+    private function seedParkingZones(Mall $mall): void
+    {
+        foreach ([['B1-A', 'Zone A (near Lift A)', 60], ['B1-B', 'Zone B (near the ramp)', 80]] as [$code, $name, $capacity]) {
+            ParkingZone::query()->create([
+                'mall_id' => $mall->getKey(),
+                'floor_id' => $this->floors['B1']->getKey(),
+                'code' => $code,
+                'name' => $name,
+                'capacity' => $capacity,
+                'status' => 'active',
+            ]);
+        }
     }
 
     /**
@@ -165,13 +186,43 @@ class DemoMallSeeder extends Seeder
 
     private function seedFloors(Mall $mall): void
     {
-        foreach ([['G', 'Ground Floor', 0, 0.0], ['F1', 'First Floor', 1, 4.5]] as [$code, $name, $order, $elevation]) {
+        foreach ([['B1', 'Basement Parking', -1, -4.0], ['G', 'Ground Floor', 0, 0.0], ['F1', 'First Floor', 1, 4.5]] as [$code, $name, $order, $elevation]) {
             $this->floors[$code] = $mall->floors()->create([
                 'code' => $code,
                 'name' => $name,
                 'sort_order' => $order,
                 'elevation_m' => $elevation,
                 'status' => 'active',
+            ]);
+        }
+    }
+
+    /**
+     * Washrooms, desks, exits, lifts and an ATM on every floor (decision D-013);
+     * the baby care room shows a temporarily closed facility.
+     */
+    private function seedFacilities(): void
+    {
+        foreach ([
+            ['G', 'Washroom', 'toilet', true, 'open', 'Behind the Food Court entrance'],
+            ['G', 'Information Desk', 'information', true, 'open', 'Main entrance'],
+            ['G', 'Main Exit', 'exit', true, 'open', 'Demo Road side'],
+            ['G', 'ATM Corner', 'atm', true, 'open', 'Next to Fresh Mart'],
+            ['G', 'Lift A', 'lift', true, 'open', 'Centre atrium'],
+            ['F1', 'Washroom', 'toilet', true, 'open', 'End of the east corridor'],
+            ['F1', 'Prayer Room', 'prayer_room', false, 'open', 'Near Book Nook, separate rooms for men and women'],
+            ['F1', 'Baby Care Room', 'other', true, 'temporarily_closed', 'Next to Little Steps'],
+            ['F1', 'Lift A', 'lift', true, 'open', 'Centre atrium'],
+            ['B1', 'Lift A', 'lift', true, 'open', 'Between zones A and B'],
+            ['B1', 'Car Park Exit', 'exit', true, 'open', 'Ramp to Demo Road'],
+        ] as [$floor, $name, $type, $accessible, $status, $note]) {
+            Facility::query()->create([
+                'floor_id' => $this->floors[$floor]->getKey(),
+                'name' => $name,
+                'facility_type' => $type,
+                'is_accessible' => $accessible,
+                'status' => $status,
+                'location_note' => $note,
             ]);
         }
     }

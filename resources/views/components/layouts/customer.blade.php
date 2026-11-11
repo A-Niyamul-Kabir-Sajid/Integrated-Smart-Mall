@@ -26,6 +26,9 @@
                     @if (Route::has('products.index'))
                         <x-nav-link :href="route('products.index', ['publicMall' => $mall->slug])" :active="request()->routeIs('products.*')">{{ __('Products') }}</x-nav-link>
                     @endif
+                    @if (Route::has('facilities.index'))
+                        <x-nav-link :href="route('facilities.index', ['publicMall' => $mall->slug])" :active="request()->routeIs('facilities.index')">{{ __('Facilities') }}</x-nav-link>
+                    @endif
                 </nav>
             @endif
 

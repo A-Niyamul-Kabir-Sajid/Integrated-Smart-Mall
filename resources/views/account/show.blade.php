@@ -44,7 +44,12 @@
                     @foreach ($moderatedMalls as $mall)
                         <li class="flex items-center justify-between gap-4 px-5 py-3">
                             <span class="font-medium">{{ $mall->name }}</span>
-                            <a href="{{ route('moderation.index', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Review moderation') }}</a>
+                            <span class="flex gap-4">
+                                @if (Route::has('facilities.admin.index'))
+                                    <a href="{{ route('facilities.admin.index', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Facilities') }}</a>
+                                @endif
+                                <a href="{{ route('moderation.index', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Review moderation') }}</a>
+                            </span>
                         </li>
                     @endforeach
                 </ul>
