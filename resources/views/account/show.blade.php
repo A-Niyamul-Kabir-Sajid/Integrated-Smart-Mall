@@ -6,6 +6,9 @@
                 @if (Route::has('account.saved'))
                     <a href="{{ route('account.saved') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Saved') }}</a>
                 @endif
+                @if (Route::has('account.lists.index'))
+                    <a href="{{ route('account.lists.index') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Shopping lists') }}</a>
+                @endif
                 <a href="{{ route('account.password.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Change password') }}</a>
                 @if (Route::has('account.reviews'))
                     <a href="{{ route('account.reviews') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Your reviews') }}</a>

@@ -5,6 +5,7 @@ namespace App\Modules\FavouritesPreferences\Providers;
 use App\Core\Modules\ModuleServiceProvider;
 use App\Modules\FavouritesPreferences\Listeners\ApplyPreferredLocale;
 use App\Modules\FavouritesPreferences\Services\FavouriteService;
+use App\Modules\FavouritesPreferences\Services\ShoppingListService;
 use App\Modules\FavouritesPreferences\Services\UserNotificationPreferences;
 use App\Modules\SharedPlatform\Contracts\NotificationPreferences;
 use Illuminate\Auth\Events\Login;
@@ -61,10 +62,14 @@ class FavouritesPreferencesServiceProvider extends ModuleServiceProvider
             $offers = $view->getData()['offers'] ?? null;
             $user = auth()->user();
 
+            $mall = $view->getData()['mall'] ?? null;
+
             if ($offers !== null) {
                 $view->with('favouritesEnabled', true)
                     ->with('savedListingIds', $user === null ? [] : app(FavouriteService::class)
-                        ->savedListingIds($user->getKey(), $offers->pluck('shop_product_id')->all()));
+                        ->savedListingIds($user->getKey(), $offers->pluck('shop_product_id')->all()))
+                    ->with('shoppingLists', $user === null || $mall === null ? collect() : app(ShoppingListService::class)
+                        ->listsFor($user->getKey(), $mall->getKey()));
             }
         });
     }
