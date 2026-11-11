@@ -20,6 +20,7 @@ class RouteProtectionTest extends TestCase
         '/',
         'locale',
         'malls/{publicMall}',
+        'malls/{publicMall}/facilities',
         'malls/{publicMall}/shops',
         'malls/{publicMall}/shops/{publicShop}',
         'malls/{publicMall}/shops/{publicShop}/reviews',

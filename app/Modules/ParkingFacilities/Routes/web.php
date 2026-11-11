@@ -1,9 +1,13 @@
 <?php
 
 use App\Modules\ParkingFacilities\Http\Controllers\FacilityAdminController;
+use App\Modules\ParkingFacilities\Http\Controllers\FacilityFinderController;
 use App\Modules\ParkingFacilities\Http\Controllers\ParkingController;
 use App\Modules\ParkingFacilities\Http\Controllers\ParkingZoneAdminController;
 use Illuminate\Support\Facades\Route;
+
+// The public facility finder of a mall; the parking section adds the visitor's own spot when signed in.
+Route::get('/malls/{publicMall}/facilities', [FacilityFinderController::class, 'index'])->middleware('throttle:search')->name('facilities.index');
 
 // Saving or clearing one's own parking spot needs a signed-in account.
 Route::middleware(['auth', 'throttle:parking'])->group(function (): void {
