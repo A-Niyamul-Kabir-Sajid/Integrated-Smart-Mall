@@ -36,6 +36,14 @@ interface CatalogueLookup
     public function offersFor(Mall $mall, Product $product): Collection;
 
     /**
+     * Which of the given products are active and have at least one visible offer in the mall.
+     *
+     * @param  list<string>  $productIds
+     * @return list<string>
+     */
+    public function soldProductIds(Mall $mall, array $productIds): array;
+
+    /**
      * A visible offer in the mall by listing id, or null.
      */
     public function visibleListing(Mall $mall, string $listingId): ?ShopProduct;

@@ -64,6 +64,24 @@ class ProductDiscoveryService implements CatalogueLookup
             ->get();
     }
 
+    /**
+     * @param  list<string>  $productIds
+     * @return list<string>
+     */
+    public function soldProductIds(Mall $mall, array $productIds): array
+    {
+        if ($productIds === []) {
+            return [];
+        }
+
+        return Product::query()
+            ->active()
+            ->whereKey($productIds)
+            ->whereHas('listings', fn (Builder $listings) => $this->visibleOffers($listings, $this->directory->operationalShopIds($mall->getKey()), []))
+            ->pluck('product_id')
+            ->all();
+    }
+
     public function visibleListing(Mall $mall, string $listingId): ?ShopProduct
     {
         return $this->visibleOffers(ShopProduct::query(), $this->directory->operationalShopIds($mall->getKey()), [])
