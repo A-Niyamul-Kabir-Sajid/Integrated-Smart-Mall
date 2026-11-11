@@ -1,8 +1,14 @@
 <x-layouts.customer :title="__('Your account')">
     <div class="mx-auto max-w-2xl px-4 py-10">
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <h1 class="text-2xl font-semibold">{{ __('Your account') }}</h1>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+                @if (Route::has('account.saved'))
+                    <a href="{{ route('account.saved') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Saved') }}</a>
+                @endif
+                @if (Route::has('account.lists.index'))
+                    <a href="{{ route('account.lists.index') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Shopping lists') }}</a>
+                @endif
                 <a href="{{ route('account.password.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Change password') }}</a>
                 @if (Route::has('account.reviews'))
                     <a href="{{ route('account.reviews') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Your reviews') }}</a>

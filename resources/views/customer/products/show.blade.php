@@ -47,10 +47,53 @@
                             'bg-slate-100 text-slate-600' => $offer->availability_status === 'unknown',
                         ])>{{ ['available' => __('Available'), 'unavailable' => __('Out of stock'), 'unknown' => __('Availability unknown')][$offer->availability_status] }}</span>
                         <span class="w-24 text-right font-semibold tabular-nums">৳{{ number_format((float) $offer->price_amount, 2) }}</span>
+                        @isset($favouritesEnabled)
+                            @auth
+                                @php($isSaved = in_array($offer->shop_product_id, $savedListingIds, true))
+                                <button type="submit" form="favourite-{{ $offer->shop_product_id }}" aria-pressed="{{ $isSaved ? 'true' : 'false' }}" aria-label="{{ $isSaved ? __('Remove :shop offer from saved items', ['shop' => $offer->shop->name]) : __('Save :shop offer', ['shop' => $offer->shop->name]) }}" class="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50">
+                                    {{ $isSaved ? __('Saved ✓') : __('Save') }}
+                                </button>
+                            @endauth
+                        @endisset
                     </li>
                 @endforeach
             </ul>
         </form>
+        @isset($favouritesEnabled)
+            @auth
+                {{-- Save forms live outside the comparison form; each button above targets its own form by id. --}}
+                <section class="mt-6 rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="add-to-list-heading" data-integration="shopping-lists">
+                    <h2 id="add-to-list-heading" class="font-semibold">{{ __('Add to a shopping list') }}</h2>
+                    @if ($shoppingLists->isEmpty())
+                        <p class="mt-2 text-sm text-slate-600">{{ __('You have no shopping list for :mall yet.', ['mall' => $mall->name]) }}
+                            <a href="{{ route('account.lists.index') }}" class="font-medium text-brand-700 hover:underline">{{ __('Create a shopping list') }}</a></p>
+                    @else
+                        {{-- One form; each button posts it to its own list with formaction. --}}
+                        <form method="POST" action="{{ route('account.lists.items.store', $shoppingLists->first()) }}" class="mt-3 flex flex-wrap items-end gap-3">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->product_id }}">
+                            <div>
+                                <label for="list-quantity" class="block text-xs font-medium text-slate-600">{{ __('Quantity') }}</label>
+                                <input id="list-quantity" name="quantity" type="number" min="1" max="99" value="1" class="mt-1 w-20 rounded-lg px-2 py-1.5 ring-1 ring-slate-300">
+                            </div>
+                            @foreach ($shoppingLists as $shoppingList)
+                                <button type="submit" formaction="{{ route('account.lists.items.store', $shoppingList) }}" class="rounded-lg border border-brand-600 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50">{{ __('Add to ":list"', ['list' => $shoppingList->name]) }}</button>
+                            @endforeach
+                        </form>
+                    @endif
+                    @error('business') <p class="mt-3 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{{ $message }}</p> @enderror
+                </section>
+                @foreach ($offers as $offer)
+                    @php($isSaved = in_array($offer->shop_product_id, $savedListingIds, true))
+                    <form id="favourite-{{ $offer->shop_product_id }}" method="POST" action="{{ route($isSaved ? 'favourites.listings.destroy' : 'favourites.listings.store', $offer->shop_product_id) }}" class="hidden" data-integration="favourites">
+                        @csrf
+                        @if ($isSaved) @method('DELETE') @endif
+                    </form>
+                @endforeach
+            @else
+                <p class="mt-3 text-sm"><a href="{{ route('login') }}" class="font-medium text-brand-700 hover:underline">{{ __('Sign in to save offers') }}</a></p>
+            @endauth
+        @endisset
         <p class="mt-3 text-xs text-slate-500">{{ __('Prices and availability are maintained by each shop and may change.') }}</p>
     </div>
 </x-layouts.customer>

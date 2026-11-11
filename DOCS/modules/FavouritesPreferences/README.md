@@ -4,7 +4,7 @@
 
 Saved shop/listing favourites and user preferences. Source folder: [app/Modules/FavouritesPreferences](../../../app/Modules/FavouritesPreferences/).
 
-Status: folder architecture only; this page routes to existing requirements, not implemented APIs.
+Status: implemented in EPIC-08 (preferences, favourites, shopping lists); see the [module README](../../../app/Modules/FavouritesPreferences/README.md) for tables, routes and contracts. Shopping lists are outside the ERD by decision D-012.
 
 ## Read before implementation
 
