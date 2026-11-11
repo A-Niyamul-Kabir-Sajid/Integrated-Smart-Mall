@@ -3,6 +3,7 @@
 namespace App\Modules\FavouritesPreferences\Services;
 
 use App\Core\Exceptions\BusinessRuleViolation;
+use App\Modules\AccountsAccess\Models\User;
 use App\Modules\FavouritesPreferences\Models\ShoppingList;
 use App\Modules\FavouritesPreferences\Models\ShoppingListItem;
 use App\Modules\MallShopDirectory\Enums\MallStatus;
@@ -57,9 +58,11 @@ class ShoppingListService
         }
 
         return DB::transaction(function () use ($userId, $mall, $name): ShoppingList {
-            $count = ShoppingList::query()->where('user_id', $userId)->lockForUpdate()->count();
+            // Two parallel requests of one account queue on its user row, so the count stays exact.
+            // (PostgreSQL does not allow FOR UPDATE on an aggregate.)
+            User::query()->whereKey($userId)->lockForUpdate()->first();
 
-            if ($count >= self::MAX_LISTS) {
+            if (ShoppingList::query()->where('user_id', $userId)->count() >= self::MAX_LISTS) {
                 throw new BusinessRuleViolation('shopping_list.limit_reached', __('You can keep at most :max shopping lists. Delete one first.', ['max' => self::MAX_LISTS]));
             }
 
