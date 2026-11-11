@@ -10,6 +10,7 @@ use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\MallShopDirectory\Models\ShopCategory;
 use App\Modules\MallShopDirectory\Models\ShopOpeningHour;
+use App\Modules\ParkingFacilities\Models\ParkingZone;
 use App\Modules\ProductsCatalogue\Models\Product;
 use App\Modules\ProductsCatalogue\Models\ProductCategory;
 use App\Modules\ProductsCatalogue\Models\ShopProduct;
@@ -59,9 +60,27 @@ class DemoMallSeeder extends Seeder
 
         $this->seedFloors($mall);
         $this->seedFacilities();
+        $this->seedParkingZones($mall);
         $this->seedShopCategories();
         $this->seedShops($mall);
         $this->seedCatalogue();
+    }
+
+    /**
+     * Two zones of the basement car park (decision D-013).
+     */
+    private function seedParkingZones(Mall $mall): void
+    {
+        foreach ([['B1-A', 'Zone A (near Lift A)', 60], ['B1-B', 'Zone B (near the ramp)', 80]] as [$code, $name, $capacity]) {
+            ParkingZone::query()->create([
+                'mall_id' => $mall->getKey(),
+                'floor_id' => $this->floors['B1']->getKey(),
+                'code' => $code,
+                'name' => $name,
+                'capacity' => $capacity,
+                'status' => 'active',
+            ]);
+        }
     }
 
     /**
