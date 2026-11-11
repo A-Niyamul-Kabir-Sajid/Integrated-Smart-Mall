@@ -106,6 +106,18 @@ Decisions taken as defaults (need team confirmation): reviews publish at once; 3
 
 Limitations: the PostgreSQL run was not done (Docker was not running), so the rating CHECK constraint and the partial unique indexes were only exercised on SQLite; `npm run build` was not run (no node modules installed here), so new Tailwind classes need a build before they show; no review edit history; shop list cards do not show ratings yet; no notifications for reports or decisions; sentiment analysis not built.
 
+## 2026-11-12: EPIC-08 favourites and preferences (ISM-42)
+
+Branch `feature/epic-08-favourites-preferences`, stories ISM-83, ISM-86 and ISM-89 (taken over from the original assignee on 2026-11-12).
+
+- ISM-83 favourites: `favourite_shops` and `favourite_products` exactly as in ERD domain 07 (composite keys). `FavouriteService` saves only visible targets (through `DirectoryLookup` and `CatalogueLookup`), saves and removes idempotently and reports saved items that were later archived as unavailable. Save buttons on shop pages and per offer on product pages (view composers), `GET /account/saved`, `throttle:favourites`.
+- ISM-86 shopping lists (decision D-012, outside the ERD): `shopping_lists` (account, mall, name) and `shopping_list_items` (optional product, label snapshot, quantity, note, done). `ShoppingListService` scopes every lookup to the owner, enforces 20 lists / 100 lines / quantity 99, merges repeated products and refuses products the mall does not sell; `CatalogueLookup::soldProductIds()` checks a whole list in one query. Screens `/account/lists` and the list page; product pages get an "Add to a shopping list" box.
+- ISM-89 preferences: storage already existed (D-010). New `PreferenceLookup` contract with a `PreferenceData` DTO (incl. `needsStepFreeRoutes()` for MapsNavigation); the usual mall is listed first on the mall list; Bangla validation, sign-in, password-reset and pagination messages (`lang/bn/*.php`) and Bangla account, notification and review messages.
+
+Evidence: `php artisan test` 497 tests (495 passed, 2 skipped, none failed) on SQLite and `composer test:pgsql` 497 passed on PostgreSQL 17, both after Pint. The PostgreSQL run found and fixed a `FOR UPDATE` on an aggregate (shopping list limit); it also covers the EPIC-06/07 tests that had not run on PostgreSQL before. 38 new tests in `tests/Feature/Modules/FavouritesPreferences`. Manual checks: `guide/TestByYourself/15_favourites_saved_items.md`, `16_shopping_lists.md`, `17_language_and_usual_mall.md`.
+
+Limitations: shop and admin workspaces stay English only; AR preference and step-free routes have no consumer until MapsNavigation (EPIC-05); personalisation opt-in is stored but no recommendations exist; favourites are not yet shown on the shop list cards; `npm run build` must be re-run for the new Tailwind classes.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
