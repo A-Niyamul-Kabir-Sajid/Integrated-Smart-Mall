@@ -118,6 +118,18 @@ Evidence: `php artisan test` 497 tests (495 passed, 2 skipped, none failed) on S
 
 Limitations: shop and admin workspaces stay English only; AR preference and step-free routes have no consumer until MapsNavigation (EPIC-05); personalisation opt-in is stored but no recommendations exist; favourites are not yet shown on the shop list cards; `npm run build` must be re-run for the new Tailwind classes.
 
+## 2026-11-12: EPIC-09 parking and facilities (ISM-43)
+
+Branch `feature/epic-09-parking-facilities` (built on the EPIC-08 branch), stories ISM-92, ISM-95 and ISM-98. Decision D-013.
+
+- ISM-92 facility directory: `facilities` (ERD FACILITY, owned by MallShopDirectory) plus types atm and lift and a location note. `FacilityService` places facilities only on active floors of the managed mall, audits changes and finds customer-visible ones by type, floor, step-free access and open status. Mall administrators add and edit facilities at `/admin/malls/{mall}/facilities` (administer-mall gate; reached from the account page). Demo data: basement parking floor B1 and eleven facilities. ISM-94's map-node link (FACILITY_ANCHOR) is deferred with EPIC-05.
+- ISM-95 saved parking: `parking_zones` and `parking_locations` (ParkingFacilities, outside the ERD). Administrators maintain zones; a signed-in customer saves, replaces or clears one spot per mall (zone, bay, note; private; deleted with the account) and gets floor-by-floor directions back naming the lift on the starting floor. Routed paths through the common routing service wait for EPIC-05.
+- ISM-98 finder and occupancy: public `/malls/{publicMall}/facilities` with filters, floor sections and labelled controls, linked from the header; `SimulatedOccupancyFeed` shows free spaces per zone from capacity and the hour of day, always labelled "Simulated data, not live" (C-09). Map markers wait for EPIC-05.
+
+Evidence: `php artisan test` 527 tests (525 passed, 2 skipped, none failed) on SQLite and `composer test:pgsql` 527 passed on PostgreSQL 17, after Pint; 30 new tests (`tests/Feature/Modules/ParkingFacilities`, `FacilityServiceTest`, `tests/Unit/ParkingFacilities`). A browser walkthrough of the EPIC-08 and EPIC-09 flows (12 steps, no console errors) found a lazy-loading crash on directions from the first floor, fixed with a regression test. Manual checks: `guide/TestByYourself/18_facility_finder_and_admin.md`, `19_saved_parking_and_occupancy.md`.
+
+Limitations: no map markers, facility anchors or routed return paths until MapsNavigation (EPIC-05); occupancy is simulated only; the admin screens are English only; parking checkpoints (QR) belong to EPIC-05.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.

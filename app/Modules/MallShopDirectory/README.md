@@ -28,7 +28,7 @@ FLOOR 1──* FACILITY
 | SHOP | `shops` | One business in one mall; unique `(mall_id, slug)`; status draft, active, closed or archived |
 | SHOP_UNIT | `shop_units` | Unique `(floor_id, unit_code)`; the floor must belong to the shop's mall; positive area when given |
 | SHOP_OPENING_HOUR | `shop_opening_hours` | Key `(shop_id, weekday, interval_no)`; ISO weekday 1–7; intervals on a day never overlap; no interval means closed; overnight via `closes_next_day`; equal times with `closes_next_day` mean 24 hours |
-| FACILITY | `facilities` | Washroom, prayer room, information desk, exit or other on one floor; built with the facility stories (EPIC-09) |
+| FACILITY | `facilities` | Washroom, prayer room, information desk, exit, ATM, lift or other on one active floor, with an optional location note (D-013); written by `FacilityService`, screens in ParkingFacilities (EPIC-09) |
 
 Rules a foreign key cannot express (unit floor in the shop's mall, acyclic categories, non-overlapping intervals) are enforced by this module's services and reported with `BusinessRuleViolation`.
 
@@ -59,4 +59,4 @@ Reads go through `Contracts\DirectoryLookup` (bound to `Services\DirectoryLookup
 | `floorsOf(mallId)` | Active floors in display order | MapsNavigation |
 | `locationsOf(shopId)` | Non-archived units with their floor loaded | MapsNavigation (entrances) |
 
-Writes go through `ShopService`, `MallService` and `FloorService`. `ShopStatusChanged` is dispatched after commit whenever a shop changes status.
+Writes go through `ShopService`, `MallService`, `FloorService` and `FacilityService` (which also finds customer-visible facilities by type, floor, step-free and open status). `ShopStatusChanged` is dispatched after commit whenever a shop changes status.
