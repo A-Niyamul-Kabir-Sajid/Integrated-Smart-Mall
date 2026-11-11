@@ -3,8 +3,10 @@
 namespace App\Modules\FavouritesPreferences\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
+use App\Modules\FavouritesPreferences\Contracts\PreferenceLookup;
 use App\Modules\FavouritesPreferences\Listeners\ApplyPreferredLocale;
 use App\Modules\FavouritesPreferences\Services\FavouriteService;
+use App\Modules\FavouritesPreferences\Services\PreferenceService;
 use App\Modules\FavouritesPreferences\Services\ShoppingListService;
 use App\Modules\FavouritesPreferences\Services\UserNotificationPreferences;
 use App\Modules\SharedPlatform\Contracts\NotificationPreferences;
@@ -29,6 +31,7 @@ class FavouritesPreferencesServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->bind(NotificationPreferences::class, UserNotificationPreferences::class);
+        $this->app->bind(PreferenceLookup::class, PreferenceService::class);
     }
 
     public function boot(): void
@@ -39,6 +42,10 @@ class FavouritesPreferencesServiceProvider extends ModuleServiceProvider
             ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
 
         $this->showSaveButtonsOnDirectoryAndCataloguePages();
+
+        View::composer('customer.malls.index', function (ViewInstance $view): void {
+            $view->with('usualMallId', app(PreferenceLookup::class)->preferencesFor(auth()->id())->defaultMallId);
+        });
     }
 
     /**
