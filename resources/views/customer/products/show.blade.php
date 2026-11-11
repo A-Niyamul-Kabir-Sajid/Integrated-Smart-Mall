@@ -47,10 +47,32 @@
                             'bg-slate-100 text-slate-600' => $offer->availability_status === 'unknown',
                         ])>{{ ['available' => __('Available'), 'unavailable' => __('Out of stock'), 'unknown' => __('Availability unknown')][$offer->availability_status] }}</span>
                         <span class="w-24 text-right font-semibold tabular-nums">৳{{ number_format((float) $offer->price_amount, 2) }}</span>
+                        @isset($favouritesEnabled)
+                            @auth
+                                @php($isSaved = in_array($offer->shop_product_id, $savedListingIds, true))
+                                <button type="submit" form="favourite-{{ $offer->shop_product_id }}" aria-pressed="{{ $isSaved ? 'true' : 'false' }}" aria-label="{{ $isSaved ? __('Remove :shop offer from saved items', ['shop' => $offer->shop->name]) : __('Save :shop offer', ['shop' => $offer->shop->name]) }}" class="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50">
+                                    {{ $isSaved ? __('Saved ✓') : __('Save') }}
+                                </button>
+                            @endauth
+                        @endisset
                     </li>
                 @endforeach
             </ul>
         </form>
+        @isset($favouritesEnabled)
+            @auth
+                {{-- Save forms live outside the comparison form; each button above targets its own form by id. --}}
+                @foreach ($offers as $offer)
+                    @php($isSaved = in_array($offer->shop_product_id, $savedListingIds, true))
+                    <form id="favourite-{{ $offer->shop_product_id }}" method="POST" action="{{ route($isSaved ? 'favourites.listings.destroy' : 'favourites.listings.store', $offer->shop_product_id) }}" class="hidden" data-integration="favourites">
+                        @csrf
+                        @if ($isSaved) @method('DELETE') @endif
+                    </form>
+                @endforeach
+            @else
+                <p class="mt-3 text-sm"><a href="{{ route('login') }}" class="font-medium text-brand-700 hover:underline">{{ __('Sign in to save offers') }}</a></p>
+            @endauth
+        @endisset
         <p class="mt-3 text-xs text-slate-500">{{ __('Prices and availability are maintained by each shop and may change.') }}</p>
     </div>
 </x-layouts.customer>

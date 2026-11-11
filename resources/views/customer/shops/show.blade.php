@@ -14,7 +14,22 @@
                         <p class="text-sm text-slate-500">{{ __($shop->category->name) }}</p>
                         <h1 class="text-2xl font-semibold">{{ $shop->name }}</h1>
                     </div>
-                    <x-open-badge :open="$isOpenNow" :closed-permanently="$shop->status->value === 'closed'" />
+                    <div class="flex items-center gap-2">
+                        <x-open-badge :open="$isOpenNow" :closed-permanently="$shop->status->value === 'closed'" />
+                        @isset($favouritesEnabled)
+                            @auth
+                                <form method="POST" action="{{ route($shopIsSaved ? 'favourites.shops.destroy' : 'favourites.shops.store', $shop->shop_id) }}" data-integration="favourites">
+                                    @csrf
+                                    @if ($shopIsSaved) @method('DELETE') @endif
+                                    <button type="submit" aria-pressed="{{ $shopIsSaved ? 'true' : 'false' }}" class="rounded-lg border border-brand-600 px-3 py-1 text-sm font-medium text-brand-700 hover:bg-brand-50">
+                                        {{ $shopIsSaved ? __('Saved ✓') : __('Save shop') }}
+                                    </button>
+                                </form>
+                            @else
+                                <a href="{{ route('login') }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Sign in to save') }}</a>
+                            @endauth
+                        @endisset
+                    </div>
                 </div>
 
                 @if ($shop->description)
