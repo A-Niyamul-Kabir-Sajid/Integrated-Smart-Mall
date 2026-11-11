@@ -1,0 +1,4 @@
+name,brand,category,option,option_code,sku,price,availability
+Tea,,drinks,Cup,cup,T 1,-5,available
+Biscuit,,no-such-category,Pack,pack,B-1,30,available
+Cake,,snacks-meals,Slice,slice,C-1,60,maybe

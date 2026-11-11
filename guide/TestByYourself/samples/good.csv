@@ -1,0 +1,4 @@
+name,brand,category,option,option_code,sku,price,availability
+Iced Latte,Cafe Brew,drinks,Regular,regular,IL-001,210,available
+Iced Latte,Cafe Brew,drinks,Large,large,IL-002,260,available
+Chocolate Muffin,,snacks-meals,One piece,default,CM-001,140,unknown
