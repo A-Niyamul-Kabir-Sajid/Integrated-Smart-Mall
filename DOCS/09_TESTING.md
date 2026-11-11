@@ -17,6 +17,10 @@ composer validate
 
 For documentation changes use `python DOCS/maintenance/validate_docs.py`: it checks local Markdown link targets, module coverage and preserved reference hashes. It is a structural check, not a substitute for approving requirements or visually testing the diagram viewer.
 
+## Manual guide (TestByYourself)
+
+Every slice also adds or updates a step-by-step manual check in [guide/TestByYourself](../guide/TestByYourself/README.md), next to its automatic tests. The guide names accounts, URLs, inputs, expected results and what must be refused, and maps each area to the test files that cover it ([14_automated_tests](../guide/TestByYourself/14_automated_tests.md)). A manual run is evidence for the browser check in the Definition of Done; record it in the file's Result block.
+
 ## Test layout (EPIC-01, ISM-150)
 
 | Folder | Contains | Base class |
@@ -50,7 +54,7 @@ Tests that touch the database use `RefreshDatabase`. Never point tests at the de
 A Jira story is Done only when all of these hold:
 
 1. Its acceptance criteria are met and, for user-facing work, checked in a browser.
-2. Every changed decision has a test: success path, validation failures, authorization and tenant isolation where relevant.
+2. Every changed decision has a test: success path, validation failures, authorization and tenant isolation where relevant, and a matching step in the [manual guide](../guide/TestByYourself/README.md).
 3. `composer ci` and `composer test:pgsql` pass locally, and the pipeline is green.
 4. `vendor/bin/pint` leaves no changes.
 5. Affected documentation is updated: module README, `DOCS/PROGRESS.md`, contracts or decisions.

@@ -15,6 +15,7 @@ Relevant open decisions and resolution:
 Authorization and transaction boundaries:
 Pattern and reason (or none):
 Tests / evidence required:
+Manual guide file (guide/TestByYourself/NN_area.md) added or updated:
 ```
 
 Check the existing source before adding a class. Keep controllers thin, business workflows in services, repositories selective, and cross-module writes behind the owning interface. Do not implement placeholder features or invent schema from folder names.

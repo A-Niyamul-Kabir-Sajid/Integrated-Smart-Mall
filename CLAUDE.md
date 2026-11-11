@@ -4,6 +4,8 @@ Before implementation, read [DOCS/00_START_HERE.md](DOCS/00_START_HERE.md), foll
 
 Setup, database and check commands: [README.md](README.md). Branch and commit conventions: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+Testing rule: every implemented slice ships automatic tests under `tests/` **and** a manual check file in [guide/TestByYourself/](guide/TestByYourself/README.md) (add to the file for that area, or copy `_TEMPLATE.md` to the next free `NN_area.md` and list it in that folder's index). The file must be self-contained (own setup, own accounts and data, every URL in full, never "do file NN first"). Each step names the account, URL or button, input, expected result and what must be refused. A slice is not done until both exist; update the guide whenever behaviour changes. See [AGENTS.md](AGENTS.md).
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
