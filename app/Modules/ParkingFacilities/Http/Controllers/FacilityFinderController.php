@@ -55,7 +55,7 @@ class FacilityFinderController extends Controller
             'occupancy' => $occupancy->occupancyOf($parkingZones, now($publicMall->timezone)),
             'savedSpot' => $savedSpot,
             'fromFloor' => $fromFloor,
-            'directions' => $savedSpot !== null && $fromFloor !== null ? $parking->directionsBack($savedSpot, $fromFloor) : [],
+            'directions' => $savedSpot !== null && $fromFloor !== null ? $parking->directionsBack($publicMall, $savedSpot, $fromFloor) : [],
         ]);
     }
 }

@@ -106,10 +106,10 @@ class ParkingServiceTest extends TestCase
             'Go down 2 floors to Basement Parking.',
             'Your car is in zone B1-A (Zone A), bay B-14.',
             'Your note: Blue car',
-        ], $this->parking->directionsBack($location, $this->first));
+        ], $this->parking->directionsBack($this->mall, $location, $this->first));
 
-        $this->assertSame(['Your car is on this floor, in zone B1-A (Zone A), bay B-14.', 'Your note: Blue car'], $this->parking->directionsBack($location, $this->basement));
-        $this->assertSame('Go down 1 floor to Basement Parking.', $this->parking->directionsBack($location, $this->ground)[0]);
+        $this->assertSame(['Your car is on this floor, in zone B1-A (Zone A), bay B-14.', 'Your note: Blue car'], $this->parking->directionsBack($this->mall, $location, $this->basement));
+        $this->assertSame('Go down 1 floor to Basement Parking.', $this->parking->directionsBack($this->mall, $location, $this->ground)[0]);
     }
 
     public function test_deleting_an_account_deletes_its_spot(): void

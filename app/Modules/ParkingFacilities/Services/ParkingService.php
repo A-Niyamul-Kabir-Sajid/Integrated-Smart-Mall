@@ -64,7 +64,7 @@ class ParkingService
      *
      * @return list<string>
      */
-    public function directionsBack(ParkingLocation $location, Floor $from): array
+    public function directionsBack(Mall $mall, ParkingLocation $location, Floor $from): array
     {
         $zone = $location->zone;
         $target = $zone->floor;
@@ -80,7 +80,7 @@ class ParkingService
 
         $levels = abs($target->sort_order - $from->sort_order);
         $steps = [];
-        $lifts = $this->facilities->find($from->mall, ['type' => 'lift', 'floor' => $from->code, 'open_only' => true]);
+        $lifts = $this->facilities->find($mall, ['type' => 'lift', 'floor' => $from->code, 'open_only' => true]);
 
         if ($lifts->isNotEmpty()) {
             $lift = $lifts->first();

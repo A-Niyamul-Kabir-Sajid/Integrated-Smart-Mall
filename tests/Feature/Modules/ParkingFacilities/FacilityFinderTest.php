@@ -93,6 +93,18 @@ class FacilityFinderTest extends TestCase
         $this->get($this->url())->assertSee('No spot saved for this mall yet.');
     }
 
+    public function test_directions_work_from_every_floor_of_the_mall(): void
+    {
+        $first = Floor::factory()->for($this->mall)->create(['code' => 'F1', 'name' => 'First Floor', 'sort_order' => 1]);
+        Facility::factory()->for($first)->create(['name' => 'Lift A', 'facility_type' => 'lift']);
+        $user = User::factory()->create();
+        app(ParkingService::class)->save($user->getKey(), $this->mall, $this->zone->getKey(), '14');
+
+        foreach (['F1' => 'Go down 2 floors to Basement Parking.', 'G' => 'Go down 1 floor to Basement Parking.', 'B1' => 'Your car is on this floor'] as $from => $expected) {
+            $this->actingAs($user)->get($this->url(['from' => $from]))->assertOk()->assertSee($expected);
+        }
+    }
+
     public function test_a_spot_is_private_and_foreign_zones_are_refused(): void
     {
         [$me, $other] = User::factory()->count(2)->create();
