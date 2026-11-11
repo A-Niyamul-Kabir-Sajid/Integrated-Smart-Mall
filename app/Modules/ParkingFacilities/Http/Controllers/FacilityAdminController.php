@@ -9,6 +9,7 @@ use App\Modules\MallShopDirectory\Models\Facility;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Services\FacilityService;
 use App\Modules\ParkingFacilities\Http\Requests\FacilityRequest;
+use App\Modules\ParkingFacilities\Services\ParkingZoneService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -20,11 +21,12 @@ class FacilityAdminController extends Controller
 {
     public function __construct(private FacilityService $facilities) {}
 
-    public function index(Mall $mall): View
+    public function index(Mall $mall, ParkingZoneService $zones): View
     {
         return view('mall-admin.facilities.index', [
             'mall' => $mall,
             'facilities' => $this->facilities->allOf($mall),
+            'zones' => $zones->allZonesOf($mall),
         ]);
     }
 

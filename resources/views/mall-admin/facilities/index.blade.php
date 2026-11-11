@@ -42,5 +42,24 @@
                 </table>
             </div>
         @endif
+
+        <section id="zones" class="mt-10" aria-labelledby="zones-heading">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 id="zones-heading" class="text-xl font-semibold">{{ __('Parking zones') }}</h2>
+                <a href="{{ route('parking-zones.admin.create', $mall) }}" class="rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">{{ __('Add parking zone') }}</a>
+            </div>
+            @if ($zones->isEmpty())
+                <p class="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600">{{ __('No parking zones yet.') }}</p>
+            @else
+                <ul class="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white text-sm">
+                    @foreach ($zones as $zone)
+                        <li @class(['flex flex-wrap items-center justify-between gap-3 px-5 py-3', 'opacity-60' => $zone->status === 'archived'])>
+                            <span><span class="font-medium">{{ $zone->code }} · {{ $zone->name }}</span> <span class="text-slate-500">· {{ __($zone->floor->name) }} · {{ __(':count spaces', ['count' => $zone->capacity]) }}@if ($zone->status === 'archived') · {{ __('Archived') }}@endif</span></span>
+                            <a href="{{ route('parking-zones.admin.edit', [$mall, $zone]) }}" class="font-medium text-brand-700 hover:underline" aria-label="{{ __('Edit :name', ['name' => $zone->name]) }}">{{ __('Edit') }}</a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </section>
     </div>
 </x-layouts.customer>
