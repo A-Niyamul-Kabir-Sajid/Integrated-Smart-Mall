@@ -4,7 +4,7 @@
 
 Authorized shop workflows calling the owning domains. Source folder: [app/Modules/ShopOwnerOperations](../../../app/Modules/ShopOwnerOperations/).
 
-Status: folder architecture only; this page routes to existing requirements, not implemented APIs.
+Status: implemented for EPIC-10 (shop applications and staff access, stock, orders and sales, receipts, returns, promotions, customer support, maintenance requests); see [progress](../../PROGRESS.md) and decision D-014 for the tables, rules and limits. The catalogue workspace and review replies came earlier (EPIC-04, EPIC-07).
 
 ## Read before implementation
 
