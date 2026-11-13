@@ -45,6 +45,10 @@
             <p class="mt-4 text-xs text-slate-500">{{ __('Recorded by the shop. No payment was processed through this site.') }}</p>
         </article>
 
+        @isset($returnForm)
+            @include('receipts._return-form', ['purchase' => $purchase, 'returnForm' => $returnForm])
+        @endisset
+
         <p class="mt-4 print:hidden"><button type="button" onclick="window.print()" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">{{ __('Print') }}</button></p>
     </div>
 </x-layouts.customer>

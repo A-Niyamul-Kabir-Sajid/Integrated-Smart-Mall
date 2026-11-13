@@ -4,8 +4,10 @@ use App\Modules\ShopOwnerOperations\Http\Controllers\CatalogueController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CatalogueImportController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerOrderController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerPurchaseController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerReturnController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\MallShopApplicationController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\OrderController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\ReturnController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\ReviewController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\SaleController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\ShopApplicationController;
@@ -70,6 +72,16 @@ Route::middleware(['auth', 'can:shop-area-orders,shop'])
             Route::post('/{shopOrder}/complete', [OrderController::class, 'complete'])->middleware('throttle:pickup-codes')->name('complete');
         });
 
+        Route::prefix('returns')->name('returns.')->group(function (): void {
+            Route::get('/', [ReturnController::class, 'index'])->name('index');
+            Route::post('/sales/{shopPurchase}', [ReturnController::class, 'store'])->name('store');
+            Route::get('/{shopReturn}', [ReturnController::class, 'show'])->name('show');
+            Route::post('/{shopReturn}/approve', [ReturnController::class, 'approve'])->name('approve');
+            Route::post('/{shopReturn}/reject', [ReturnController::class, 'reject'])->name('reject');
+            Route::post('/{shopReturn}/complete', [ReturnController::class, 'complete'])->name('complete');
+            Route::post('/{shopReturn}/cancel', [ReturnController::class, 'cancel'])->name('cancel');
+        });
+
         Route::prefix('sales')->name('sales.')->group(function (): void {
             Route::get('/', [SaleController::class, 'index'])->name('index');
             Route::get('/create', [SaleController::class, 'create'])->name('create');
@@ -90,6 +102,10 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/account/orders/{customerOrder}/cancel', [CustomerOrderController::class, 'cancel'])->middleware('throttle:orders')->name('orders.cancel');
     Route::get('/account/purchases', [CustomerPurchaseController::class, 'index'])->name('account.purchases.index');
     Route::get('/account/purchases/{customerPurchase}', [CustomerPurchaseController::class, 'show'])->name('account.purchases.show');
+    Route::post('/account/purchases/{customerPurchase}/returns', [CustomerReturnController::class, 'store'])->middleware('throttle:orders')->name('returns.store');
+    Route::get('/account/returns', [CustomerReturnController::class, 'index'])->name('returns.index');
+    Route::get('/account/returns/{customerReturn}', [CustomerReturnController::class, 'show'])->name('returns.show');
+    Route::post('/account/returns/{customerReturn}/cancel', [CustomerReturnController::class, 'cancel'])->middleware('throttle:orders')->name('returns.cancel');
 });
 
 // A customer applies to open a shop and follows the decision.

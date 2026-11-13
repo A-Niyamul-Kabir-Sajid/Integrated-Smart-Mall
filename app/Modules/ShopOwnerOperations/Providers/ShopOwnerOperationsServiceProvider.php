@@ -10,6 +10,7 @@ use App\Modules\PurchaseVerification\Models\Purchase;
 use App\Modules\ShopOwnerOperations\Console\ExpireOverdueOrders;
 use App\Modules\ShopOwnerOperations\Enums\ShopArea;
 use App\Modules\ShopOwnerOperations\Models\ShopOrder;
+use App\Modules\ShopOwnerOperations\Models\ShopReturn;
 use App\Modules\ShopOwnerOperations\Services\ShopAccessService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
@@ -47,7 +48,11 @@ class ShopOwnerOperationsServiceProvider extends ModuleServiceProvider
         Route::bind('shopOrder', fn (string $id, RoutingRoute $route): ShopOrder => $this->scopedToShop(ShopOrder::query(), $id, $route)->firstOrFail());
         Route::bind('shopPurchase', fn (string $id, RoutingRoute $route): Purchase => $this->scopedToShop(Purchase::query(), $id, $route)->firstOrFail());
 
+        Route::bind('shopReturn', fn (string $id, RoutingRoute $route): ShopReturn => $this->scopedToShop(ShopReturn::query(), $id, $route)->firstOrFail());
+
         // A customer reaches only their own orders and purchases; anyone else's is not found.
+        Route::bind('customerReturn', fn (string $id): ShopReturn => ShopReturn::query()->whereKey($this->uuid($id))
+            ->whereIn('purchase_id', Purchase::query()->where('buyer_user_id', auth()->id())->select('purchase_id'))->firstOrFail());
         Route::bind('customerOrder', fn (string $id): ShopOrder => ShopOrder::query()->whereKey($this->uuid($id))->where('customer_user_id', auth()->id())->firstOrFail());
         Route::bind('customerPurchase', fn (string $id): Purchase => Purchase::query()->whereKey($this->uuid($id))->where('buyer_user_id', auth()->id())->firstOrFail());
 

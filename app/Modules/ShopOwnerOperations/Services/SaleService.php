@@ -14,6 +14,7 @@ use App\Modules\PurchaseVerification\Services\PurchaseService;
 use App\Modules\PurchaseVerification\Services\VerificationCredentialService;
 use App\Modules\SharedPlatform\Services\AuditLogger;
 use App\Modules\ShopOwnerOperations\Enums\ShopArea;
+use App\Modules\ShopOwnerOperations\Models\ShopReturn;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -82,6 +83,10 @@ class SaleService
 
         if (mb_strlen($reason) < 3 || mb_strlen($reason) > 500) {
             throw new BusinessRuleViolation('sale.reason_required', __('Write a reason of 3 to 500 characters.'));
+        }
+
+        if (ShopReturn::query()->where('purchase_id', $purchase->getKey())->whereIn('status', ['requested', 'approved', 'completed'])->exists()) {
+            throw new BusinessRuleViolation('sale.has_returns', __('This sale has returns. Finish or cancel them before voiding it.'));
         }
 
         return DB::transaction(function () use ($staff, $purchase, $reason, $shop): Purchase {

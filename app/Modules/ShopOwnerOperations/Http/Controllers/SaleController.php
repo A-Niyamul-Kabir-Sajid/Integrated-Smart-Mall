@@ -8,7 +8,9 @@ use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use App\Modules\PurchaseVerification\Models\Purchase;
 use App\Modules\PurchaseVerification\Models\PurchaseItem;
 use App\Modules\PurchaseVerification\Services\PurchaseService;
+use App\Modules\ShopOwnerOperations\Enums\ReturnKind;
 use App\Modules\ShopOwnerOperations\Services\ReceiptService;
+use App\Modules\ShopOwnerOperations\Services\ReturnService;
 use App\Modules\ShopOwnerOperations\Services\SaleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +23,7 @@ use Illuminate\View\View;
  */
 class SaleController extends Controller
 {
-    public function __construct(private SaleService $sales, private PurchaseService $purchases, private ReceiptService $receipts) {}
+    public function __construct(private SaleService $sales, private PurchaseService $purchases, private ReceiptService $receipts, private ReturnService $returns) {}
 
     public function index(Request $request, Shop $shop): View
     {
@@ -73,6 +75,12 @@ class SaleController extends Controller
             'shop' => $shop,
             'purchase' => $purchase->load(['items.verificationToken', 'buyer:user_id,display_name']),
             'receipt' => $this->receipts->forPurchase($purchase),
+            'returnForm' => [
+                'blocked' => $this->returns->eligibility($purchase),
+                'committed' => $this->returns->committedQuantities($purchase),
+                'kinds' => ReturnKind::cases(),
+                'action' => route('workspace.returns.store', [$shop, $purchase]),
+            ],
         ]);
     }
 

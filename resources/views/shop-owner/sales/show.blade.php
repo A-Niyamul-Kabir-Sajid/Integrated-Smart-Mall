@@ -58,6 +58,8 @@
             <a href="{{ route('workspace.sales.receipt', [$shop, $purchase]) }}" class="font-medium text-brand-700 hover:underline">{{ __('Open the receipt') }}@if ($receipt) ({{ $receipt->receipt_number }})@endif</a>
         </div>
 
+        @include('receipts._return-form', ['purchase' => $purchase, 'returnForm' => $returnForm])
+
         @if ($completed)
             <form method="POST" action="{{ route('workspace.sales.void', [$shop, $purchase]) }}" class="mt-8 flex flex-wrap items-end gap-2 border-t border-slate-200 pt-6">
                 @csrf

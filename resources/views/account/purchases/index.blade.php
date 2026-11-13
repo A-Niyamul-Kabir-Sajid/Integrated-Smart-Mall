@@ -1,7 +1,10 @@
 <x-layouts.customer :title="__('Your purchases')">
     <div class="mx-auto max-w-3xl px-4 py-8">
         <a href="{{ route('account.show') }}" class="text-sm font-medium text-brand-700 hover:underline">&larr; {{ __('Your account') }}</a>
-        <h1 class="mt-2 text-2xl font-semibold">{{ __('Your purchases and receipts') }}</h1>
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
+            <h1 class="text-2xl font-semibold">{{ __('Your purchases and receipts') }}</h1>
+            <a href="{{ route('returns.index') }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Returns and exchanges') }}</a>
+        </div>
 
         @if ($purchases->isEmpty())
             <p class="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">{{ __('No purchases are linked to your account yet.') }}</p>

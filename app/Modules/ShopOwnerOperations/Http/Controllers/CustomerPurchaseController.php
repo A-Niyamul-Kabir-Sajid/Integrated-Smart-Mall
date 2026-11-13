@@ -5,7 +5,9 @@ namespace App\Modules\ShopOwnerOperations\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\PurchaseVerification\Models\Purchase;
 use App\Modules\PurchaseVerification\Services\PurchaseService;
+use App\Modules\ShopOwnerOperations\Enums\ReturnKind;
 use App\Modules\ShopOwnerOperations\Services\ReceiptService;
+use App\Modules\ShopOwnerOperations\Services\ReturnService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -15,7 +17,7 @@ use Illuminate\View\View;
  */
 class CustomerPurchaseController extends Controller
 {
-    public function __construct(private PurchaseService $purchases, private ReceiptService $receipts) {}
+    public function __construct(private PurchaseService $purchases, private ReceiptService $receipts, private ReturnService $returns) {}
 
     public function index(Request $request): View
     {
@@ -30,6 +32,12 @@ class CustomerPurchaseController extends Controller
             'purchase' => $purchase->load('shop.mall'),
             'receipt' => $this->receipts->forPurchase($purchase),
             'backUrl' => route('account.purchases.index'),
+            'returnForm' => [
+                'blocked' => $this->returns->eligibility($purchase),
+                'committed' => $this->returns->committedQuantities($purchase),
+                'kinds' => ReturnKind::cases(),
+                'action' => route('returns.store', $purchase),
+            ],
         ]);
     }
 }
