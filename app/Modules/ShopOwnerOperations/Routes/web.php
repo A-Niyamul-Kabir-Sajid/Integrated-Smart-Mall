@@ -2,8 +2,12 @@
 
 use App\Modules\ShopOwnerOperations\Http\Controllers\CatalogueController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CatalogueImportController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerOrderController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerPurchaseController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\MallShopApplicationController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\OrderController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\ReviewController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\SaleController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\ShopApplicationController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\StaffController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\StaffInvitationController;
@@ -51,6 +55,42 @@ Route::middleware(['auth', 'can:shop-area-stock,shop'])
         Route::post('/{shopListing}/adjust', [StockController::class, 'adjust'])->name('adjust');
         Route::put('/{shopListing}/threshold', [StockController::class, 'threshold'])->name('threshold');
     });
+
+// Orders and counter sales: cashiers, managers and owners of an active shop.
+Route::middleware(['auth', 'can:shop-area-orders,shop'])
+    ->prefix('workspace/shops/{shop}')
+    ->name('workspace.')
+    ->group(function (): void {
+        Route::prefix('orders')->name('orders.')->group(function (): void {
+            Route::get('/', [OrderController::class, 'index'])->name('index');
+            Route::get('/{shopOrder}', [OrderController::class, 'show'])->name('show');
+            Route::post('/{shopOrder}/accept', [OrderController::class, 'accept'])->name('accept');
+            Route::post('/{shopOrder}/ready', [OrderController::class, 'ready'])->name('ready');
+            Route::post('/{shopOrder}/reject', [OrderController::class, 'reject'])->name('reject');
+            Route::post('/{shopOrder}/complete', [OrderController::class, 'complete'])->middleware('throttle:pickup-codes')->name('complete');
+        });
+
+        Route::prefix('sales')->name('sales.')->group(function (): void {
+            Route::get('/', [SaleController::class, 'index'])->name('index');
+            Route::get('/create', [SaleController::class, 'create'])->name('create');
+            Route::post('/', [SaleController::class, 'store'])->name('store');
+            Route::get('/{shopPurchase}', [SaleController::class, 'show'])->name('show');
+            Route::get('/{shopPurchase}/receipt', [SaleController::class, 'receipt'])->name('receipt');
+            Route::post('/{shopPurchase}/lines/{item}/review-code', [SaleController::class, 'reviewCode'])->whereUuid('item')->name('review-code');
+            Route::post('/{shopPurchase}/void', [SaleController::class, 'void'])->name('void');
+        });
+    });
+
+// A customer's own orders, purchases and receipts.
+Route::middleware('auth')->group(function (): void {
+    Route::get('/malls/{publicMall}/shops/{publicShop}/order', [CustomerOrderController::class, 'create'])->name('orders.create');
+    Route::post('/malls/{publicMall}/shops/{publicShop}/order', [CustomerOrderController::class, 'store'])->middleware('throttle:orders')->name('orders.store');
+    Route::get('/account/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
+    Route::get('/account/orders/{customerOrder}', [CustomerOrderController::class, 'show'])->name('orders.show');
+    Route::post('/account/orders/{customerOrder}/cancel', [CustomerOrderController::class, 'cancel'])->middleware('throttle:orders')->name('orders.cancel');
+    Route::get('/account/purchases', [CustomerPurchaseController::class, 'index'])->name('account.purchases.index');
+    Route::get('/account/purchases/{customerPurchase}', [CustomerPurchaseController::class, 'show'])->name('account.purchases.show');
+});
 
 // A customer applies to open a shop and follows the decision.
 Route::middleware('auth')->group(function (): void {

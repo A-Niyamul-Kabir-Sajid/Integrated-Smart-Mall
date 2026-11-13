@@ -10,6 +10,12 @@
                     <a href="{{ route('account.lists.index') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Shopping lists') }}</a>
                 @endif
                 <a href="{{ route('account.password.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Change password') }}</a>
+                @if (Route::has('orders.index'))
+                    <a href="{{ route('orders.index') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Orders') }}</a>
+                @endif
+                @if (Route::has('account.purchases.index'))
+                    <a href="{{ route('account.purchases.index') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Purchases') }}</a>
+                @endif
                 @if (Route::has('shop-applications.index'))
                     <a href="{{ route('shop-applications.index') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Shop applications') }}</a>
                 @endif

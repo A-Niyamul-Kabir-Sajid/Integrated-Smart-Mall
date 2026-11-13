@@ -224,6 +224,8 @@ class StockService
      */
     private function apply(ListingStock $stock, ShopProduct $listing, StockMovementType $type, int $delta, ?string $reason, ?User $actor, ?string $referenceType = null, ?string $referenceId = null): ListingStock
     {
+        $listing->loadMissing('shop');
+
         $before = $stock->on_hand;
         $after = $before + $delta;
 
@@ -308,7 +310,7 @@ class StockService
 
     private function authorize(User $actor, ShopProduct $listing): void
     {
-        Gate::forUser($actor)->authorize(ShopArea::Stock->ability(), $listing->shop);
+        Gate::forUser($actor)->authorize(ShopArea::Stock->ability(), $listing->loadMissing('shop')->shop);
     }
 
     private function ensureQuantity(int $quantity): void

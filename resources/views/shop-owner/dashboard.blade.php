@@ -53,6 +53,9 @@
                     </a></li>
                 @endif
             @endforeach
+            @if (in_array(\App\Modules\ShopOwnerOperations\Enums\ShopArea::Orders, $areas, true) && Route::has('workspace.sales.index'))
+                <li><a href="{{ route('workspace.sales.index', $shop) }}" class="block rounded-xl border border-slate-200 bg-white p-4 font-medium hover:border-brand-500">{{ __('Counter sales') }}</a></li>
+            @endif
             @can('manage-shop', $shop)
                 <li><a href="{{ route('workspace.profile.edit', $shop) }}" class="block rounded-xl border border-slate-200 bg-white p-4 font-medium hover:border-brand-500">{{ __('Shop profile and opening hours') }}</a></li>
                 <li><a href="{{ route('workspace.staff.index', $shop) }}" class="block rounded-xl border border-slate-200 bg-white p-4 font-medium hover:border-brand-500">{{ __('Staff') }}</a></li>

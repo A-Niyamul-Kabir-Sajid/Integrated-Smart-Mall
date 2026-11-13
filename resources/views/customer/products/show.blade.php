@@ -47,6 +47,9 @@
                             'bg-slate-100 text-slate-600' => $offer->availability_status === 'unknown',
                         ])>{{ ['available' => __('Available'), 'unavailable' => __('Out of stock'), 'unknown' => __('Availability unknown')][$offer->availability_status] }}</span>
                         <span class="w-24 text-right font-semibold tabular-nums">৳{{ number_format((float) $offer->price_amount, 2) }}</span>
+                        @if (Route::has('orders.create') && $offer->availability_status !== 'unavailable')
+                            <a href="{{ route('orders.create', ['publicMall' => $mall->slug, 'publicShop' => $offer->shop->slug, 'listing' => $offer->shop_product_id]) }}" class="rounded-lg border border-brand-600 px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50" aria-label="{{ __('Order from :shop', ['shop' => $offer->shop->name]) }}">{{ __('Order') }}</a>
+                        @endif
                         @isset($favouritesEnabled)
                             @auth
                                 @php($isSaved = in_array($offer->shop_product_id, $savedListingIds, true))
