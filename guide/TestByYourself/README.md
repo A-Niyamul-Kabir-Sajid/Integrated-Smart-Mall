@@ -28,6 +28,7 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [17_language_and_usual_mall](17_language_and_usual_mall.md) | Bangla error messages, usual mall first | EPIC-08 |
 | [18_facility_finder_and_admin](18_facility_finder_and_admin.md) | Find facilities by type and floor; mall admins add and edit them | EPIC-09 |
 | [19_saved_parking_and_occupancy](19_saved_parking_and_occupancy.md) | Save your parking spot, directions back, simulated free spaces, parking zones | EPIC-09 |
+| [20_shop_onboarding_and_staff](20_shop_onboarding_and_staff.md) | Apply for a shop, mall approval or rejection, profile and hours, staff invitations and work functions, suspension | EPIC-10 |
 
 ## Helpers
 

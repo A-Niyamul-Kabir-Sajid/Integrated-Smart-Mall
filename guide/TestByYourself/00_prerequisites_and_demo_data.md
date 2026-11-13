@@ -22,7 +22,8 @@ Sign in at <http://127.0.0.1:8000/login>. Every password is `password`.
 |---|---|---|
 | `customer@demo.test` | Customer | Browsing, reviews, reporting |
 | `owner@demo.test` | Shop owner of Cafe Brew | Shop workspace, selling, replies |
-| `staff@demo.test` | Shop staff of Cafe Brew | Same as owner but cannot manage the shop |
+| `staff@demo.test` | Shop staff of Cafe Brew, function Cashier | Orders, sales, returns and support; no stock or promotions; cannot manage the shop |
+| `manager@demo.test` | Shop staff of Cafe Brew, function Manager | Every workspace area except staff and shop profile |
 | `mall.admin@demo.test` | Mall administrator of Niagara City Mall | Moderation desk |
 | `platform@demo.test` | Platform administrator | Passes every ability check |
 | `test@example.com` | Plain account from `DatabaseSeeder` (no role) | "Someone with no role" checks |
