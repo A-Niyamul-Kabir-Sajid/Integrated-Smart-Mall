@@ -10,6 +10,7 @@ use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use App\Modules\ProductsCatalogue\Services\CatalogueService;
 use App\Modules\ShopOwnerOperations\Http\Requests\ListingRules;
 use App\Modules\ShopOwnerOperations\Http\Requests\StoreListingRequest;
+use App\Modules\ShopOwnerOperations\Models\ListingStock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,16 +26,21 @@ class CatalogueController extends Controller
     {
         $status = $request->validate(['status' => ['nullable', Rule::in(['active', 'archived'])]])['status'] ?? 'active';
 
+        $listings = ShopProduct::query()
+            ->where('shop_id', $shop->getKey())
+            ->where('status', $status)
+            ->with('variant.product')
+            ->orderBy('seller_sku')
+            ->paginate(20)
+            ->withQueryString();
+
+        $stocks = ListingStock::query()->whereIn('shop_product_id', $listings->getCollection()->modelKeys())->get()->keyBy('shop_product_id');
+
         return view('shop-owner.catalogue.index', [
             'shop' => $shop,
             'status' => $status,
-            'listings' => ShopProduct::query()
-                ->where('shop_id', $shop->getKey())
-                ->where('status', $status)
-                ->with('variant.product')
-                ->orderBy('seller_sku')
-                ->paginate(20)
-                ->withQueryString(),
+            'listings' => $listings,
+            'stocks' => $stocks,
         ]);
     }
 
@@ -119,6 +125,27 @@ class CatalogueController extends Controller
         $catalogue->updateSharedProduct($shop, $shopListing->loadMissing('variant.product')->variant->product, $details);
 
         return redirect()->route('workspace.catalogue.edit', [$shop, $shopListing])->with('status', __('The product details were saved.'));
+    }
+
+    /**
+     * Adds another option (size, volume, colour) to a product this shop is the sole lister of.
+     */
+    public function storeVariant(Request $request, Shop $shop, ShopProduct $shopListing, CatalogueService $catalogue): RedirectResponse
+    {
+        $request->validate([
+            'variant_label' => ['required', 'string', 'max:120'],
+            'variant_code' => ['nullable', 'string', 'max:60'],
+            ...ListingRules::rules(),
+        ], ListingRules::messages());
+
+        $catalogue->addVariantListing(
+            $shop,
+            $shopListing->loadMissing('variant.product')->variant->product,
+            ['variant_code' => $request->input('variant_code'), 'label' => $request->string('variant_label')->trim()->toString()],
+            $request->only(['seller_sku', 'price_amount', 'availability_status']),
+        );
+
+        return redirect()->route('workspace.catalogue.index', $shop)->with('status', __('The option was added to your catalogue.'));
     }
 
     public function storeImage(Request $request, Shop $shop, ShopProduct $shopListing, CatalogueService $catalogue): RedirectResponse

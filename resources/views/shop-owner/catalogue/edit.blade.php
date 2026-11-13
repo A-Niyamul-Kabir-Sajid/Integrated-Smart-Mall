@@ -66,5 +66,21 @@
             @endif
             <p class="text-xs text-slate-500">{{ trans_choice(':count photo|:count photos', $product->images->count(), ['count' => $product->images->count()]) }}</p>
         </section>
+
+        @if ($canEditProduct)
+            <section class="space-y-4 rounded-xl border border-slate-200 bg-white p-6" aria-labelledby="variant-heading">
+                <h2 id="variant-heading" class="font-semibold">{{ __('Add another option of this product') }}</h2>
+                <p class="text-sm text-slate-600">{{ __('For example a larger size. The new option gets its own SKU, price and stock.') }}</p>
+                <form method="POST" action="{{ route('workspace.catalogue.variants.store', [$shop, $listing]) }}" class="space-y-4">
+                    @csrf
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <x-form-field name="variant_label" :label="__('Option (size, volume, colour…)')" required maxlength="120" />
+                        <x-form-field name="variant_code" :label="__('Option code (optional)')" maxlength="60" />
+                    </div>
+                    @include('shop-owner.catalogue._listing-fields', ['listing' => null])
+                    <button type="submit" class="rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">{{ __('Add option') }}</button>
+                </form>
+            </section>
+        @endif
     </div>
 </x-layouts.customer>

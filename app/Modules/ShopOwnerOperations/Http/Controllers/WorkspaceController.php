@@ -5,8 +5,10 @@ namespace App\Modules\ShopOwnerOperations\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\MallShopDirectory\Services\ShopService;
+use App\Modules\ShopOwnerOperations\Enums\ShopArea;
 use App\Modules\ShopOwnerOperations\Models\ShopApplication;
 use App\Modules\ShopOwnerOperations\Services\ShopAccessService;
+use App\Modules\ShopOwnerOperations\Services\StockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,11 +20,14 @@ use Illuminate\View\View;
  */
 class WorkspaceController extends Controller
 {
-    public function dashboard(Request $request, Shop $shop, ShopAccessService $access): View
+    public function dashboard(Request $request, Shop $shop, ShopAccessService $access, StockService $stock): View
     {
+        $areas = $access->areasFor($request->user(), $shop);
+
         return view('shop-owner.dashboard', [
             'shop' => $shop->load('mall', 'category'),
-            'areas' => $access->areasFor($request->user(), $shop),
+            'areas' => $areas,
+            'lowStock' => in_array(ShopArea::Stock, $areas, true) ? $stock->lowStockCount($shop) : 0,
             'function' => $access->functionOf($request->user(), $shop),
             'application' => ShopApplication::query()->where('shop_id', $shop->getKey())->first(),
         ]);

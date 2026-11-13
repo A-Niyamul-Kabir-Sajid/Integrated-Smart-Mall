@@ -6,6 +6,9 @@
                 <h1 class="text-2xl font-semibold">{{ $shop->name }} · {{ __('Catalogue') }}</h1>
             </div>
             <div class="flex gap-2">
+                @can('shop-area-stock', $shop)
+                    <a href="{{ route('workspace.stock.index', $shop) }}" class="rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-50">{{ __('Stock') }}</a>
+                @endcan
                 @if (Route::has('workspace.reviews.index'))
                     <a href="{{ route('workspace.reviews.index', $shop) }}" class="rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-50">{{ __('Reviews') }}</a>
                 @endif
@@ -33,6 +36,7 @@
                             <th scope="col" class="px-4 py-2">{{ __('Product') }}</th>
                             <th scope="col" class="px-4 py-2 text-right">{{ __('Price') }}</th>
                             <th scope="col" class="px-4 py-2">{{ __('Availability') }}</th>
+                            <th scope="col" class="px-4 py-2 text-right">{{ __('In stock') }}</th>
                             <th scope="col" class="px-4 py-2"><span class="sr-only">{{ __('Actions') }}</span></th>
                         </tr>
                     </thead>
@@ -43,6 +47,15 @@
                                 <td class="px-4 py-2">{{ $listing->variant->product->name }} <span class="text-slate-500">· {{ $listing->variant->label }}</span></td>
                                 <td class="px-4 py-2 text-right tabular-nums">৳{{ number_format((float) $listing->price_amount, 2) }}</td>
                                 <td class="px-4 py-2">{{ __(ucfirst($listing->availability_status)) }}</td>
+                                @php($stock = $stocks->get($listing->getKey()))
+                                <td class="px-4 py-2 text-right tabular-nums">
+                                    @if ($stock)
+                                        {{ $stock->on_hand }}
+                                        @if ($stock->isLow()) <span class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">{{ __('Low') }}</span> @endif
+                                    @else
+                                        <span class="text-slate-400" aria-label="{{ __('Not tracked') }}">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-2 text-right"><a href="{{ route('workspace.catalogue.edit', [$shop, $listing]) }}" class="font-medium text-brand-700 hover:underline">{{ __('Edit') }}</a></td>
                             </tr>
                         @endforeach

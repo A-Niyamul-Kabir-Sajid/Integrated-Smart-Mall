@@ -7,6 +7,7 @@ use App\Modules\ShopOwnerOperations\Http\Controllers\ReviewController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\ShopApplicationController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\StaffController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\StaffInvitationController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\StockController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'can:work-in-shop,shop'])
         Route::post('/{shopListing}/restore', [CatalogueController::class, 'restore'])->name('restore');
         Route::put('/{shopListing}/product', [CatalogueController::class, 'updateProduct'])->name('product.update');
         Route::post('/{shopListing}/images', [CatalogueController::class, 'storeImage'])->name('images.store');
+        Route::post('/{shopListing}/variants', [CatalogueController::class, 'storeVariant'])->name('variants.store');
     });
 
 Route::middleware(['auth', 'can:work-in-shop,shop'])
@@ -36,6 +38,18 @@ Route::middleware(['auth', 'can:work-in-shop,shop'])
         Route::post('/{review}/reply', [ReviewController::class, 'reply'])->middleware('throttle:review-submissions')->name('reply');
         Route::put('/replies/{reply}', [ReviewController::class, 'updateReply'])->name('replies.update');
         Route::post('/replies/{reply}/hide', [ReviewController::class, 'hideReply'])->name('replies.hide');
+    });
+
+// Stock: catalogue editors, managers and owners of an active shop.
+Route::middleware(['auth', 'can:shop-area-stock,shop'])
+    ->prefix('workspace/shops/{shop}/stock')
+    ->name('workspace.stock.')
+    ->group(function (): void {
+        Route::get('/', [StockController::class, 'index'])->name('index');
+        Route::get('/{shopListing}', [StockController::class, 'show'])->name('show');
+        Route::post('/{shopListing}/receive', [StockController::class, 'receive'])->name('receive');
+        Route::post('/{shopListing}/adjust', [StockController::class, 'adjust'])->name('adjust');
+        Route::put('/{shopListing}/threshold', [StockController::class, 'threshold'])->name('threshold');
     });
 
 // A customer applies to open a shop and follows the decision.

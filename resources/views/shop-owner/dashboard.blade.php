@@ -46,7 +46,11 @@
             <li><a href="{{ route('workspace.reviews.index', $shop) }}" class="block rounded-xl border border-slate-200 bg-white p-4 font-medium hover:border-brand-500">{{ __('Reviews') }}</a></li>
             @foreach ($areas as $area)
                 @if (Route::has($areaLinks[$area->value][0]))
-                    <li><a href="{{ route($areaLinks[$area->value][0], $shop) }}" class="block rounded-xl border border-slate-200 bg-white p-4 font-medium hover:border-brand-500">{{ $areaLinks[$area->value][1] }}</a></li>
+                    <li><a href="{{ route($areaLinks[$area->value][0], $shop) }}" class="block rounded-xl border border-slate-200 bg-white p-4 font-medium hover:border-brand-500">{{ $areaLinks[$area->value][1] }}
+                        @if ($area->value === 'stock' && $lowStock > 0)
+                            <span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">{{ trans_choice(':count item low|:count items low', $lowStock, ['count' => $lowStock]) }}</span>
+                        @endif
+                    </a></li>
                 @endif
             @endforeach
             @can('manage-shop', $shop)
