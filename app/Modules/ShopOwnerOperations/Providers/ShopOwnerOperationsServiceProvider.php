@@ -9,6 +9,7 @@ use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use App\Modules\PurchaseVerification\Models\Purchase;
 use App\Modules\ShopOwnerOperations\Console\ExpireOverdueOrders;
 use App\Modules\ShopOwnerOperations\Enums\ShopArea;
+use App\Modules\ShopOwnerOperations\Models\MaintenanceRequest;
 use App\Modules\ShopOwnerOperations\Models\ShopOrder;
 use App\Modules\ShopOwnerOperations\Models\ShopPromotion;
 use App\Modules\ShopOwnerOperations\Models\ShopReturn;
@@ -53,6 +54,7 @@ class ShopOwnerOperationsServiceProvider extends ModuleServiceProvider
         Route::bind('shopPromotion', fn (string $id, RoutingRoute $route): ShopPromotion => $this->scopedToShop(ShopPromotion::query(), $id, $route)->firstOrFail());
         Route::bind('shopThread', fn (string $id, RoutingRoute $route): SupportThread => $this->scopedToShop(SupportThread::query(), $id, $route)->firstOrFail());
         Route::bind('customerThread', fn (string $id): SupportThread => SupportThread::query()->whereKey($this->uuid($id))->where('customer_user_id', auth()->id())->firstOrFail());
+        Route::bind('shopMaintenance', fn (string $id, RoutingRoute $route): MaintenanceRequest => $this->scopedToShop(MaintenanceRequest::query(), $id, $route)->firstOrFail());
         Route::bind('shopReturn', fn (string $id, RoutingRoute $route): ShopReturn => $this->scopedToShop(ShopReturn::query(), $id, $route)->firstOrFail());
 
         // A customer reaches only their own orders and purchases; anyone else's is not found.

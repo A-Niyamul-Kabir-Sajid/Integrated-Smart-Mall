@@ -6,6 +6,7 @@ use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerOrderController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerPurchaseController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerReturnController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerSupportController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\MaintenanceController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\MallShopApplicationController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\OrderController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\PromotionController;
@@ -70,6 +71,19 @@ Route::middleware(['auth', 'can:shop-area-support,shop'])
         Route::get('/{shopThread}', [SupportController::class, 'show'])->name('show');
         Route::post('/{shopThread}/reply', [SupportController::class, 'reply'])->middleware('throttle:support-messages')->name('reply');
         Route::post('/{shopThread}/close', [SupportController::class, 'close'])->name('close');
+    });
+
+// Maintenance requests to the mall: managers and owners of an active shop.
+Route::middleware(['auth', 'can:shop-area-maintenance,shop'])
+    ->prefix('workspace/shops/{shop}/maintenance')
+    ->name('workspace.maintenance.')
+    ->group(function (): void {
+        Route::get('/', [MaintenanceController::class, 'index'])->name('index');
+        Route::post('/', [MaintenanceController::class, 'store'])->middleware('throttle:support-messages')->name('store');
+        Route::get('/{shopMaintenance}', [MaintenanceController::class, 'show'])->name('show');
+        Route::post('/{shopMaintenance}/cancel', [MaintenanceController::class, 'cancel'])->name('cancel');
+        Route::post('/{shopMaintenance}/confirm', [MaintenanceController::class, 'confirm'])->name('confirm');
+        Route::post('/{shopMaintenance}/reopen', [MaintenanceController::class, 'reopen'])->name('reopen');
     });
 
 // Promotions and coupons: managers and owners of an active shop.
