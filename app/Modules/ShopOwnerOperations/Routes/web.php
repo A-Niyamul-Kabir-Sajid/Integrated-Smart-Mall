@@ -7,6 +7,7 @@ use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerPurchaseController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerReturnController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\MallShopApplicationController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\OrderController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\PromotionController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\ReturnController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\ReviewController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\SaleController;
@@ -56,6 +57,21 @@ Route::middleware(['auth', 'can:shop-area-stock,shop'])
         Route::post('/{shopListing}/receive', [StockController::class, 'receive'])->name('receive');
         Route::post('/{shopListing}/adjust', [StockController::class, 'adjust'])->name('adjust');
         Route::put('/{shopListing}/threshold', [StockController::class, 'threshold'])->name('threshold');
+    });
+
+// Promotions and coupons: managers and owners of an active shop.
+Route::middleware(['auth', 'can:shop-area-promotions,shop'])
+    ->prefix('workspace/shops/{shop}/promotions')
+    ->name('workspace.promotions.')
+    ->group(function (): void {
+        Route::get('/', [PromotionController::class, 'index'])->name('index');
+        Route::get('/create', [PromotionController::class, 'create'])->name('create');
+        Route::post('/', [PromotionController::class, 'store'])->name('store');
+        Route::get('/{shopPromotion}/edit', [PromotionController::class, 'edit'])->name('edit');
+        Route::put('/{shopPromotion}', [PromotionController::class, 'update'])->name('update');
+        Route::post('/{shopPromotion}/pause', [PromotionController::class, 'pause'])->name('pause');
+        Route::post('/{shopPromotion}/resume', [PromotionController::class, 'resume'])->name('resume');
+        Route::post('/{shopPromotion}/end', [PromotionController::class, 'end'])->name('end');
     });
 
 // Orders and counter sales: cashiers, managers and owners of an active shop.

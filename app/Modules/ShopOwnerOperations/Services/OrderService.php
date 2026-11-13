@@ -56,13 +56,14 @@ class OrderService
         private PurchaseService $purchases,
         private ReceiptService $receipts,
         private MembershipService $memberships,
+        private PromotionService $promotions,
         private AuditLogger $audit,
     ) {}
 
     /**
      * Places an order for the signed-in customer.
      *
-     * @param  array{items: list<array{shop_product_id: string, quantity: int|string}>, kind: string, pickup_by: CarbonInterface|string, note?: string|null}  $data
+     * @param  array{items: list<array{shop_product_id: string, quantity: int|string}>, kind: string, pickup_by: CarbonInterface|string, note?: string|null, coupon_code?: string|null}  $data
      */
     public function place(User $customer, Shop $shop, array $data): ShopOrder
     {
@@ -77,7 +78,7 @@ class OrderService
         $kind = OrderKind::tryFrom((string) ($data['kind'] ?? ''))
             ?? throw new BusinessRuleViolation('order.invalid_kind', __('Choose reserve or order ahead.'));
 
-        $pickupBy = $this->pickupTime($data['pickup_by'] ?? null);
+        $pickupBy = $this->pickupTime($data['pickup_by'] ?? null, (string) $shop->loadMissing('mall')->mall->timezone);
 
         $open = ShopOrder::query()->where('customer_user_id', $customer->getKey())->whereIn('status', array_map(fn (OrderStatus $status): string => $status->value, OrderStatus::openCases()))->count();
 
@@ -89,7 +90,12 @@ class OrderService
 
         $note = filled($data['note'] ?? null) ? mb_substr(trim($data['note']), 0, 500) : null;
 
-        $order = DB::transaction(function () use ($customer, $shop, $kind, $pickupBy, $lines, $currency, $subtotal, $note): ShopOrder {
+        $coupon = $data['coupon_code'] ?? null;
+
+        $order = DB::transaction(function () use ($customer, $shop, $kind, $pickupBy, $lines, $currency, $subtotal, $note, $coupon): ShopOrder {
+            $quote = $this->promotions->quote($shop, $customer, $subtotal, $coupon);
+            $discount = $quote['discount'] ?? 0;
+
             $order = $this->createOrder([
                 'shop_id' => $shop->getKey(),
                 'customer_user_id' => $customer->getKey(),
@@ -97,14 +103,21 @@ class OrderService
                 'status' => OrderStatus::Requested,
                 'currency' => $currency,
                 'subtotal_amount' => $this->money($subtotal),
-                'discount_amount' => '0.00',
-                'total_amount' => $this->money($subtotal),
+                'discount_amount' => $this->money($discount),
+                'total_amount' => $this->money($subtotal - $discount),
+                'coupon_code' => $quote['promotion']->coupon_code ?? null,
+                'promotion_title' => $quote['promotion']->title ?? null,
                 'pickup_code' => $this->pickupCode(),
                 'pickup_by' => $pickupBy,
                 'customer_note' => $note,
             ]);
 
             $order->items()->createMany($lines);
+
+            if ($quote !== null && $discount > 0) {
+                $this->promotions->redeem($quote['promotion'], $order, $customer, $discount);
+            }
+
             $this->recordEvent($order, null, OrderStatus::Requested, $customer, null);
             $this->audit->record('order.placed', $order, ['number' => $order->order_number, 'lines' => count($lines), 'total' => (string) $order->total_amount], $shop->mall_id, $shop->getKey());
 
@@ -304,6 +317,11 @@ class OrderService
             }
 
             $locked->update([...$extra, 'status' => $to]);
+
+            if (in_array($to, [OrderStatus::Rejected, OrderStatus::Cancelled, OrderStatus::Expired], true)) {
+                $this->promotions->release($locked);
+            }
+
             $this->recordEvent($locked, $from, $to, $actor, $note);
             $this->audit->record('order.'.$to->value, $locked, array_filter(['number' => $locked->order_number, 'note' => $note]), $locked->shop->mall_id, $locked->shop_id);
 
@@ -418,10 +436,17 @@ class OrderService
         return ['lines' => $lines, 'currency' => (string) array_key_first($currencies), 'subtotal' => $subtotal];
     }
 
-    private function pickupTime(CarbonInterface|string|null $value): CarbonImmutable
+    /**
+     * A pickup time typed without a zone is read in the mall's timezone.
+     */
+    private function pickupTime(CarbonInterface|string|null $value, string $timezone): CarbonImmutable
     {
         try {
-            $time = $value === null || $value === '' ? null : CarbonImmutable::parse($value);
+            $time = match (true) {
+                $value === null || $value === '' => null,
+                $value instanceof CarbonInterface => CarbonImmutable::instance($value)->utc(),
+                default => CarbonImmutable::parse($value, $timezone)->utc(),
+            };
         } catch (\Throwable) {
             $time = null;
         }

@@ -64,7 +64,7 @@ class OrderWorkflowTest extends TestCase
         $this->post(route('orders.store', $this->orderUrl()), [
             'quantities' => [$this->coffee->getKey() => 2],
             'kind' => 'click_and_collect',
-            'pickup_by' => now()->addHours(5)->format('Y-m-d\TH:i'),
+            'pickup_by' => now('Asia/Dhaka')->addHours(5)->format('Y-m-d\TH:i'),
             'note' => 'Extra hot',
         ])->assertRedirect()->assertSessionHas('status');
 
@@ -80,12 +80,12 @@ class OrderWorkflowTest extends TestCase
     public function test_invalid_order_forms_are_refused(): void
     {
         $this->actingAs($this->customer);
-        $valid = ['quantities' => [$this->coffee->getKey() => 1], 'kind' => 'reservation', 'pickup_by' => now()->addHours(5)->format('Y-m-d\TH:i')];
+        $valid = ['quantities' => [$this->coffee->getKey() => 1], 'kind' => 'reservation', 'pickup_by' => now('Asia/Dhaka')->addHours(5)->format('Y-m-d\TH:i')];
 
         $this->post(route('orders.store', $this->orderUrl()), [...$valid, 'quantities' => [$this->coffee->getKey() => 0]])->assertSessionHasErrors('business');
         $this->post(route('orders.store', $this->orderUrl()), [...$valid, 'kind' => 'delivery'])->assertSessionHasErrors('kind');
         $this->post(route('orders.store', $this->orderUrl()), [...$valid, 'pickup_by' => ''])->assertSessionHasErrors('pickup_by');
-        $this->post(route('orders.store', $this->orderUrl()), [...$valid, 'pickup_by' => now()->addMinutes(2)->format('Y-m-d\TH:i')])->assertSessionHasErrors('business');
+        $this->post(route('orders.store', $this->orderUrl()), [...$valid, 'pickup_by' => now('Asia/Dhaka')->addMinutes(2)->format('Y-m-d\TH:i')])->assertSessionHasErrors('business');
         $this->post(route('orders.store', $this->orderUrl()), [...$valid, 'quantities' => [$this->coffee->getKey() => 999]])->assertSessionHasErrors('quantities.'.$this->coffee->getKey());
 
         $this->assertSame(0, ShopOrder::query()->count());
@@ -164,7 +164,7 @@ class OrderWorkflowTest extends TestCase
         $this->shop->update(['status' => 'closed']);
 
         $this->actingAs($this->customer)->post(route('orders.store', $this->orderUrl()), [
-            'quantities' => [$this->coffee->getKey() => 1], 'kind' => 'reservation', 'pickup_by' => now()->addHours(5)->format('Y-m-d\TH:i'),
+            'quantities' => [$this->coffee->getKey() => 1], 'kind' => 'reservation', 'pickup_by' => now('Asia/Dhaka')->addHours(5)->format('Y-m-d\TH:i'),
         ])->assertSessionHasErrors('business');
         $this->actingAs($this->cashier)->get(route('workspace.orders.index', $this->shop))->assertForbidden();
 

@@ -32,6 +32,7 @@ class CustomerOrderController extends Controller
                 ->with('variant.product')->orderBy('seller_sku')->limit(100)->get(),
             'preselected' => (string) $request->query('listing'),
             'kinds' => OrderKind::cases(),
+            'couponEnabled' => true,
         ]);
     }
 
@@ -43,6 +44,7 @@ class CustomerOrderController extends Controller
             'kind' => ['required', Rule::enum(OrderKind::class)],
             'pickup_by' => ['required', 'date'],
             'note' => ['nullable', 'string', 'max:500'],
+            'coupon_code' => ['nullable', 'string', 'max:30'],
         ]);
 
         $items = collect($data['quantities'])->filter(fn ($quantity): bool => (int) $quantity > 0)
@@ -54,6 +56,7 @@ class CustomerOrderController extends Controller
             'kind' => $data['kind'],
             'pickup_by' => $data['pickup_by'],
             'note' => $data['note'] ?? null,
+            'coupon_code' => $data['coupon_code'] ?? null,
         ]);
 
         return redirect()->route('orders.show', $order)->with('status', __('Your order :number was sent to :shop.', ['number' => $order->order_number, 'shop' => $publicShop->name]));
