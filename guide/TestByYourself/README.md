@@ -31,6 +31,7 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [20_shop_onboarding_and_staff](20_shop_onboarding_and_staff.md) | Apply for a shop, mall approval or rejection, profile and hours, staff invitations and work functions, suspension | EPIC-10 |
 | [21_stock_and_inventory](21_stock_and_inventory.md) | Track stock per listing, history, low-stock alerts, extra product options | EPIC-10 |
 | [22_orders_sales_and_receipts](22_orders_sales_and_receipts.md) | Order and collect, accept and hand over, counter sales, review codes, receipts, voids | EPIC-10 |
+| [23_returns_and_exchanges](23_returns_and_exchanges.md) | Request, approve, complete returns and exchanges, restock, refunded sales | EPIC-10 |
 
 ## Helpers
 
