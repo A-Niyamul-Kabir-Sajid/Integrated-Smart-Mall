@@ -12,6 +12,7 @@ use App\Modules\ShopOwnerOperations\Enums\ShopArea;
 use App\Modules\ShopOwnerOperations\Models\ShopOrder;
 use App\Modules\ShopOwnerOperations\Models\ShopPromotion;
 use App\Modules\ShopOwnerOperations\Models\ShopReturn;
+use App\Modules\ShopOwnerOperations\Models\SupportThread;
 use App\Modules\ShopOwnerOperations\Services\ShopAccessService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
@@ -50,6 +51,8 @@ class ShopOwnerOperationsServiceProvider extends ModuleServiceProvider
         Route::bind('shopPurchase', fn (string $id, RoutingRoute $route): Purchase => $this->scopedToShop(Purchase::query(), $id, $route)->firstOrFail());
 
         Route::bind('shopPromotion', fn (string $id, RoutingRoute $route): ShopPromotion => $this->scopedToShop(ShopPromotion::query(), $id, $route)->firstOrFail());
+        Route::bind('shopThread', fn (string $id, RoutingRoute $route): SupportThread => $this->scopedToShop(SupportThread::query(), $id, $route)->firstOrFail());
+        Route::bind('customerThread', fn (string $id): SupportThread => SupportThread::query()->whereKey($this->uuid($id))->where('customer_user_id', auth()->id())->firstOrFail());
         Route::bind('shopReturn', fn (string $id, RoutingRoute $route): ShopReturn => $this->scopedToShop(ShopReturn::query(), $id, $route)->firstOrFail());
 
         // A customer reaches only their own orders and purchases; anyone else's is not found.
@@ -66,6 +69,7 @@ class ShopOwnerOperationsServiceProvider extends ModuleServiceProvider
         RateLimiter::for('shop-applications', fn (Request $request): Limit => Limit::perHour(10)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
         RateLimiter::for('orders', fn (Request $request): Limit => Limit::perMinute(20)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
         RateLimiter::for('pickup-codes', fn (Request $request): Limit => Limit::perMinute(10)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
+        RateLimiter::for('support-messages', fn (Request $request): Limit => Limit::perMinute(10)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
         RateLimiter::for('staff-invitations', fn (Request $request): Limit => Limit::perMinute(10)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
     }
 

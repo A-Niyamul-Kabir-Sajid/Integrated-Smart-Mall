@@ -24,3 +24,14 @@
         <p class="text-sm text-slate-600">{{ __('Reserve goods or order ahead and collect them at the shop.') }}</p>
     </section>
 @endif
+
+@if (Route::has('support.create'))
+    <section class="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-5" aria-label="{{ __('Contact the shop') }}" data-integration="support">
+        @auth
+            <a href="{{ route('support.create', ['publicMall' => $mall->slug, 'publicShop' => $shop->slug]) }}" class="rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">{{ __('Contact the shop') }}</a>
+        @else
+            <a href="{{ route('login') }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Sign in to contact the shop') }}</a>
+        @endauth
+        <p class="text-sm text-slate-600">{{ __('Ask a question or report a problem; the shop answers in your account.') }}</p>
+    </section>
+@endif

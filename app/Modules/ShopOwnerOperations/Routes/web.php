@@ -5,6 +5,7 @@ use App\Modules\ShopOwnerOperations\Http\Controllers\CatalogueImportController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerOrderController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerPurchaseController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerReturnController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\CustomerSupportController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\MallShopApplicationController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\OrderController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\PromotionController;
@@ -15,6 +16,7 @@ use App\Modules\ShopOwnerOperations\Http\Controllers\ShopApplicationController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\StaffController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\StaffInvitationController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\StockController;
+use App\Modules\ShopOwnerOperations\Http\Controllers\SupportController;
 use App\Modules\ShopOwnerOperations\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +59,17 @@ Route::middleware(['auth', 'can:shop-area-stock,shop'])
         Route::post('/{shopListing}/receive', [StockController::class, 'receive'])->name('receive');
         Route::post('/{shopListing}/adjust', [StockController::class, 'adjust'])->name('adjust');
         Route::put('/{shopListing}/threshold', [StockController::class, 'threshold'])->name('threshold');
+    });
+
+// Customer support inbox: cashiers, managers and owners of an active shop.
+Route::middleware(['auth', 'can:shop-area-support,shop'])
+    ->prefix('workspace/shops/{shop}/support')
+    ->name('workspace.support.')
+    ->group(function (): void {
+        Route::get('/', [SupportController::class, 'index'])->name('index');
+        Route::get('/{shopThread}', [SupportController::class, 'show'])->name('show');
+        Route::post('/{shopThread}/reply', [SupportController::class, 'reply'])->middleware('throttle:support-messages')->name('reply');
+        Route::post('/{shopThread}/close', [SupportController::class, 'close'])->name('close');
     });
 
 // Promotions and coupons: managers and owners of an active shop.
@@ -113,6 +126,12 @@ Route::middleware(['auth', 'can:shop-area-orders,shop'])
 Route::middleware('auth')->group(function (): void {
     Route::get('/malls/{publicMall}/shops/{publicShop}/order', [CustomerOrderController::class, 'create'])->name('orders.create');
     Route::post('/malls/{publicMall}/shops/{publicShop}/order', [CustomerOrderController::class, 'store'])->middleware('throttle:orders')->name('orders.store');
+    Route::get('/malls/{publicMall}/shops/{publicShop}/contact', [CustomerSupportController::class, 'create'])->name('support.create');
+    Route::post('/malls/{publicMall}/shops/{publicShop}/contact', [CustomerSupportController::class, 'store'])->middleware('throttle:support-messages')->name('support.store');
+    Route::get('/account/support', [CustomerSupportController::class, 'index'])->name('support.index');
+    Route::get('/account/support/{customerThread}', [CustomerSupportController::class, 'show'])->name('support.show');
+    Route::post('/account/support/{customerThread}/reply', [CustomerSupportController::class, 'reply'])->middleware('throttle:support-messages')->name('support.reply');
+    Route::post('/account/support/{customerThread}/close', [CustomerSupportController::class, 'close'])->name('support.close');
     Route::get('/account/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/account/orders/{customerOrder}', [CustomerOrderController::class, 'show'])->name('orders.show');
     Route::post('/account/orders/{customerOrder}/cancel', [CustomerOrderController::class, 'cancel'])->middleware('throttle:orders')->name('orders.cancel');
