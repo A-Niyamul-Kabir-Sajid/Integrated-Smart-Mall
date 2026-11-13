@@ -5,9 +5,12 @@
 **Needs:** nothing else; this file is self-contained
 **Time:** about 10 minutes
 
+
+> **Update (EPIC-10):** a counter-sales screen now exists. A cashier, manager or owner can record the sale and issue the review code at `CAFE_WS`/sales (see [22_orders_sales_and_receipts](22_orders_sales_and_receipts.md), step 4). The helper script below still works and is kept for quick setup.
+
 ## Why this file exists
 
-A purchase code is what lets a customer's review carry the **Verified purchase** badge. In the finished app the shop prints it (QR or text) on the receipt from a sales screen. That screen is not built yet (EPIC-10), so until it is, you play the seller with a helper script that calls the same services the screen will call: `PurchaseService::recordPurchase` and `VerificationCredentialService::issueCredential`.
+A purchase code is what lets a customer's review carry the **Verified purchase** badge. In the finished app the shop prints it (QR or text) on the receipt from a sales screen. The sales screen exists now (see the update above); this file keeps the helper script, which plays the seller that calls the same services the screen will call: `PurchaseService::recordPurchase` and `VerificationCredentialService::issueCredential`.
 
 What happens behind the scenes:
 
