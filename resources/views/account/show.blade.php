@@ -10,6 +10,9 @@
                     <a href="{{ route('account.lists.index') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Shopping lists') }}</a>
                 @endif
                 <a href="{{ route('account.password.edit') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Change password') }}</a>
+                @if (Route::has('shop-applications.index'))
+                    <a href="{{ route('shop-applications.index') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Shop applications') }}</a>
+                @endif
                 @if (Route::has('account.reviews'))
                     <a href="{{ route('account.reviews') }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">{{ __('Your reviews') }}</a>
                 @endif
@@ -45,6 +48,9 @@
                         <li class="flex items-center justify-between gap-4 px-5 py-3">
                             <span class="font-medium">{{ $mall->name }}</span>
                             <span class="flex gap-4">
+                                @if (Route::has('shop-applications.admin.index'))
+                                    <a href="{{ route('shop-applications.admin.index', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Shop applications') }}</a>
+                                @endif
                                 @if (Route::has('facilities.admin.index'))
                                     <a href="{{ route('facilities.admin.index', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Facilities') }}</a>
                                 @endif
@@ -64,6 +70,9 @@
                         <li class="flex items-center justify-between gap-4 px-5 py-3">
                             <span><span class="font-medium">{{ $membership->shop->name }}</span> <span class="text-sm text-slate-500">· {{ __($membership->role->name) }}</span></span>
                             <span class="flex gap-4">
+                                @if (Route::has('workspace.dashboard'))
+                                    <a href="{{ route('workspace.dashboard', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Workspace') }}</a>
+                                @endif
                                 @if (Route::has('workspace.reviews.index'))
                                     <a href="{{ route('workspace.reviews.index', $membership->shop_id) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Reviews') }}</a>
                                 @endif

@@ -8,6 +8,8 @@ use App\Modules\AccountsAccess\Services\MembershipService;
 use App\Modules\AccountsAccess\Services\RoleAssignmentService;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
+use App\Modules\ShopOwnerOperations\Enums\ShopFunction;
+use App\Modules\ShopOwnerOperations\Models\ShopStaffFunction;
 use Illuminate\Database\Seeder;
 
 /**
@@ -26,8 +28,16 @@ class DemoAccountsSeeder extends Seeder
         $roles->assignPlatformRole($this->account('Platform Admin', 'platform@demo.test'), RoleCode::PlatformAdmin);
         $memberships->grantMallRole($this->account('Mall Admin', 'mall.admin@demo.test'), $mall, RoleCode::MallAdmin);
         $memberships->grantShopRole($this->account('Cafe Brew Owner', 'owner@demo.test'), $cafe, RoleCode::ShopOwner);
-        $memberships->grantShopRole($this->account('Cafe Brew Staff', 'staff@demo.test'), $cafe, RoleCode::ShopStaff);
+        $this->staff('Cafe Brew Staff', 'staff@demo.test', ShopFunction::Cashier, $cafe, $memberships);
+        $this->staff('Cafe Brew Manager', 'manager@demo.test', ShopFunction::Manager, $cafe, $memberships);
         $roles->assignPlatformRole($this->account('Demo Customer', 'customer@demo.test'), RoleCode::Customer);
+    }
+
+    private function staff(string $name, string $email, ShopFunction $function, Shop $shop, MembershipService $memberships): void
+    {
+        $membership = $memberships->grantShopRole($this->account($name, $email), $shop, RoleCode::ShopStaff);
+
+        ShopStaffFunction::query()->create(['shop_membership_id' => $membership->getKey(), 'staff_function' => $function]);
     }
 
     private function account(string $name, string $email): User

@@ -65,6 +65,42 @@ class ShopService
     }
 
     /**
+     * Changes the details a shop controls itself. The slug, category and status are
+     * not part of the profile: the slug is the public address and status belongs to the
+     * mall's approval flow.
+     *
+     * @param  array{name: string, description?: string|null, contact_phone?: string|null}  $data
+     */
+    public function updateProfile(Shop $shop, array $data): Shop
+    {
+        $name = trim($data['name']);
+
+        if ($name === '' || mb_strlen($name) > 150) {
+            throw new BusinessRuleViolation('shop.invalid_name', __('Enter a shop name of up to 150 characters.'));
+        }
+
+        if (filled($data['contact_phone'] ?? null) && $this->phones->normalize($data['contact_phone']) === null) {
+            throw new BusinessRuleViolation('shop.invalid_contact_phone', __('Enter a valid contact number, for example 01712345678.'));
+        }
+
+        if ($shop->status === ShopStatus::Archived) {
+            throw new BusinessRuleViolation('shop.archived', __('An archived shop cannot be edited.'));
+        }
+
+        return DB::transaction(function () use ($shop, $name, $data): Shop {
+            $shop->update([
+                'name' => $name,
+                'description' => filled($data['description'] ?? null) ? trim($data['description']) : null,
+                'contact_phone' => $data['contact_phone'] ?? null,
+            ]);
+
+            $this->audit->record('shop.profile_changed', $shop, ['fields' => array_keys($shop->getChanges())], $shop->mall_id, $shop->getKey());
+
+            return $shop;
+        });
+    }
+
+    /**
      * Places a shop in a physical unit. The floor must belong to the shop's own
      * mall, an ERD rule a foreign key cannot express.
      */

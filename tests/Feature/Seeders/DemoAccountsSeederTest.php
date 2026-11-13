@@ -6,6 +6,7 @@ use App\Modules\AccountsAccess\Models\User;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\SharedPlatform\Enums\Ability;
+use App\Modules\ShopOwnerOperations\Enums\ShopArea;
 use Database\Seeders\DemoAccountsSeeder;
 use Database\Seeders\DemoMallSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,6 +29,10 @@ class DemoAccountsSeederTest extends TestCase
         $this->assertTrue(Gate::forUser($account('owner@demo.test'))->allows(Ability::ManageShop, $cafe));
         $this->assertTrue(Gate::forUser($account('staff@demo.test'))->allows(Ability::WorkInShop, $cafe));
         $this->assertFalse(Gate::forUser($account('staff@demo.test'))->allows(Ability::ManageShop, $cafe));
+        $this->assertTrue(Gate::forUser($account('staff@demo.test'))->allows(ShopArea::Orders->ability(), $cafe));
+        $this->assertFalse(Gate::forUser($account('staff@demo.test'))->allows(ShopArea::Stock->ability(), $cafe));
+        $this->assertTrue(Gate::forUser($account('manager@demo.test'))->allows(ShopArea::Promotions->ability(), $cafe));
+        $this->assertFalse(Gate::forUser($account('manager@demo.test'))->allows(Ability::ManageShop, $cafe));
         $this->assertTrue(auth()->attempt(['email' => 'customer@demo.test', 'password' => DemoAccountsSeeder::PASSWORD]));
     }
 }
