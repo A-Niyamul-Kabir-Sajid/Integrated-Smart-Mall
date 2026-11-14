@@ -26,6 +26,11 @@ echo "Mall home        : {$mallUrl}\n";
 echo "Shop directory   : {$mallUrl}/shops\n";
 echo "Products         : {$mallUrl}/products\n";
 echo "Moderation desk  : {$base}/admin/malls/{$mall->getKey()}/moderation   (mall.admin@demo.test)\n";
+echo "Admin home       : {$base}/admin/malls/{$mall->getKey()}   (mall.admin@demo.test)\n";
+echo "Admin shops      : {$base}/admin/malls/{$mall->getKey()}/shops\n";
+echo "Admin floors     : {$base}/admin/malls/{$mall->getKey()}/floors\n";
+echo "Activity log     : {$base}/admin/malls/{$mall->getKey()}/activity\n";
+echo "Shop categories  : {$base}/admin/categories   (platform@demo.test)\n";
 
 echo "\n== SHOPS ==\n";
 Shop::query()->whereBelongsTo($mall)->orderBy('name')->get()->each(function (Shop $shop) use ($base, $mallUrl): void {

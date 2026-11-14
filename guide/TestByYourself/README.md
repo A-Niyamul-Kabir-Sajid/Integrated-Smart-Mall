@@ -35,6 +35,7 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [24_promotions_and_coupons](24_promotions_and_coupons.md) | Storewide offers, coupon codes, limits, discounts reaching the sale | EPIC-10 |
 | [25_customer_support](25_customer_support.md) | Customer writes to a shop, shop answers, close, isolation | EPIC-10 |
 | [26_maintenance_requests](26_maintenance_requests.md) | Shop reports a problem to the mall, mall works it, shop confirms | EPIC-10 |
+| [27_mall_admin_tenants_and_floors](27_mall_admin_tenants_and_floors.md) | Mall office creates and edits shops, owners and units, manages floors, mall details, categories and reads the activity log | EPIC-11 |
 
 ## Helpers
 
