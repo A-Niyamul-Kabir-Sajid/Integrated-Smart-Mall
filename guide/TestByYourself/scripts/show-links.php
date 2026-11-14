@@ -30,6 +30,12 @@ echo "Admin home       : {$base}/admin/malls/{$mall->getKey()}   (mall.admin@dem
 echo "Admin shops      : {$base}/admin/malls/{$mall->getKey()}/shops\n";
 echo "Admin floors     : {$base}/admin/malls/{$mall->getKey()}/floors\n";
 echo "Activity log     : {$base}/admin/malls/{$mall->getKey()}/activity\n";
+echo "Announcements    : {$base}/admin/malls/{$mall->getKey()}/announcements\n";
+echo "Complaints desk  : {$base}/admin/malls/{$mall->getKey()}/complaints\n";
+echo "Maintenance desk : {$base}/admin/malls/{$mall->getKey()}/maintenance\n";
+echo "Work orders      : {$base}/admin/malls/{$mall->getKey()}/work-orders\n";
+echo "Public news      : {$mallUrl}/news\n";
+echo "My complaints    : {$base}/account/complaints   (customer@demo.test)\n";
 echo "Shop categories  : {$base}/admin/categories   (platform@demo.test)\n";
 
 echo "\n== SHOPS ==\n";

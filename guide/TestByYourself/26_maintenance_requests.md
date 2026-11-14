@@ -1,13 +1,13 @@
 # 26 Maintenance requests to the mall
 
-**Covers:** EPIC-10 ISM-107 / ISM-109 (maintenance requests), ShopOwnerOperations
+**Covers:** EPIC-10 ISM-107 / ISM-109 (maintenance requests), ShopOwnerOperations; the mall-side desk is guide 30
 **Automated tests:** `tests/Feature/Modules/ShopOwnerOperations/MaintenanceRequestTest.php`
 **Needs:** nothing else; this file is self-contained
 **Time:** about 15 minutes
 
 ## What you are proving
 
-A manager or owner of an active shop reports a problem to the mall; the mall's administrators move it to acknowledged, in progress and resolved (the mall-side screen arrives with EPIC-11, so this file uses a helper); the shop confirms the fix or reopens it; every step is in the history; cashiers and other shops cannot see or change requests.
+A manager or owner of an active shop reports a problem to the mall; the mall's administrators move it to acknowledged, in progress and resolved (on the mall desk at `ADMIN`/maintenance, described in guide 30; this file may use either that desk or the tinker helper below); the shop confirms the fix or reopens it; every step is in the history; cashiers and other shops cannot see or change requests.
 
 ## Setup
 
@@ -30,7 +30,7 @@ Accounts (password `password`), sign in at <http://127.0.0.1:8000/login>:
 ### Create the data this file needs
 
 1. `php artisan tinker guide/TestByYourself/scripts/show-links.php`; keep Cafe Brew's `workspace` URL as `CAFE_WS`. Maintenance is at `CAFE_WS`/maintenance.
-2. The mall's side has no screen yet. To play the mall office, use tinker with the request number you will see in step 1, for example `php artisan tinker --execute 'app(\App\Modules\ShopOwnerOperations\Services\MaintenanceRequestService::class)->updateStatus(\App\Modules\AccountsAccess\Models\User::where("email","mall.admin@demo.test")->first(), \App\Modules\ShopOwnerOperations\Models\MaintenanceRequest::where("request_number","MNT-XXXXXXXX")->first(), \App\Modules\ShopOwnerOperations\Enums\MaintenanceStatus::Acknowledged);'` (replace `MNT-XXXXXXXX` and the status: `Acknowledged`, `InProgress`, then `Resolved` with a fourth argument such as `"Replaced the washer"`).
+2. To play the mall office you can open the mall desk (sign in as M, <http://127.0.0.1:8000/admin/malls/MALL_ID/maintenance>, where `MALL_ID` is the `Mall id` line of the links script) or, without a browser, use tinker with the request number you will see in step 1, for example `php artisan tinker --execute 'app(\App\Modules\ShopOwnerOperations\Services\MaintenanceRequestService::class)->updateStatus(\App\Modules\AccountsAccess\Models\User::where("email","mall.admin@demo.test")->first(), \App\Modules\ShopOwnerOperations\Models\MaintenanceRequest::where("request_number","MNT-XXXXXXXX")->first(), \App\Modules\ShopOwnerOperations\Enums\MaintenanceStatus::Acknowledged);'` (replace `MNT-XXXXXXXX` and the status: `Acknowledged`, `InProgress`, then `Resolved` with a fourth argument such as `"Replaced the washer"`).
 
 ## Steps
 
@@ -79,7 +79,7 @@ Accounts (password `password`), sign in at <http://127.0.0.1:8000/login>:
 ## If something looks wrong
 
 - 429 Too Many Requests: requests are limited to 10 per minute together with support messages.
-- The mall-side screen is part of EPIC-11 (ISM-117); until then the helper above plays the mall office.
+- The mall-side desk and work orders are covered in [30_work_orders_and_maintenance_desk.md](30_work_orders_and_maintenance_desk.md).
 
 ## Result
 

@@ -36,6 +36,9 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [25_customer_support](25_customer_support.md) | Customer writes to a shop, shop answers, close, isolation | EPIC-10 |
 | [26_maintenance_requests](26_maintenance_requests.md) | Shop reports a problem to the mall, mall works it, shop confirms | EPIC-10 |
 | [27_mall_admin_tenants_and_floors](27_mall_admin_tenants_and_floors.md) | Mall office creates and edits shops, owners and units, manages floors, mall details, categories and reads the activity log | EPIC-11 |
+| [28_announcements_and_events](28_announcements_and_events.md) | Mall notices and events: draft, publish, time windows, public pages | EPIC-11 |
+| [29_complaints](29_complaints.md) | Customer complaints: file, assign, resolve or reject, confirm or reopen | EPIC-11 |
+| [30_work_orders_and_maintenance_desk](30_work_orders_and_maintenance_desk.md) | Mall maintenance desk, work orders, queues on the admin home, moderation hand-off | EPIC-11 |
 
 ## Helpers
 
