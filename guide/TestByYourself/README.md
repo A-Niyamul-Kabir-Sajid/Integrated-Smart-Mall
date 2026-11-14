@@ -39,6 +39,9 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [28_announcements_and_events](28_announcements_and_events.md) | Mall notices and events: draft, publish, time windows, public pages | EPIC-11 |
 | [29_complaints](29_complaints.md) | Customer complaints: file, assign, resolve or reject, confirm or reopen | EPIC-11 |
 | [30_work_orders_and_maintenance_desk](30_work_orders_and_maintenance_desk.md) | Mall maintenance desk, work orders, queues on the admin home, moderation hand-off | EPIC-11 |
+| [31_search_demand](31_search_demand.md) | Anonymous search counting, privacy masking, unmet-demand report | EPIC-14 |
+| [32_page_views_and_funnel](32_page_views_and_funnel.md) | Shop and product views, staff exclusion, view-to-order funnel | EPIC-14 |
+| [33_activity_rollups_retention_and_demo_data](33_activity_rollups_retention_and_demo_data.md) | Daily summaries, retention, labelled demonstration traffic | EPIC-14 |
 
 ## Helpers
 
