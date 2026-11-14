@@ -4,7 +4,7 @@
 
 Tenant/admin workflows, maps, moderation and mall operations. Source folder: [app/Modules/MallOwnerAdmin](../../../app/Modules/MallOwnerAdmin/).
 
-Status: folder architecture only; this page routes to existing requirements, not implemented APIs.
+Status: implemented for EPIC-11 except map and QR administration (ISM-113, waits for EPIC-05): tenant, shop, floor, mall and category administration, announcements and events, complaints, maintenance desk and work orders, the queue overview and the activity log; see [progress](../../PROGRESS.md) and decision D-015 for the tables, rules and limits. Leases, dues, advertising and role administration are not built.
 
 ## Read before implementation
 
