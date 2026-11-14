@@ -3,6 +3,10 @@
 namespace App\Modules\MallOwnerAdmin\Services;
 
 use App\Modules\AccountsAccess\Models\User;
+use App\Modules\MallOwnerAdmin\Enums\ComplaintStatus;
+use App\Modules\MallOwnerAdmin\Enums\WorkOrderStatus;
+use App\Modules\MallOwnerAdmin\Models\Complaint;
+use App\Modules\MallOwnerAdmin\Models\WorkOrder;
 use App\Modules\MallShopDirectory\Enums\ShopStatus;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\ReviewsModeration\Services\ModerationService;
@@ -36,6 +40,8 @@ class MallOverviewService
             'waiting' => [
                 'applications' => ShopApplication::query()->where('mall_id', $mall->getKey())->where('status', ApplicationStatus::Pending->value)->count(),
                 'maintenance' => MaintenanceRequest::query()->where('mall_id', $mall->getKey())->whereIn('status', [MaintenanceStatus::Open->value, MaintenanceStatus::Acknowledged->value, MaintenanceStatus::InProgress->value])->count(),
+                'complaints' => Complaint::query()->where('mall_id', $mall->getKey())->whereIn('status', array_map(fn (ComplaintStatus $status): string => $status->value, ComplaintStatus::openCases()))->count(),
+                'work_orders' => WorkOrder::query()->where('mall_id', $mall->getKey())->whereIn('status', array_map(fn (WorkOrderStatus $status): string => $status->value, WorkOrderStatus::openCases()))->count(),
                 'reported_reviews' => $this->moderation->reportedReviews($administrator, $mall, 1)->total(),
             ],
         ];

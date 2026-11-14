@@ -22,6 +22,7 @@ class MallDashboardController extends Controller
             ['route' => 'shop-applications.admin.index', 'label' => __('Shop applications'), 'count' => $summary['waiting']['applications']],
             ['route' => 'mall-admin.maintenance.index', 'label' => __('Maintenance requests'), 'count' => $summary['waiting']['maintenance']],
             ['route' => 'mall-admin.complaints.index', 'label' => __('Complaints'), 'count' => $summary['waiting']['complaints'] ?? 0],
+            ['route' => 'mall-admin.work-orders.index', 'label' => __('Open work orders'), 'count' => $summary['waiting']['work_orders']],
             ['route' => 'moderation.index', 'label' => __('Reported reviews'), 'count' => $summary['waiting']['reported_reviews']],
         ])->filter(fn (array $queue): bool => Route::has($queue['route']))
             ->map(fn (array $queue): array => [...$queue, 'url' => route($queue['route'], $mall)])
@@ -32,7 +33,10 @@ class MallDashboardController extends Controller
             ['route' => 'mall-admin.floors.index', 'label' => __('Floors'), 'hint' => __('Floor names, order and elevation')],
             ['route' => 'facilities.admin.index', 'label' => __('Facilities and parking'), 'hint' => __('Washrooms, lifts, prayer rooms, parking zones')],
             ['route' => 'mall-admin.announcements.index', 'label' => __('Announcements and events'), 'hint' => __('Notices and events shown on the mall page')],
+            ['route' => 'mall-admin.maintenance.index', 'label' => __('Maintenance requests'), 'hint' => __('Requests from shops, work orders and progress')],
             ['route' => 'mall-admin.work-orders.index', 'label' => __('Work orders'), 'hint' => __('Assign and track maintenance work')],
+            ['route' => 'mall-admin.complaints.index', 'label' => __('Complaints'), 'hint' => __('Assign, work and resolve customer complaints')],
+            ['route' => 'moderation.index', 'label' => __('Review moderation'), 'hint' => __('Reported and hidden reviews')],
             ['route' => 'mall-admin.activity.index', 'label' => __('Activity log'), 'hint' => __('Who changed what, and when')],
             ['route' => 'mall-admin.profile.edit', 'label' => __('Mall details'), 'hint' => __('Name, address, time zone and visibility')],
         ])->filter(fn (array $tool): bool => Route::has($tool['route']))
