@@ -39,6 +39,10 @@ echo "My complaints    : {$base}/account/complaints   (customer@demo.test)\n";
 echo "Shop categories  : {$base}/admin/categories   (platform@demo.test)\n";
 echo "Search demand    : {$base}/admin/malls/{$mall->getKey()}/analytics/search\n";
 echo "Page views       : {$base}/admin/malls/{$mall->getKey()}/analytics/views\n";
+echo "Sales and performance : {$base}/admin/malls/{$mall->getKey()}/analytics   (mall.admin@demo.test)\n";
+echo "Sales forecast   : {$base}/admin/malls/{$mall->getKey()}/analytics/forecast\n";
+echo "Monthly reports  : {$base}/admin/malls/{$mall->getKey()}/analytics/reports\n";
+echo "Metric catalogue : {$base}/admin/malls/{$mall->getKey()}/analytics/metrics\n";
 
 echo "\n== SHOPS ==\n";
 Shop::query()->whereBelongsTo($mall)->orderBy('name')->get()->each(function (Shop $shop) use ($base, $mallUrl): void {
@@ -49,6 +53,10 @@ Shop::query()->whereBelongsTo($mall)->orderBy('name')->get()->each(function (Sho
     echo "  CSV import      : {$base}/workspace/shops/{$shop->getKey()}/catalogue/import\n";
     echo "  review inbox    : {$base}/workspace/shops/{$shop->getKey()}/reviews\n";
     echo "  visitors/views  : {$base}/workspace/shops/{$shop->getKey()}/analytics   (owner only)\n";
+    echo "  sales and performance : {$base}/workspace/shops/{$shop->getKey()}/insights   (owner only)\n";
+    echo "  sales forecast  : {$base}/workspace/shops/{$shop->getKey()}/insights/forecast\n";
+    echo "  monthly reports : {$base}/workspace/shops/{$shop->getKey()}/insights/reports\n";
+    echo "  metric catalogue: {$base}/workspace/shops/{$shop->getKey()}/insights/metrics\n";
 });
 
 echo "\n== LISTINGS (product reviews) ==\n";

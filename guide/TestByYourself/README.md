@@ -42,6 +42,9 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [31_search_demand](31_search_demand.md) | Anonymous search counting, privacy masking, unmet-demand report | EPIC-14 |
 | [32_page_views_and_funnel](32_page_views_and_funnel.md) | Shop and product views, staff exclusion, view-to-order funnel | EPIC-14 |
 | [33_activity_rollups_retention_and_demo_data](33_activity_rollups_retention_and_demo_data.md) | Daily summaries, retention, labelled demonstration traffic | EPIC-14 |
+| [34_sales_dashboards_and_metric_catalogue](34_sales_dashboards_and_metric_catalogue.md) | Shop and mall dashboards, quality flags, date filters, metric catalogue | EPIC-12 |
+| [35_sales_forecast_prototype](35_sales_forecast_prototype.md) | Forecast with baselines, evaluation, run id and limits | EPIC-12 |
+| [36_monthly_reports_and_exports](36_monthly_reports_and_exports.md) | Monthly reports, summaries from figures, CSV and print, visitor figures in exports | EPIC-12 |
 
 ## Helpers
 

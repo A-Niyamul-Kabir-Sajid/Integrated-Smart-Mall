@@ -4,7 +4,7 @@
 
 Shared metrics, shop/mall reports and evaluated forecasts. Source folder: [app/Modules/AnalyticsReports](../../../app/Modules/AnalyticsReports/).
 
-Status: visitor activity analytics implemented for EPIC-14 (search demand, page views, view-to-order funnel, daily summaries, retention, demonstration traffic); the metric catalogue, dashboards, monthly reports, exports and forecasts of EPIC-12 are not built; see [progress](../../PROGRESS.md) and decision D-016.
+Status: visitor activity analytics implemented for EPIC-14 (decision D-016); metric catalogue, shop and mall dashboards, monthly reports, CSV exports and the forecast prototype implemented for EPIC-12 (decision D-017); navigation demand waits for EPIC-05; see [progress](../../PROGRESS.md).
 
 ## Read before implementation
 
@@ -45,3 +45,14 @@ Source tables `activity_search_events`, `activity_view_events`; summaries `activ
 | `product_page_views` | Views of the product page and distinct visitors that day; shared by every shop selling the product | Mall administrators; shop owners see the products they list |
 
 Counting rules: one search or view per visitor per page per 30 minutes; only page one of a search; no crawlers, no accounts that run a shop or the mall; visitor-days add up daily distinct visitors and are not distinct people over a period. A page view is not a visit to the mall. The funnel (product views, orders containing the listing, completed sales containing the listing) is real traffic only. A change of formula gets a new metric code, never an edit of an old one.
+
+## Reporting metrics (EPIC-12, decision D-017)
+
+The full catalogue (meaning, source tables, formula, dimensions, refresh, method, access) is in code as `ReportMetric` and is shown to each audience on the "How each figure is calculated" page; it is not repeated here so it cannot drift. Rules that hold for every figure:
+
+- One query source (`Services/Reporting/SourceData`) for dashboards, monthly reports, exports and the forecast.
+- Sales are completed purchases only; orders are not sales; a page view is not a visit; navigation requests (EPIC-05, not built) are interest, not footfall.
+- Shop figures: the shop's owner only. Mall figures: the mall's administrators only. Visitor-activity figures use real traffic only in reports.
+- Simulated demonstration records (receipt, order or complaint numbers starting `SIM-`, reviewers at `@sim.demo.test`) are counted and stated in every report.
+- Algorithms live in `Algorithms/` (regression, t distribution, Holt-Winters, forecast metrics, k-means, empirical Bayes, ABC-XYZ, robust statistics, log-odds terms) and are pure, deterministic and unit-tested against published values.
+- `analytics_monthly_reports` holds one snapshot per shop or mall and month.
