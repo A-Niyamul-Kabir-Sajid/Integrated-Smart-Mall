@@ -53,6 +53,7 @@ class ShopSearchTest extends TestCase
             'percent sign is literal' => ['50%', ['Juice Corner']],
             'lone percent matches only a literal percent sign' => ['%', ['Juice Corner']],
             'underscore is literal' => ['_', []],
+            'exclamation mark (the escape character) is literal' => ['!', []],
             'no match' => ['bicycle', []],
             'drafts and other malls never match' => ['coffee', ['Cafe Brew']],
         ];

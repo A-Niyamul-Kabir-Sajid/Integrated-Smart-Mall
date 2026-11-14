@@ -176,7 +176,7 @@ class ActivityRollupTest extends TestCase
         $this->rollups->rollupDay($this->mall, $this->day());
 
         $this->assertSame(0, ActivitySummary::query()->where('subject_key', 'secret')->count());
-        $this->assertSame(1, ActivitySummary::query()->where('metric_code', SummaryMetric::SearchTotal->value)->sum('value'));
+        $this->assertSame(1, (int) ActivitySummary::query()->where('metric_code', SummaryMetric::SearchTotal->value)->sum('value'));
     }
 
     public function test_the_rollup_command_recomputes_the_latest_days_and_one_chosen_day(): void

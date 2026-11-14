@@ -119,12 +119,13 @@ class ProductDiscoveryService implements CatalogueLookup
         $words = array_slice(preg_split('/\s+/u', Str::lower(trim($search)), -1, PREG_SPLIT_NO_EMPTY), 0, 5);
 
         foreach ($words as $word) {
-            $pattern = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $word).'%';
+            // "!" is the LIKE escape character: a backslash one breaks PHP 8.3's PostgreSQL statement parser.
+            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $word).'%';
 
             $query->where(fn (Builder $match) => $match
-                ->whereRaw("lower(products.name) like ? escape '\\'", [$pattern])
-                ->orWhereRaw("lower(coalesce(products.brand, '')) like ? escape '\\'", [$pattern])
-                ->orWhereHas('category', fn (Builder $category) => $category->whereRaw("lower(name) like ? escape '\\'", [$pattern])));
+                ->whereRaw("lower(products.name) like ? escape '!'", [$pattern])
+                ->orWhereRaw("lower(coalesce(products.brand, '')) like ? escape '!'", [$pattern])
+                ->orWhereHas('category', fn (Builder $category) => $category->whereRaw("lower(name) like ? escape '!'", [$pattern])));
         }
     }
 }

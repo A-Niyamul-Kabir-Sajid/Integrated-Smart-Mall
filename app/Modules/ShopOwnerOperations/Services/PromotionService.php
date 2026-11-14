@@ -14,6 +14,7 @@ use App\Modules\ShopOwnerOperations\Models\ShopPromotion;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
@@ -44,7 +45,8 @@ class PromotionService
         $attributes = $this->clean($shop, $data, null);
 
         try {
-            $promotion = ShopPromotion::query()->create([...$attributes, 'shop_id' => $shop->getKey(), 'created_by_user_id' => $actor->getKey()]);
+            // A savepoint, so a duplicate code does not poison an enclosing PostgreSQL transaction.
+            $promotion = DB::transaction(fn (): ShopPromotion => ShopPromotion::query()->create([...$attributes, 'shop_id' => $shop->getKey(), 'created_by_user_id' => $actor->getKey()]));
         } catch (UniqueConstraintViolationException) {
             throw new BusinessRuleViolation('promotion.code_taken', __('Another promotion of this shop already uses that coupon code.'));
         }
@@ -63,7 +65,7 @@ class PromotionService
         $this->authorize($actor, $shop);
 
         try {
-            $promotion->update($this->clean($shop, $data, $promotion));
+            DB::transaction(fn () => $promotion->update($this->clean($shop, $data, $promotion)));
         } catch (UniqueConstraintViolationException) {
             throw new BusinessRuleViolation('promotion.code_taken', __('Another promotion of this shop already uses that coupon code.'));
         }
