@@ -4,7 +4,11 @@
 
 <x-layouts.customer :title="__('Review moderation').' · '.$mall->name" :mall="$mall">
     <div class="mx-auto max-w-5xl px-4 py-8">
-        <p class="text-sm text-slate-500">{{ __('Mall administration') }}</p>
+        @if (Route::has('mall-admin.dashboard'))
+            <a href="{{ route('mall-admin.dashboard', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">&larr; {{ __('Mall administration') }}</a>
+        @else
+            <p class="text-sm text-slate-500">{{ __('Mall administration') }}</p>
+        @endif
         <h1 class="text-2xl font-semibold">{{ $mall->name }} · {{ __('Review moderation') }}</h1>
         <p class="mt-1 text-sm text-slate-600">{{ __('Reporters are never shown. Every decision needs a reason and is kept in the review history.') }}</p>
 
