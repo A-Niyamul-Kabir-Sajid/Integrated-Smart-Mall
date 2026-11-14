@@ -87,6 +87,16 @@ class MembershipService
     }
 
     /**
+     * Whether the account runs a mall or a shop (any active mall or shop role). Their own page
+     * visits are work, not customer interest, so visitor statistics leave them out.
+     */
+    public function holdsOperatingRole(User $user): bool
+    {
+        return MallMembership::query()->active()->where('user_id', $user->getKey())->exists()
+            || ShopMembership::query()->active()->where('user_id', $user->getKey())->exists();
+    }
+
+    /**
      * Active administrators of the mall, for notices that need a person to act.
      *
      * @return Collection<int, User>

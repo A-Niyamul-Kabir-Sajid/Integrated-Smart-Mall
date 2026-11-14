@@ -37,6 +37,8 @@ class MallDashboardController extends Controller
             ['route' => 'mall-admin.work-orders.index', 'label' => __('Work orders'), 'hint' => __('Assign and track maintenance work')],
             ['route' => 'mall-admin.complaints.index', 'label' => __('Complaints'), 'hint' => __('Assign, work and resolve customer complaints')],
             ['route' => 'moderation.index', 'label' => __('Review moderation'), 'hint' => __('Reported and hidden reviews')],
+            ['route' => 'mall-admin.analytics.search', 'label' => __('Search demand'), 'hint' => __('What visitors search for and cannot find')],
+            ['route' => 'mall-admin.analytics.views', 'label' => __('Page views'), 'hint' => __('Views of shop and product pages')],
             ['route' => 'mall-admin.activity.index', 'label' => __('Activity log'), 'hint' => __('Who changed what, and when')],
             ['route' => 'mall-admin.profile.edit', 'label' => __('Mall details'), 'hint' => __('Name, address, time zone and visibility')],
         ])->filter(fn (array $tool): bool => Route::has($tool['route']))

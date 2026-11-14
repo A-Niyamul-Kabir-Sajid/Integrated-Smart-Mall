@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\AccountsAccess\Providers\AccountsAccessServiceProvider;
+use App\Modules\AnalyticsReports\Providers\AnalyticsReportsServiceProvider;
 use App\Modules\FavouritesPreferences\Providers\FavouritesPreferencesServiceProvider;
 use App\Modules\MallOwnerAdmin\Providers\MallOwnerAdminServiceProvider;
 use App\Modules\MallShopDirectory\Providers\MallShopDirectoryServiceProvider;
@@ -36,6 +37,7 @@ return [
         'FavouritesPreferences' => FavouritesPreferencesServiceProvider::class,
         'ParkingFacilities' => ParkingFacilitiesServiceProvider::class,
         'MallOwnerAdmin' => MallOwnerAdminServiceProvider::class,
+        'AnalyticsReports' => AnalyticsReportsServiceProvider::class,
     ],
 
 ];
