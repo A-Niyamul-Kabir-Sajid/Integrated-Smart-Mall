@@ -8,6 +8,8 @@ use App\Modules\ProductsCatalogue\Contracts\CatalogueLookup;
 use App\Modules\ProductsCatalogue\Models\Product;
 use App\Modules\ProductsCatalogue\Models\ProductCategory;
 use App\Modules\ProductsCatalogue\Services\ProductDiscoveryService;
+use App\Modules\SharedPlatform\Enums\ActivityType;
+use App\Modules\SharedPlatform\Events\VisitorActivity;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -31,9 +33,15 @@ class ProductController extends Controller
             'sort' => ['nullable', Rule::in(ProductDiscoveryService::SORTS)],
         ]);
 
+        $products = $catalogue->searchProducts($publicMall, [...$filters, 'available_only' => $request->boolean('available_only')]);
+
+        if (filled($filters['q'] ?? null) && (int) $request->query('page', 1) <= 1) {
+            VisitorActivity::report(new VisitorActivity(ActivityType::ProductSearch, $publicMall->getKey(), term: $filters['q'], resultCount: $products->total(), category: $filters['category'] ?? null));
+        }
+
         return view('customer.products.index', [
             'mall' => $publicMall,
-            'products' => $catalogue->searchProducts($publicMall, [...$filters, 'available_only' => $request->boolean('available_only')]),
+            'products' => $products,
             'filters' => $filters,
             'categories' => ProductCategory::query()->orderBy('name')->get(),
         ]);
@@ -44,6 +52,8 @@ class ProductController extends Controller
         $offers = $catalogue->offersFor($publicMall, $publicProduct);
 
         abort_if($offers->isEmpty(), 404);
+
+        VisitorActivity::report(new VisitorActivity(ActivityType::ProductView, $publicMall->getKey(), productId: $publicProduct->getKey()));
 
         return view('customer.products.show', [
             'mall' => $publicMall,

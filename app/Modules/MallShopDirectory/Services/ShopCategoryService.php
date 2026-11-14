@@ -27,6 +27,19 @@ class ShopCategoryService
         ]);
     }
 
+    public function rename(ShopCategory $category, string $name): ShopCategory
+    {
+        $name = trim($name);
+
+        if ($name === '' || mb_strlen($name) > 100) {
+            throw new BusinessRuleViolation('shop_category.invalid_name', __('Enter a category name of up to 100 characters.'));
+        }
+
+        $category->update(['name' => $name]);
+
+        return $category;
+    }
+
     /**
      * Moves a category under a new parent, or to the top level with null.
      */

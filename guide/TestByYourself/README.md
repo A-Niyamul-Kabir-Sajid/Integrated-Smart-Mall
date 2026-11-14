@@ -28,6 +28,23 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [17_language_and_usual_mall](17_language_and_usual_mall.md) | Bangla error messages, usual mall first | EPIC-08 |
 | [18_facility_finder_and_admin](18_facility_finder_and_admin.md) | Find facilities by type and floor; mall admins add and edit them | EPIC-09 |
 | [19_saved_parking_and_occupancy](19_saved_parking_and_occupancy.md) | Save your parking spot, directions back, simulated free spaces, parking zones | EPIC-09 |
+| [20_shop_onboarding_and_staff](20_shop_onboarding_and_staff.md) | Apply for a shop, mall approval or rejection, profile and hours, staff invitations and work functions, suspension | EPIC-10 |
+| [21_stock_and_inventory](21_stock_and_inventory.md) | Track stock per listing, history, low-stock alerts, extra product options | EPIC-10 |
+| [22_orders_sales_and_receipts](22_orders_sales_and_receipts.md) | Order and collect, accept and hand over, counter sales, review codes, receipts, voids | EPIC-10 |
+| [23_returns_and_exchanges](23_returns_and_exchanges.md) | Request, approve, complete returns and exchanges, restock, refunded sales | EPIC-10 |
+| [24_promotions_and_coupons](24_promotions_and_coupons.md) | Storewide offers, coupon codes, limits, discounts reaching the sale | EPIC-10 |
+| [25_customer_support](25_customer_support.md) | Customer writes to a shop, shop answers, close, isolation | EPIC-10 |
+| [26_maintenance_requests](26_maintenance_requests.md) | Shop reports a problem to the mall, mall works it, shop confirms | EPIC-10 |
+| [27_mall_admin_tenants_and_floors](27_mall_admin_tenants_and_floors.md) | Mall office creates and edits shops, owners and units, manages floors, mall details, categories and reads the activity log | EPIC-11 |
+| [28_announcements_and_events](28_announcements_and_events.md) | Mall notices and events: draft, publish, time windows, public pages | EPIC-11 |
+| [29_complaints](29_complaints.md) | Customer complaints: file, assign, resolve or reject, confirm or reopen | EPIC-11 |
+| [30_work_orders_and_maintenance_desk](30_work_orders_and_maintenance_desk.md) | Mall maintenance desk, work orders, queues on the admin home, moderation hand-off | EPIC-11 |
+| [31_search_demand](31_search_demand.md) | Anonymous search counting, privacy masking, unmet-demand report | EPIC-14 |
+| [32_page_views_and_funnel](32_page_views_and_funnel.md) | Shop and product views, staff exclusion, view-to-order funnel | EPIC-14 |
+| [33_activity_rollups_retention_and_demo_data](33_activity_rollups_retention_and_demo_data.md) | Daily summaries, retention, labelled demonstration traffic | EPIC-14 |
+| [34_sales_dashboards_and_metric_catalogue](34_sales_dashboards_and_metric_catalogue.md) | Shop and mall dashboards, quality flags, date filters, metric catalogue | EPIC-12 |
+| [35_sales_forecast_prototype](35_sales_forecast_prototype.md) | Forecast with baselines, evaluation, run id and limits | EPIC-12 |
+| [36_monthly_reports_and_exports](36_monthly_reports_and_exports.md) | Monthly reports, summaries from figures, CSV and print, visitor figures in exports | EPIC-12 |
 
 ## Helpers
 

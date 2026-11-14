@@ -26,6 +26,23 @@ echo "Mall home        : {$mallUrl}\n";
 echo "Shop directory   : {$mallUrl}/shops\n";
 echo "Products         : {$mallUrl}/products\n";
 echo "Moderation desk  : {$base}/admin/malls/{$mall->getKey()}/moderation   (mall.admin@demo.test)\n";
+echo "Admin home       : {$base}/admin/malls/{$mall->getKey()}   (mall.admin@demo.test)\n";
+echo "Admin shops      : {$base}/admin/malls/{$mall->getKey()}/shops\n";
+echo "Admin floors     : {$base}/admin/malls/{$mall->getKey()}/floors\n";
+echo "Activity log     : {$base}/admin/malls/{$mall->getKey()}/activity\n";
+echo "Announcements    : {$base}/admin/malls/{$mall->getKey()}/announcements\n";
+echo "Complaints desk  : {$base}/admin/malls/{$mall->getKey()}/complaints\n";
+echo "Maintenance desk : {$base}/admin/malls/{$mall->getKey()}/maintenance\n";
+echo "Work orders      : {$base}/admin/malls/{$mall->getKey()}/work-orders\n";
+echo "Public news      : {$mallUrl}/news\n";
+echo "My complaints    : {$base}/account/complaints   (customer@demo.test)\n";
+echo "Shop categories  : {$base}/admin/categories   (platform@demo.test)\n";
+echo "Search demand    : {$base}/admin/malls/{$mall->getKey()}/analytics/search\n";
+echo "Page views       : {$base}/admin/malls/{$mall->getKey()}/analytics/views\n";
+echo "Sales and performance : {$base}/admin/malls/{$mall->getKey()}/analytics   (mall.admin@demo.test)\n";
+echo "Sales forecast   : {$base}/admin/malls/{$mall->getKey()}/analytics/forecast\n";
+echo "Monthly reports  : {$base}/admin/malls/{$mall->getKey()}/analytics/reports\n";
+echo "Metric catalogue : {$base}/admin/malls/{$mall->getKey()}/analytics/metrics\n";
 
 echo "\n== SHOPS ==\n";
 Shop::query()->whereBelongsTo($mall)->orderBy('name')->get()->each(function (Shop $shop) use ($base, $mallUrl): void {
@@ -35,6 +52,11 @@ Shop::query()->whereBelongsTo($mall)->orderBy('name')->get()->each(function (Sho
     echo "  workspace       : {$base}/workspace/shops/{$shop->getKey()}/catalogue\n";
     echo "  CSV import      : {$base}/workspace/shops/{$shop->getKey()}/catalogue/import\n";
     echo "  review inbox    : {$base}/workspace/shops/{$shop->getKey()}/reviews\n";
+    echo "  visitors/views  : {$base}/workspace/shops/{$shop->getKey()}/analytics   (owner only)\n";
+    echo "  sales and performance : {$base}/workspace/shops/{$shop->getKey()}/insights   (owner only)\n";
+    echo "  sales forecast  : {$base}/workspace/shops/{$shop->getKey()}/insights/forecast\n";
+    echo "  monthly reports : {$base}/workspace/shops/{$shop->getKey()}/insights/reports\n";
+    echo "  metric catalogue: {$base}/workspace/shops/{$shop->getKey()}/insights/metrics\n";
 });
 
 echo "\n== LISTINGS (product reviews) ==\n";

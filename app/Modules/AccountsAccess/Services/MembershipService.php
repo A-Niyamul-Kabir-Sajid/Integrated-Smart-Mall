@@ -12,6 +12,7 @@ use App\Modules\AccountsAccess\Models\User;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\SharedPlatform\Services\AuditLogger;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Grants and revokes mall- and shop-scoped roles. Revoking keeps the row
@@ -83,6 +84,42 @@ class MembershipService
         if ($updated > 0) {
             $this->audit->record('access.role_revoked', $user, ['role' => $code->value, 'scope' => 'shop'], $shop->mall_id, $shop->getKey());
         }
+    }
+
+    /**
+     * Whether the account runs a mall or a shop (any active mall or shop role). Their own page
+     * visits are work, not customer interest, so visitor statistics leave them out.
+     */
+    public function holdsOperatingRole(User $user): bool
+    {
+        return MallMembership::query()->active()->where('user_id', $user->getKey())->exists()
+            || ShopMembership::query()->active()->where('user_id', $user->getKey())->exists();
+    }
+
+    /**
+     * Active administrators of the mall, for notices that need a person to act.
+     *
+     * @return Collection<int, User>
+     */
+    public function mallAdministrators(Mall $mall): Collection
+    {
+        return User::query()->whereIn('user_id', MallMembership::query()->active()
+            ->where('mall_id', $mall->getKey())
+            ->whereHas('role', fn ($role) => $role->where('code', RoleCode::MallAdmin->value))
+            ->select('user_id'))->get();
+    }
+
+    /**
+     * Active owners of the shop.
+     *
+     * @return Collection<int, User>
+     */
+    public function shopOwners(Shop $shop): Collection
+    {
+        return User::query()->whereIn('user_id', ShopMembership::query()->active()
+            ->where('shop_id', $shop->getKey())
+            ->whereHas('role', fn ($role) => $role->where('code', RoleCode::ShopOwner->value))
+            ->select('user_id'))->get();
     }
 
     private function roleWithScope(RoleCode $code, RoleScope $scope): Role

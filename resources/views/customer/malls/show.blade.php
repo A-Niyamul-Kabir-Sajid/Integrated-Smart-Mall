@@ -20,6 +20,10 @@
         </div>
     </section>
 
+    @if (Route::has('announcements.index'))
+        <x-mall-news :mall="$mall" />
+    @endif
+
     <div class="mx-auto grid max-w-6xl gap-10 px-4 py-10 lg:grid-cols-3">
         <section class="lg:col-span-2" aria-labelledby="categories-heading">
             <h2 id="categories-heading" class="text-lg font-semibold">{{ __('Browse by category') }}</h2>

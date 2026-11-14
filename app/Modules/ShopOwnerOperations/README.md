@@ -9,4 +9,9 @@ Shop-owner workspace: authorized shop workflows that call the owning domain modu
 
 ## Status
 
-Not implemented yet. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md).
+Implemented for EPIC-10. Progress is recorded in [DOCS/PROGRESS.md](../../../DOCS/PROGRESS.md) and the design in decision D-014 ([DOCS/DECISIONS.md](../../../DOCS/DECISIONS.md)).
+
+- Owns (outside the ERD): shop applications, staff invitations and functions, stock and its ledger, orders, receipts, returns, promotions, support threads and maintenance requests.
+- Orchestrates: `ShopService`, `MembershipService`, `CatalogueService`, `PurchaseService`, `VerificationCredentialService`; reads listings along foreign keys.
+- Access: `work-in-shop` for the catalogue and review inbox; `manage-shop` for profile, hours and staff; `shop-area-stock`, `shop-area-orders`, `shop-area-promotions`, `shop-area-support` and `shop-area-maintenance` (work function plus an active shop) for the rest.
+- Console: `php artisan orders:expire-overdue` (scheduled daily).

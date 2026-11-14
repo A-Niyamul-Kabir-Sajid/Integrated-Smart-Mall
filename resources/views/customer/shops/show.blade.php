@@ -76,6 +76,8 @@
             </section>
         </div>
 
+        <x-shop-actions :shop="$shop" :mall="$mall" />
+
         @isset($ratingSummary)
             <section class="mt-6 rounded-xl border border-slate-200 bg-white p-6" aria-labelledby="reviews-heading" data-integration="reviews">
                 <div class="flex flex-wrap items-center justify-between gap-3">

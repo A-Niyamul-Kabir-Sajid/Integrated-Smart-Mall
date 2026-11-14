@@ -142,6 +142,26 @@ class CatalogueService
         return $listing;
     }
 
+    /**
+     * Sets only the availability flag, for stock tracking that keeps it in step with the
+     * quantity on hand. The change is audited when the value actually changes.
+     */
+    public function setAvailability(ShopProduct $listing, string $availability): void
+    {
+        if (! in_array($availability, ['available', 'unavailable', 'unknown'], true)) {
+            throw new BusinessRuleViolation('listing.invalid_availability', __('Choose available, out of stock or unknown.'));
+        }
+
+        if ($listing->availability_status === $availability) {
+            return;
+        }
+
+        $from = $listing->availability_status;
+        $listing->update(['availability_status' => $availability]);
+
+        $this->audit->record('listing.availability_changed', $listing, ['from' => $from, 'to' => $availability], $listing->shop->mall_id, $listing->shop_id);
+    }
+
     public function archiveListing(ShopProduct $listing): void
     {
         $listing->update(['status' => 'archived']);
