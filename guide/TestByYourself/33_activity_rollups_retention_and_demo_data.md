@@ -51,7 +51,7 @@ Account (password `password`), sign in at <http://127.0.0.1:8000/login>: `mall.a
 
 **Expect:** `Deleted 1 search events and 0 view events.` (the 100-day-old one; the retention period is 90 days, `ANALYTICS_RETENTION_DAYS`). Then:
 - `php artisan tinker --execute 'echo \App\Modules\AnalyticsReports\Models\SearchEvent::pluck("term")->implode(",");'` lists `retentionnew` but not `retentionold`.
-- `php artisan tinker --execute 'echo \App\Modules\AnalyticsReports\Models\ActivitySummary::where("subject_key","retentionold")->count();'` prints `1`: the old day was summarised before its event was deleted.
+- `php artisan tinker --execute 'echo \App\Modules\AnalyticsReports\Models\ActivitySummary::where("subject_key","retentionold")->count();'` prints `2` (the term's search count and its no-result count): the old day was summarised before its event was deleted.
 3. Run `php artisan analytics:purge-events` again: `Deleted 0 search events and 0 view events.`
 
 ### 5. The jobs are scheduled

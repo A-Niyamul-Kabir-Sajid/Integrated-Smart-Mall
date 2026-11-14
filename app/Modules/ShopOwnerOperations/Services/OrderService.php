@@ -292,7 +292,8 @@ class OrderService
     {
         for ($attempt = 0; $attempt < 5; $attempt++) {
             try {
-                return ShopOrder::query()->create([...$attributes, 'order_number' => 'ORD-'.$this->randomCode(8)]);
+                // A savepoint, so a clash on the number does not abort an enclosing PostgreSQL transaction.
+                return DB::transaction(fn (): ShopOrder => ShopOrder::query()->create([...$attributes, 'order_number' => 'ORD-'.$this->randomCode(8)]));
             } catch (UniqueConstraintViolationException) {
                 continue;
             }

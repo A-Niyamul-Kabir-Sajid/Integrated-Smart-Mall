@@ -6,6 +6,7 @@ use App\Modules\AccountsAccess\Models\User;
 use App\Modules\PurchaseVerification\Models\Purchase;
 use App\Modules\ShopOwnerOperations\Models\PurchaseReceipt;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -25,13 +26,14 @@ class ReceiptService
 
         for ($attempt = 0; $attempt < 5; $attempt++) {
             try {
-                return PurchaseReceipt::query()->create([
+                // A savepoint, so a clash does not abort an enclosing PostgreSQL transaction.
+                return DB::transaction(fn (): PurchaseReceipt => PurchaseReceipt::query()->create([
                     'purchase_id' => $purchase->getKey(),
                     'shop_id' => $purchase->shop_id,
                     'receipt_number' => 'RC-'.now()->format('Ymd').'-'.Str::upper(Str::random(6)),
                     'issued_by_user_id' => $issuer?->getKey(),
                     'issued_at' => now(),
-                ]);
+                ]));
             } catch (UniqueConstraintViolationException) {
                 if (PurchaseReceipt::query()->whereKey($purchase->getKey())->exists()) {
                     return PurchaseReceipt::query()->findOrFail($purchase->getKey());

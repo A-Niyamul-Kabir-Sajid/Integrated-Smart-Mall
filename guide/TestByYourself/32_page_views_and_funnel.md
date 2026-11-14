@@ -49,7 +49,7 @@ Use a normal browser window that is **not** signed in.
 
 ### 3. Place an order as a customer
 
-1. Sign in as C, open `CAFE_PAGE` (this counts as a third view, so expect **3**), click **Order from this shop**, choose the product from step 1 (quantity 1), choose a pickup time, and send the order. Sign out.
+1. Sign in as C, open `CAFE_PAGE` (you opened it earlier from this same browser and address, so you are the same visitor within 30 minutes and it does **not** add a view; the count stays **2**), click **Order from this shop**, choose the product from step 1 (quantity 1), choose a pickup time, and send the order. Sign out.
 
 ### 4. Run the daily summary
 
@@ -60,7 +60,7 @@ Use a normal browser window that is **not** signed in.
 1. Sign in as O and open `CAFE_ANALYTICS` (or **Visitors and views** on the workspace home).
 
 **Expect:** under `Real visitor traffic`:
-- `Shop page views` 3 and `Visitor-days` 3 (one per distinct visitor, per day).
+- `Shop page views` 2 and `Visitor-days` 2 (one per distinct visitor, per day: your first browser and the second browser).
 - A bar per day for the whole period; days with no views show 0.
 - In the table `From view to order to sale, per product`, the product from step 1 shows product views 1 (shared with every shop that sells it), `Orders` 1 and `Orders per 100 views` 100; a product nobody viewed shows `—` for the rate, not 0 and not infinite.
 
@@ -70,7 +70,7 @@ Use a normal browser window that is **not** signed in.
 
 1. Open `VIEWS`.
 
-**Expect:** `Shop page views` includes Cafe Brew's 3 and every other shop's views of the real traffic (none for the demo shops); the lists `Shops` and `Products` show names with views and visitor-days. Another mall's figures never appear.
+**Expect:** `Shop page views` includes Cafe Brew's 2 and every other shop's views of the real traffic (none for the demo shops); the lists `Shops` and `Products` show names with views and visitor-days. Another mall's figures never appear.
 
 ### 7. Demonstration data
 

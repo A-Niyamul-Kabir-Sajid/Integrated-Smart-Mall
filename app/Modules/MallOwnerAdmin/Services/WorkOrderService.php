@@ -256,7 +256,8 @@ class WorkOrderService
     {
         for ($attempt = 0; $attempt < 5; $attempt++) {
             try {
-                return WorkOrder::query()->create([...$attributes, 'work_order_number' => 'WO-'.Str::upper(Str::random(8))]);
+                // A savepoint, so a clash on the number does not abort an enclosing PostgreSQL transaction.
+                return DB::transaction(fn (): WorkOrder => WorkOrder::query()->create([...$attributes, 'work_order_number' => 'WO-'.Str::upper(Str::random(8))]));
             } catch (UniqueConstraintViolationException) {
                 continue;
             }

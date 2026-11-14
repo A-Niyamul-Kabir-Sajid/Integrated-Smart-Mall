@@ -199,7 +199,8 @@ class MaintenanceRequestService
     {
         for ($attempt = 0; $attempt < 5; $attempt++) {
             try {
-                return MaintenanceRequest::query()->create([...$attributes, 'request_number' => 'MNT-'.Str::upper(Str::random(8))]);
+                // A savepoint, so a clash on the number does not abort an enclosing PostgreSQL transaction.
+                return DB::transaction(fn (): MaintenanceRequest => MaintenanceRequest::query()->create([...$attributes, 'request_number' => 'MNT-'.Str::upper(Str::random(8))]));
             } catch (UniqueConstraintViolationException) {
                 continue;
             }

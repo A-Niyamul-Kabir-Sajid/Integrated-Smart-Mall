@@ -236,7 +236,8 @@ class ComplaintService
     {
         for ($attempt = 0; $attempt < 5; $attempt++) {
             try {
-                return Complaint::query()->create([...$attributes, 'complaint_number' => 'CMP-'.Str::upper(Str::random(8))]);
+                // A savepoint, so a clash on the number does not abort an enclosing PostgreSQL transaction.
+                return DB::transaction(fn (): Complaint => Complaint::query()->create([...$attributes, 'complaint_number' => 'CMP-'.Str::upper(Str::random(8))]));
             } catch (UniqueConstraintViolationException) {
                 continue;
             }
