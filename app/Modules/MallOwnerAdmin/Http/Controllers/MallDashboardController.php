@@ -37,6 +37,8 @@ class MallDashboardController extends Controller
             ['route' => 'mall-admin.work-orders.index', 'label' => __('Work orders'), 'hint' => __('Assign and track maintenance work')],
             ['route' => 'mall-admin.complaints.index', 'label' => __('Complaints'), 'hint' => __('Assign, work and resolve customer complaints')],
             ['route' => 'moderation.index', 'label' => __('Review moderation'), 'hint' => __('Reported and hidden reviews')],
+            ['route' => 'mall-admin.analytics.index', 'label' => __('Sales and performance'), 'hint' => __('Tenant comparison, complaints, quality flags, demand')],
+            ['route' => 'mall-admin.analytics.reports.index', 'label' => __('Monthly reports'), 'hint' => __('Generate and download a monthly summary')],
             ['route' => 'mall-admin.analytics.search', 'label' => __('Search demand'), 'hint' => __('What visitors search for and cannot find')],
             ['route' => 'mall-admin.analytics.views', 'label' => __('Page views'), 'hint' => __('Views of shop and product pages')],
             ['route' => 'mall-admin.activity.index', 'label' => __('Activity log'), 'hint' => __('Who changed what, and when')],
