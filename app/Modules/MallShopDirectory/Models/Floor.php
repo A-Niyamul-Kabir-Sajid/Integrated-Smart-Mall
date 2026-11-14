@@ -41,6 +41,14 @@ class Floor extends Model
         return $this->hasMany(ShopUnit::class, 'floor_id');
     }
 
+    /**
+     * @return HasMany<Facility, $this>
+     */
+    public function facilities(): HasMany
+    {
+        return $this->hasMany(Facility::class, 'floor_id');
+    }
+
     #[Scope]
     protected function active(Builder $query): Builder
     {

@@ -41,6 +41,37 @@ class MallService
         return $mall;
     }
 
+    /**
+     * Changes what the mall's administrators maintain about it. The slug is the public address
+     * and the status follows its own lifecycle, so neither is part of the profile.
+     *
+     * @param  array{name: string, address: string, city: string, timezone: string}  $data
+     */
+    public function updateProfile(Mall $mall, array $data): Mall
+    {
+        $name = trim($data['name']);
+        $address = trim($data['address']);
+        $city = trim($data['city']);
+
+        if ($name === '' || mb_strlen($name) > 150 || $address === '' || $city === '') {
+            throw new BusinessRuleViolation('mall.invalid_profile', __('Enter the mall name, address and city.'));
+        }
+
+        if (! in_array($data['timezone'], DateTimeZone::listIdentifiers(), true)) {
+            throw new BusinessRuleViolation('mall.invalid_timezone', __(':timezone is not a known time zone.', ['timezone' => $data['timezone']]));
+        }
+
+        if ($mall->status === MallStatus::Archived) {
+            throw new BusinessRuleViolation('mall.archived', __('An archived mall cannot be edited.'));
+        }
+
+        $mall->update(['name' => $name, 'address' => $address, 'city' => $city, 'timezone' => $data['timezone']]);
+
+        $this->audit->record('mall.profile_changed', $mall, ['fields' => array_keys($mall->getChanges())], mallId: $mall->getKey());
+
+        return $mall;
+    }
+
     public function changeStatus(Mall $mall, MallStatus $to): Mall
     {
         $from = $mall->status;

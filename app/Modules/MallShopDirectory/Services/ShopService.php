@@ -120,7 +120,9 @@ class ShopService
             throw new BusinessRuleViolation('shop_unit.invalid_code', __('A unit code uses letters, digits and hyphens, e.g. G-05.'));
         }
 
-        if ($floor->shopUnits()->where('unit_code', $unitCode)->exists()) {
+        $existing = $floor->shopUnits()->where('unit_code', $unitCode)->first();
+
+        if ($existing !== null && $existing->status !== 'archived') {
             throw new BusinessRuleViolation('shop_unit.code_taken', __('Unit :code on this floor is already assigned.', ['code' => $unitCode]));
         }
 
@@ -128,18 +130,55 @@ class ShopService
             throw new BusinessRuleViolation('shop_unit.invalid_area', __('The unit area must be greater than zero.'));
         }
 
-        return DB::transaction(function () use ($shop, $floor, $unitCode, $areaSqM): ShopUnit {
-            $unit = $shop->units()->create([
-                'floor_id' => $floor->getKey(),
-                'unit_code' => $unitCode,
-                'area_sq_m' => $areaSqM,
-                'status' => 'open',
-            ]);
+        return DB::transaction(function () use ($shop, $floor, $unitCode, $areaSqM, $existing): ShopUnit {
+            // A released unit keeps its code (one row per floor and code), so a later tenant takes the same row over.
+            $unit = $existing ?? new ShopUnit(['floor_id' => $floor->getKey(), 'unit_code' => $unitCode]);
+            $unit->fill(['shop_id' => $shop->getKey(), 'area_sq_m' => $areaSqM, 'status' => 'open'])->save();
 
             $this->audit->record('shop.unit_assigned', $shop, ['unit_code' => $unitCode, 'floor' => $floor->code], $shop->mall_id, $shop->getKey());
 
             return $unit;
         });
+    }
+
+    /**
+     * Moves a shop to another category; used by the mall's administrators, who own the classification.
+     */
+    public function changeCategory(Shop $shop, ShopCategory $category): Shop
+    {
+        if ($shop->status === ShopStatus::Archived) {
+            throw new BusinessRuleViolation('shop.archived', __('An archived shop cannot be edited.'));
+        }
+
+        $from = $shop->shop_category_id;
+        $shop->update(['shop_category_id' => $category->getKey()]);
+
+        if ($shop->wasChanged('shop_category_id')) {
+            $this->audit->record('shop.category_changed', $shop, ['from' => $from, 'to' => $category->getKey()], $shop->mall_id, $shop->getKey());
+        }
+
+        return $shop;
+    }
+
+    /**
+     * Gives a unit back: the shop no longer trades there. The record stays, archived, and the next
+     * tenant of the same unit code takes it over.
+     */
+    public function releaseUnit(Shop $shop, ShopUnit $unit): ShopUnit
+    {
+        if ($unit->shop_id !== $shop->getKey()) {
+            throw new BusinessRuleViolation('shop_unit.not_of_shop', __('This unit does not belong to the shop.'));
+        }
+
+        if ($unit->status === 'archived') {
+            throw new BusinessRuleViolation('shop_unit.already_released', __('This unit is already released.'));
+        }
+
+        $unit->update(['status' => 'archived']);
+
+        $this->audit->record('shop.unit_released', $shop, ['unit_code' => $unit->unit_code], $shop->mall_id, $shop->getKey());
+
+        return $unit;
     }
 
     /**

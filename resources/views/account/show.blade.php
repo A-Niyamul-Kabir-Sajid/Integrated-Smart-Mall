@@ -57,6 +57,9 @@
                         <li class="flex items-center justify-between gap-4 px-5 py-3">
                             <span class="font-medium">{{ $mall->name }}</span>
                             <span class="flex gap-4">
+                                @if (Route::has('mall-admin.dashboard'))
+                                    <a href="{{ route('mall-admin.dashboard', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Administration') }}</a>
+                                @endif
                                 @if (Route::has('shop-applications.admin.index'))
                                     <a href="{{ route('shop-applications.admin.index', $mall) }}" class="text-sm font-medium text-brand-700 hover:underline">{{ __('Shop applications') }}</a>
                                 @endif
