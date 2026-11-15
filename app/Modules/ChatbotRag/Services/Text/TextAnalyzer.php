@@ -52,12 +52,13 @@ class TextAnalyzer
 
     /**
      * Every word of the text in order, lower case. Letters with their combining marks stay together,
-     * which keeps Bangla words whole. A hyphenated word gives its parts and the parts written as one
-     * word, so "Wi-Fi" is found by "wifi" and by "wi-fi".
+     * which keeps Bangla words whole. A hyphenated word gives its parts and, for the text of a
+     * document, also the parts written as one word, so "Wi-Fi" is found by "wifi" and by "wi-fi".
      *
+     * @param  bool  $joinCompounds  False for a question: its hyphenated words are only split, so a joined form the visitor never typed is not counted as a word the answer must contain
      * @return list<string>
      */
-    public function tokens(string $text): array
+    public function tokens(string $text, bool $joinCompounds = true): array
     {
         preg_match_all('/[\p{L}\p{M}\p{N}]+(?:-[\p{L}\p{M}\p{N}]+)*/u', $this->normalise($text), $matches);
         $tokens = [];
@@ -66,7 +67,7 @@ class TextAnalyzer
             $parts = explode('-', $word);
             array_push($tokens, ...$parts);
 
-            if (count($parts) > 1 && count($parts) <= 3) {
+            if ($joinCompounds && count($parts) > 1 && count($parts) <= 3) {
                 $tokens[] = implode('', $parts);
             }
         }
@@ -75,7 +76,8 @@ class TextAnalyzer
     }
 
     /**
-     * The words that carry meaning, each once, in the order they first appear; not stemmed.
+     * The words of a question that carry meaning, each once, in the order they first appear; not
+     * stemmed.
      *
      * @return list<string>
      */
@@ -83,7 +85,7 @@ class TextAnalyzer
     {
         $words = [];
 
-        foreach ($this->tokens($text) as $token) {
+        foreach ($this->tokens($text, joinCompounds: false) as $token) {
             if (! $this->isStopWord($token)) {
                 $words[$token] = true;
             }

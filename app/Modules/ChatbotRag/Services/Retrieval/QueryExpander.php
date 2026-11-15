@@ -24,11 +24,12 @@ class QueryExpander
         ['hours', 'hour', 'timing', 'timings', 'time', 'times', 'schedule', 'open', 'opens', 'opening', 'close', 'closes', 'closing', 'closed', 'সময়', 'সময়সূচি', 'খোলা', 'খোলে', 'বন্ধ'],
         ['wifi', 'internet', 'ওয়াইফাই', 'ইন্টারনেট'],
         ['refund', 'return', 'returns', 'exchange', 'ফেরত', 'বদল'],
-        ['price', 'prices', 'cost', 'costs', 'দাম', 'মূল্য'],
+        ['price', 'prices', 'cost', 'costs', 'fee', 'fees', 'charge', 'charges', 'দাম', 'মূল্য', 'খরচ', 'ফি'],
         ['shop', 'shops', 'store', 'stores', 'outlet', 'দোকান', 'দোকানে'],
         ['floor', 'level', 'storey', 'তলা', 'তলায়', 'ফ্লোর'],
         ['discount', 'discounts', 'offer', 'offers', 'sale', 'deal', 'deals', 'promotion', 'ছাড়', 'অফার'],
         ['drink', 'drinks', 'beverage', 'beverages', 'পানীয়', 'ড্রিংক'],
+        ['cold', 'chilled', 'iced', 'ঠান্ডা'],
         ['coffee', 'কফি'],
         ['tea', 'চা'],
         ['juice', 'জুস', 'শরবত'],
@@ -54,6 +55,11 @@ class QueryExpander
         ['security', 'guard', 'safety', 'নিরাপত্তা'],
     ];
 
+    /**
+     * Case endings a Bangla noun may carry, longest first.
+     */
+    private const BANGLA_ENDINGS = ['গুলোর', 'গুলো', 'য়ের', 'তে', 'ের', 'এর', 'টি', 'টা', 'কে', 'য়', 'ে', 'র'];
+
     /** @var array<string, list<string>>|null */
     private ?array $index = null;
 
@@ -67,7 +73,36 @@ class QueryExpander
      */
     public function alternatives(string $word): array
     {
-        return array_values(array_filter($this->index()[$word] ?? [], fn (string $other): bool => $other !== $word));
+        $index = $this->index();
+        $known = isset($index[$word]) ? $word : $this->withoutBanglaEnding($word, $index);
+
+        return $known === null ? [] : array_values(array_filter($index[$known], fn (string $other): bool => $other !== $word));
+    }
+
+    /**
+     * A Bangla word carries its case ending ("দোকানে", "কফির"): the listed word it is built on, if any.
+     *
+     * @param  array<string, list<string>>  $index
+     */
+    private function withoutBanglaEnding(string $word, array $index): ?string
+    {
+        if (preg_match('/[\x{0980}-\x{09FF}]/u', $word) !== 1) {
+            return null;
+        }
+
+        foreach (self::BANGLA_ENDINGS as $ending) {
+            $ending = $this->analyzer->normalise($ending);
+
+            if (mb_strlen($word) > mb_strlen($ending) + 1 && str_ends_with($word, $ending)) {
+                $base = mb_substr($word, 0, mb_strlen($word) - mb_strlen($ending));
+
+                if (isset($index[$base])) {
+                    return $base;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -19,4 +19,13 @@ class PersonalDataMasker
         // Seven or more digits, possibly grouped with spaces, dashes, dots or brackets.
         return (string) preg_replace('/(?<![\p{L}\p{N}])\+?\p{Nd}(?:[\s\-().]{0,2}\p{Nd}){6,}(?![\p{L}\p{N}])/u', self::NUMBER, $text);
     }
+
+    /**
+     * A masked text without the placeholders, for searching: "[email removed]" is not something
+     * the visitor asked about.
+     */
+    public function withoutPlaceholders(string $masked): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', str_replace([self::EMAIL, self::NUMBER], ' ', $masked)));
+    }
 }

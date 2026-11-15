@@ -16,6 +16,11 @@
                 <a href="{{ route('shops.index', ['publicMall' => $mall->slug, 'open_now' => 1]) }}" class="inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 font-medium hover:bg-white/25">
                     <x-icon name="clock" class="size-4" />{{ __(':open of :total shops open now', ['open' => $openShopCount, 'total' => $shopCount]) }}
                 </a>
+                @if (Route::has('assistant.show'))
+                    <a href="{{ route('assistant.show', ['publicMall' => $mall->slug]) }}" class="inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 font-medium hover:bg-white/25">
+                        <x-icon name="search" class="size-4" />{{ __('Ask the assistant') }}
+                    </a>
+                @endif
             </div>
         </div>
     </section>

@@ -1,7 +1,19 @@
 <?php
 
+use App\Modules\ChatbotRag\Http\Controllers\AssistantHandoffController;
+use App\Modules\ChatbotRag\Http\Controllers\CustomerAssistantController;
 use App\Modules\ChatbotRag\Http\Controllers\KnowledgeAdminController;
+use App\Modules\ChatbotRag\Services\Assistant\NavigationHandoff;
 use Illuminate\Support\Facades\Route;
+
+// The visitors' assistant of a mall is public: guests and signed-in visitors may ask.
+Route::prefix('malls/{publicMall}/assistant')->name('assistant.')->group(function (): void {
+    Route::get('/', [CustomerAssistantController::class, 'show'])->name('show');
+    Route::post('/messages', [CustomerAssistantController::class, 'store'])->middleware('throttle:assistant')->name('messages.store');
+    Route::delete('/', [CustomerAssistantController::class, 'destroy'])->name('destroy');
+    Route::get('/go/{type}/{id}', [AssistantHandoffController::class, 'show'])
+        ->whereIn('type', NavigationHandoff::TYPES)->whereUuid('id')->name('go');
+});
 
 // The assistant's knowledge of one mall: administrators of that mall (or the platform) only.
 Route::middleware(['auth', 'throttle:assistant-admin', 'can:administer-mall,mall'])
