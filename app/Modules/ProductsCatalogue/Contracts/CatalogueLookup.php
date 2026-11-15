@@ -4,6 +4,7 @@ namespace App\Modules\ProductsCatalogue\Contracts;
 
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\ProductsCatalogue\Models\Product;
+use App\Modules\ProductsCatalogue\Models\ProductCategory;
 use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -47,6 +48,13 @@ interface CatalogueLookup
      * A visible offer in the mall by listing id, or null.
      */
     public function visibleListing(Mall $mall, string $listingId): ?ShopProduct;
+
+    /**
+     * Every product category by name, for consumers that match a request to a category.
+     *
+     * @return Collection<int, ProductCategory>
+     */
+    public function categories(): Collection;
 
     /**
      * The mall's visible offers in one query, with product, category, shop and shop locations

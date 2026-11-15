@@ -139,4 +139,12 @@ class ProductDiscoveryServiceTest extends TestCase
         $this->assertTrue($requested->first()->shop->relationLoaded('units'));
         $this->assertCount(0, $lookup->visibleListings($this->mall, []));
     }
+
+    public function test_categories_are_listed_by_name(): void
+    {
+        ProductCategory::factory()->create(['name' => 'Snacks', 'slug' => 'snacks']);
+        ProductCategory::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+
+        $this->assertSame(['drinks', 'snacks'], app(CatalogueLookup::class)->categories()->pluck('slug')->all());
+    }
 }
