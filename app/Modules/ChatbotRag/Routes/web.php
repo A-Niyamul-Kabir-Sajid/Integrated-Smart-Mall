@@ -1,0 +1,23 @@
+<?php
+
+use App\Modules\ChatbotRag\Http\Controllers\KnowledgeAdminController;
+use Illuminate\Support\Facades\Route;
+
+// The assistant's knowledge of one mall: administrators of that mall (or the platform) only.
+Route::middleware(['auth', 'throttle:assistant-admin', 'can:administer-mall,mall'])
+    ->prefix('admin/malls/{mall}/assistant')
+    ->name('assistant.admin.')
+    ->group(function (): void {
+        Route::prefix('knowledge')->name('knowledge.')->group(function (): void {
+            Route::get('/', [KnowledgeAdminController::class, 'index'])->name('index');
+            Route::get('/create', [KnowledgeAdminController::class, 'create'])->name('create');
+            Route::post('/', [KnowledgeAdminController::class, 'store'])->name('store');
+            Route::post('/sync', [KnowledgeAdminController::class, 'sync'])->name('sync');
+            Route::get('/{knowledgeDocument}', [KnowledgeAdminController::class, 'show'])->name('show');
+            Route::get('/{knowledgeDocument}/edit', [KnowledgeAdminController::class, 'edit'])->name('edit');
+            Route::put('/{knowledgeDocument}', [KnowledgeAdminController::class, 'update'])->name('update');
+            Route::post('/{knowledgeDocument}/withdraw', [KnowledgeAdminController::class, 'withdraw'])->name('withdraw');
+            Route::post('/{knowledgeDocument}/restore', [KnowledgeAdminController::class, 'restore'])->name('restore');
+            Route::delete('/{knowledgeDocument}', [KnowledgeAdminController::class, 'destroy'])->name('destroy');
+        });
+    });
