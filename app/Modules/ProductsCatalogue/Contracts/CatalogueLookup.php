@@ -47,4 +47,14 @@ interface CatalogueLookup
      * A visible offer in the mall by listing id, or null.
      */
     public function visibleListing(Mall $mall, string $listingId): ?ShopProduct;
+
+    /**
+     * The mall's visible offers in one query, with product, category, shop and shop locations
+     * loaded: all of them, or only those among the given listing ids. Ids of hidden, archived or
+     * foreign listings are simply absent from the result.
+     *
+     * @param  list<string>|null  $listingIds
+     * @return Collection<int, ShopProduct>
+     */
+    public function visibleListings(Mall $mall, ?array $listingIds = null): Collection;
 }

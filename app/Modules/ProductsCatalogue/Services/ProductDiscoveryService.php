@@ -92,6 +92,24 @@ class ProductDiscoveryService implements CatalogueLookup
     }
 
     /**
+     * @param  list<string>|null  $listingIds
+     * @return Collection<int, ShopProduct>
+     */
+    public function visibleListings(Mall $mall, ?array $listingIds = null): Collection
+    {
+        if ($listingIds === []) {
+            return new Collection;
+        }
+
+        return $this->visibleOffers(ShopProduct::query(), $this->directory->operationalShopIds($mall->getKey()), [])
+            ->when($listingIds !== null, fn (Builder $query) => $query->whereKey($listingIds))
+            ->whereHas('variant.product', fn (Builder $product) => $product->where('status', 'active'))
+            ->with(['variant.product.category', 'shop.units.floor'])
+            ->orderBy('shop_product_id')
+            ->get();
+    }
+
+    /**
      * Active listings of active variants in the given shops, narrowed by the price and availability filters.
      *
      * @param  list<string>  $shopIds
