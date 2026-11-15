@@ -3,11 +3,16 @@
 namespace App\Modules\ChatbotRag\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
+use App\Modules\ChatbotRag\Adapters\GeminiAnswerGenerator;
 use App\Modules\ChatbotRag\Console\SyncKnowledge;
+use App\Modules\ChatbotRag\Contracts\AnswerGenerator;
 use App\Modules\ChatbotRag\Contracts\ChunkSearch;
 use App\Modules\ChatbotRag\Contracts\PublicOfferSource;
 use App\Modules\ChatbotRag\Listeners\RefreshShopKnowledge;
 use App\Modules\ChatbotRag\Models\KnowledgeDocument;
+use App\Modules\ChatbotRag\Services\Generation\FallbackAnswerGenerator;
+use App\Modules\ChatbotRag\Services\Generation\GeneratedAnswerValidator;
+use App\Modules\ChatbotRag\Services\Generation\TemplateAnswerGenerator;
 use App\Modules\ChatbotRag\Services\Knowledge\NoPublicOffers;
 use App\Modules\ChatbotRag\Services\Retrieval\PortableChunkSearch;
 use App\Modules\ChatbotRag\Services\Retrieval\PostgresChunkSearch;
@@ -50,6 +55,19 @@ class ChatbotRagServiceProvider extends ModuleServiceProvider
 
         // The module that owns promotions binds the real source; without it profiles carry no offers.
         $this->app->bindIf(PublicOfferSource::class, NoPublicOffers::class);
+
+        // Answers are written by Gemini when a key is configured, and by the template driver
+        // otherwise and whenever the model cannot answer (decision D-018).
+        $this->app->bind(AnswerGenerator::class, function (Application $app): AnswerGenerator {
+            $driver = (string) config('assistant.driver', 'auto');
+            $useModel = $driver === 'gemini' || ($driver === 'auto' && filled(config('services.gemini.key')));
+
+            return new FallbackAnswerGenerator(
+                $useModel ? $app->make(GeminiAnswerGenerator::class) : null,
+                $app->make(TemplateAnswerGenerator::class),
+                $app->make(GeneratedAnswerValidator::class),
+            );
+        });
     }
 
     public function boot(): void
@@ -71,6 +89,10 @@ class ChatbotRagServiceProvider extends ModuleServiceProvider
         });
 
         RateLimiter::for('assistant-admin', fn (Request $request): Limit => Limit::perMinute(60)
+            ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
+
+        // Questions cost a search and possibly a model call, so they are limited per visitor.
+        RateLimiter::for('assistant', fn (Request $request): Limit => Limit::perMinute(20)
             ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
     }
 }
