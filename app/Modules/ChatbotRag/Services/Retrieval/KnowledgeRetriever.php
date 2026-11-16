@@ -6,6 +6,7 @@ use App\Modules\ChatbotRag\Contracts\ChunkSearch;
 use App\Modules\ChatbotRag\DTOs\RetrievedChunkData;
 use App\Modules\ChatbotRag\Enums\AccessScope;
 use App\Modules\ChatbotRag\Enums\SourceKind;
+use App\Modules\ChatbotRag\Models\KnowledgeDocument;
 use App\Modules\ChatbotRag\Services\Text\TextAnalyzer;
 use App\Modules\MallShopDirectory\Models\Mall;
 use Carbon\CarbonImmutable;
@@ -20,6 +21,19 @@ use Carbon\CarbonImmutable;
  */
 class KnowledgeRetriever
 {
+    /**
+     * How a chunk's score is made up. Coverage of the question decides; the database's own rank
+     * only orders chunks that cover it equally; and between those, a document the mall wrote comes
+     * before a shop's profile, a profile before the floor guide, and the guide before a single offer.
+     */
+    private const COVERAGE_WEIGHT = 0.9;
+
+    private const RANK_WEIGHT = 0.05;
+
+    private const WRITTEN_PREFERENCE = 0.05;
+
+    private const CAPTURED_PREFERENCE = ['shop_profile' => 0.03, 'mall_guide' => 0.02, 'product_listing' => 0.0];
+
     public function __construct(
         private ChunkSearch $search,
         private RetrievableChunks $chunks,
@@ -43,7 +57,7 @@ class KnowledgeRetriever
             return [];
         }
 
-        $candidates = $this->search->search($mallId, $scopes, $this->searchWords($question), $kindValues, (int) config('assistant.retrieval.candidates', 24));
+        $candidates = $this->search->search($mallId, $scopes, $this->wordGroups($question), $kindValues, (int) config('assistant.retrieval.candidates', 40));
 
         if ($candidates === []) {
             return [];
@@ -85,7 +99,7 @@ class KnowledgeRetriever
                 shopProductId: $row->shop_product_id === null ? null : (string) $row->shop_product_id,
                 revisionNo: (int) $row->revision_no,
                 capturedAt: CarbonImmutable::parse((string) $row->captured_at),
-                score: round(0.75 * $coverage + 0.25 * ($candidates[(string) $row->chunk_id] / $best), 4),
+                score: round(self::COVERAGE_WEIGHT * $coverage + self::RANK_WEIGHT * ($candidates[(string) $row->chunk_id] / $best) + $this->preference((string) $row->source_locator, (string) $row->source_kind), 4),
                 coverage: round($coverage, 4),
             );
         }
@@ -95,24 +109,22 @@ class KnowledgeRetriever
         return array_slice($found, 0, $limit ?? (int) config('assistant.retrieval.top', 4));
     }
 
-    /**
-     * The words handed to the database search: the question's content words and their synonyms.
-     *
-     * @return list<string>
-     */
-    private function searchWords(string $question): array
+    private function preference(string $locator, string $kind): float
     {
-        $words = [];
+        return str_starts_with($locator, KnowledgeDocument::SYSTEM_PREFIX) ? (self::CAPTURED_PREFERENCE[$kind] ?? 0.0) : self::WRITTEN_PREFERENCE;
+    }
 
-        foreach ($this->analyzer->contentWords($question) as $word) {
-            $words[$word] = true;
-
-            foreach ($this->expander->alternatives($word) as $alternative) {
-                $words[$alternative] = true;
-            }
-        }
-
-        return array_map('strval', array_keys($words));
+    /**
+     * What is handed to the database search: each content word of the question with its synonyms.
+     *
+     * @return list<list<string>>
+     */
+    private function wordGroups(string $question): array
+    {
+        return array_map(
+            fn (string $word): array => array_values(array_unique([$word, ...$this->expander->alternatives($word)])),
+            $this->analyzer->contentWords($question),
+        );
     }
 
     /**

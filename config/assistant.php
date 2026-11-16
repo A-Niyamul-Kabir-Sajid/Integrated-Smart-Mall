@@ -63,7 +63,7 @@ return [
     'chunk_max' => 1000,
 
     'retrieval' => [
-        'candidates' => 24,
+        'candidates' => 40,
         'top' => 4,
         'answer_coverage' => 0.6,
         'low_coverage' => 0.34,

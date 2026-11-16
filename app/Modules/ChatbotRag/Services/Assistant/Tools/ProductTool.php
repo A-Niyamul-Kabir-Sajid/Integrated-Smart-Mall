@@ -28,6 +28,8 @@ use Illuminate\Validation\Rule;
  */
 class ProductTool
 {
+    private const MIN_RELAXED_KEYWORD = 4;
+
     public function __construct(
         private ProductQueryParser $parser,
         private CatalogueLookup $catalogue,
@@ -121,7 +123,10 @@ class ProductTool
             usort($words, fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
 
             foreach ($words as $word) {
-                $attempts[] = $asked->with($word, $asked->categorySlug, $asked->categoryName);
+                // A short fragment on its own matches too much to be called the closest result.
+                if (mb_strlen($word) >= self::MIN_RELAXED_KEYWORD) {
+                    $attempts[] = $asked->with($word, $asked->categorySlug, $asked->categoryName);
+                }
             }
         }
 

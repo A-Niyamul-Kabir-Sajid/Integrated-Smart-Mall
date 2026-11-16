@@ -19,6 +19,11 @@ class ProductQueryParser
 {
     public const MAX_KEYWORDS = 5;
 
+    /**
+     * A single letter is never a product name; it would match almost every product.
+     */
+    public const MIN_KEYWORD_LENGTH = 2;
+
     private const CURRENCY = '(?:bdt|tk|taka|৳|টাকার|টাকা)';
 
     private const NUMBER = '(\d[\d,]*(?:\.\d+)?k?)';
@@ -54,7 +59,7 @@ class ProductQueryParser
         $noise = array_fill_keys(array_map($this->analyzer->normalise(...), self::NOISE), true);
         $words = array_values(array_filter(
             $this->analyzer->contentWords($text),
-            fn (string $word): bool => ! isset($noise[$word]) && preg_match('/^\d+$/', $word) !== 1,
+            fn (string $word): bool => ! isset($noise[$word]) && mb_strlen($word) >= self::MIN_KEYWORD_LENGTH && preg_match('/^\d+$/', $word) !== 1,
         ));
 
         [$categorySlug, $categoryName, $words] = $this->category($words);

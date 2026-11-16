@@ -24,9 +24,10 @@ class TemplateAnswerGenerator implements AnswerGenerator
     private const QUOTE_SENTENCES = 3;
 
     /**
-     * A second passage is quoted too when it scored at least this share of the best one.
+     * A second passage is quoted too when its score is within this margin of the best one, that
+     * is when the two are equally good answers.
      */
-    private const SECOND_PASSAGE = 0.9;
+    private const SECOND_PASSAGE_MARGIN = 0.01;
 
     public function __construct(private TextAnalyzer $analyzer) {}
 
@@ -56,7 +57,7 @@ class TemplateAnswerGenerator implements AnswerGenerator
         $quoted = [$best];
         $second = $request->sources[1] ?? null;
 
-        if ($second !== null && $best->score !== null && $second->score !== null && $second->score >= self::SECOND_PASSAGE * $best->score) {
+        if ($second !== null && $best->score !== null && $second->score !== null && $second->score >= $best->score - self::SECOND_PASSAGE_MARGIN) {
             $quoted[] = $second;
         }
 

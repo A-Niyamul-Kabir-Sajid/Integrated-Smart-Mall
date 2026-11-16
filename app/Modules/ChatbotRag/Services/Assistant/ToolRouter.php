@@ -31,13 +31,13 @@ class ToolRouter
      * Further words that name a figure of the metric catalogue; only read in the administrators' assistant,
      * because a visitor may use them innocently ("best rated coffee").
      */
-    private const ADMIN_FIGURES = '/\b(orders?|reservations?|complaints?|reviews?|ratings?|returns?|refunds?|discounts?|coupons?|redemptions?|quality flags?|flags?|page views?|searches|search demand|unmet|segments?|tenants?|active shops|top shops?|best shops?|worst shops?|units sold|completion rate|forecast|demand by)\b/u';
+    private const ADMIN_FIGURES = '/\b(orders?|reservations?|complaints?|reviews?|ratings?|rated|footfall|foot traffic|navigation requests?|route requests?|returns?|refunds?|discounts?|coupons?|redemptions?|quality flags?|flags?|page views?|searches|search demand|unmet|segments?|tenants?|active shops|top shops?|best shops?|worst shops?|units sold|completion rate|forecast|demand by|stock|inventory|figures?|metrics?)\b/u';
 
     private const ADMIN_ACTION = '/^\s*(please\s+|can you\s+|could you\s+|kindly\s+)?(suspend|approve|reject|delete|remove|archive|ban|block|activate|deactivate|publish|unpublish|assign|resolve|close|reopen|refund|cancel|edit|update|change|set|add|create a|create an|rename|move|hide|restore|grant|revoke)\b/u';
 
     private const OPEN_NOW = '/\b(open (right )?now|open today|currently open|still open|open at the moment|what(\'s| is) open|which (shops?|stores?) (is|are) open)\b|এখন খোলা/u';
 
-    private const SHOPPING = '/\b(buy|purchase|price|prices|cost|costs|cheap|cheaper|cheapest|expensive|affordable|budget|sell|sells|selling|sold|in stock|available|availability|looking for|where can i (get|find|buy)|where (do|can) (i|we|you) (get|find|buy)|do you (have|sell)|does (anyone|any shop|any store) sell|i (want|need)|show me|find me|recommend|suggest|top rated|best rated|under \d|below \d)\b|দাম|কিনতে|কিনব|সস্তা|টাকার মধ্যে|বিক্রি|কোথা\x{09AF}\x{09BC}\s+(পাব|পাবো|পাও\x{09AF}\x{09BC}া)|পাও\x{09AF}\x{09BC}া যা\x{09AF}\x{09BC}/u';
+    private const SHOPPING = '/\b(buy|purchase|price|prices|cost|costs|cheap|cheaper|cheapest|expensive|affordable|budget|sell|sells|selling|sold|in stock|available|availability|looking for|where can i (get|find|buy)|where (do|can) (i|we|you) (get|find|buy)|do you (have|sell)|does (anyone|any shop|any store) sell|i (want|need)|show me|find me|recommend|suggest|top rated|best rated)\b|\b(under|below|within|up to|less than)\s+(bdt|tk|taka|৳)?\s*\d|দাম|কিনতে|কিনব|সস্তা|টাকার মধ্যে|বিক্রি|কোথা\x{09AF}\x{09BC}\s+(পাব|পাবো|পাও\x{09AF}\x{09BC}া)|পাও\x{09AF}\x{09BC}া যা\x{09AF}\x{09BC}/u';
 
     public function __construct(private TextAnalyzer $analyzer, private FacilityTool $facilities) {}
 

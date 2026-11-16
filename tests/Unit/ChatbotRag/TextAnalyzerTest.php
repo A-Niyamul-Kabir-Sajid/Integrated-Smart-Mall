@@ -112,6 +112,15 @@ class TextAnalyzerTest extends TestCase
         $this->assertSame('Call me on [number removed] or mail [email removed] about order 12, under 1500 taka', $masked);
     }
 
+    public function test_a_date_is_not_mistaken_for_a_personal_number(): void
+    {
+        $masker = new PersonalDataMasker;
+
+        $this->assertSame('sales from 2026-10-01 to 2026-10-31', $masker->mask('sales from 2026-10-01 to 2026-10-31'));
+        $this->assertSame('call [number removed]', $masker->mask('call 2026-10-0199'));
+        $this->assertSame('sales on 2026-10-01', $masker->withoutPlaceholders($masker->mask('sales on 2026-10-01 [number removed]')));
+    }
+
     public function test_bangla_phone_numbers_are_masked(): void
     {
         $this->assertSame('আমার নম্বর [number removed]', (new PersonalDataMasker)->mask('আমার নম্বর ০১৭১২৩৪৫৬৭৮'));

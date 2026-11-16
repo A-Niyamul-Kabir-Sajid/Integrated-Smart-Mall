@@ -16,8 +16,13 @@ class PersonalDataMasker
     {
         $text = (string) preg_replace('/[\p{L}\p{N}._%+\-]+@[\p{L}\p{N}.\-]+\.\p{L}{2,}/u', self::EMAIL, $text);
 
-        // Seven or more digits, possibly grouped with spaces, dashes, dots or brackets.
-        return (string) preg_replace('/(?<![\p{L}\p{N}])\+?\p{Nd}(?:[\s\-().]{0,2}\p{Nd}){6,}(?![\p{L}\p{N}])/u', self::NUMBER, $text);
+        // Seven or more digits, possibly grouped with spaces, dashes, dots or brackets. A date written
+        // as year-month-day is not a personal number and stays.
+        return (string) preg_replace_callback(
+            '/(?<![\p{L}\p{N}])\+?\p{Nd}(?:[\s\-().]{0,2}\p{Nd}){6,}(?![\p{L}\p{N}])/u',
+            fn (array $match): string => preg_match('/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', $match[0]) === 1 ? $match[0] : self::NUMBER,
+            $text,
+        );
     }
 
     /**

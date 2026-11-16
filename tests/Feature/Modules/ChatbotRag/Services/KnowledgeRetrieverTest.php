@@ -196,10 +196,11 @@ class KnowledgeRetrieverTest extends TestCase
         $search = app(PostgresChunkSearch::class);
         $mallId = (string) $this->mall->getKey();
 
-        $this->assertArrayHasKey($chunkId, $search->search($mallId, ['public'], ['opening'], null, 10), 'Stemming: "opening" must match "opens".');
-        $this->assertArrayHasKey($chunkId, $search->search($mallId, ['public'], ['cinma'], null, 10), 'Trigram: "cinma" must match "cinema".');
-        $this->assertSame([], $search->search($mallId, ['mall_admin'], ['opening'], null, 10));
-        $this->assertSame([], $search->search($mallId, ['public'], ['helicopter'], null, 10));
+        $this->assertArrayHasKey($chunkId, $search->search($mallId, ['public'], [['opening']], null, 10), 'Stemming: "opening" must match "opens".');
+        $this->assertArrayHasKey($chunkId, $search->search($mallId, ['public'], [['cinma']], null, 10), 'Trigram: "cinma" must match "cinema".');
+        $this->assertSame([], $search->search($mallId, ['mall_admin'], [['opening']], null, 10));
+        $this->assertSame([], $search->search($mallId, ['public'], [['helicopter']], null, 10));
+        $this->assertArrayHasKey($chunkId, $search->search($mallId, ['public'], [['film', 'cinema'], ['helicopter']], null, 10), 'A synonym counts as the word.');
         $this->assertSame(1, DB::table('pg_indexes')->where('indexname', 'knowledge_chunks_search_vector_index')->count());
         $this->assertSame(1, DB::table('pg_indexes')->where('indexname', 'knowledge_chunks_search_text_trgm_index')->count());
     }

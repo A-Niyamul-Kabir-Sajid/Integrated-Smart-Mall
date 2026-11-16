@@ -344,7 +344,7 @@ class AnswerGenerationTest extends TestCase
         $template = app(TemplateAnswerGenerator::class);
         $close = new GenerationRequestData('parking', 'en', 'Harbour Mall', [
             new SourceSnippetData(1, 'faq', 'FAQ', 'Parking costs BDT 30.', score: 0.9),
-            new SourceSnippetData(2, 'mall_guide', 'Rules', 'Parking overnight is not allowed.', score: 0.85),
+            new SourceSnippetData(2, 'mall_guide', 'Rules', 'Parking overnight is not allowed.', score: 0.895),
         ]);
 
         $this->assertSame("Parking costs BDT 30. [1]\nParking overnight is not allowed. [2]", $template->generate($close)->text);

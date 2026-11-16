@@ -74,6 +74,17 @@ class ProductFinderTest extends TestCase
         $this->assertSame('red green blue yellow purple', $query->keywords);
     }
 
+    public function test_a_single_letter_or_short_fragment_is_never_what_the_closest_result_matches(): void
+    {
+        $this->assertSame('helicopter', $this->parse('a b c helicopter x')->keywords);
+
+        $reply = $this->ask('where can I buy a zz cola helicopter');
+
+        $this->assertSame([$this->colaAtMart->getKey()], array_column($reply->recommendations, 'listing_id'));
+        $this->assertStringContainsString('The closest, for "cola"', $reply->text);
+        $this->assertSame(AnswerOutcome::NoAnswer, $this->ask('where can I buy a zz ab helicopter')->outcome);
+    }
+
     public function test_a_shop_of_another_mall_is_not_a_shop_filter(): void
     {
         $this->shopIn(Mall::factory()->create(), 'Far Bazaar', 'groceries', 'Groceries', 'Elsewhere.', null, null, ['09:00', '22:00']);

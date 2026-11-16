@@ -7,7 +7,8 @@ use App\Modules\ChatbotRag\Services\Text\TextAnalyzer;
 
 /**
  * Retrieval on databases without PostgreSQL's text search (the SQLite test and scratch databases).
- * It reads the retrievable chunks of the mall, at most SCAN_LIMIT, and compares words in PHP. The
+ * It reads the retrievable chunks of the mall, at most SCAN_LIMIT, and compares words in PHP: a
+ * chunk scores by the share of the question's words it holds, a synonym counting as the word. The
  * same access filter applies as on PostgreSQL; only the matching differs. Not meant for production.
  */
 class PortableChunkSearch implements ChunkSearch
@@ -20,9 +21,11 @@ class PortableChunkSearch implements ChunkSearch
         private TermMatcher $matcher,
     ) {}
 
-    public function search(string $mallId, array $scopes, array $words, ?array $kinds, int $limit): array
+    public function search(string $mallId, array $scopes, array $wordGroups, ?array $kinds, int $limit): array
     {
-        if ($words === [] || $scopes === []) {
+        $wordGroups = array_values(array_filter($wordGroups));
+
+        if ($wordGroups === [] || $scopes === []) {
             return [];
         }
 
@@ -38,16 +41,26 @@ class PortableChunkSearch implements ChunkSearch
             $chunkWords = array_fill_keys(explode(' ', (string) $row->search_text), true);
             $score = 0.0;
 
-            foreach ($words as $word) {
-                $score += $this->matcher->match($word, $this->analyzer->stem($word), $chunkTerms, $chunkWords);
+            foreach ($wordGroups as $group) {
+                $best = 0.0;
+
+                foreach ($group as $index => $word) {
+                    // A spelling mistake is forgiven in the word the visitor typed, not in its synonyms.
+                    $best = max($best, $index === 0
+                        ? $this->matcher->match($word, $this->analyzer->stem($word), $chunkTerms, $chunkWords)
+                        : (isset($chunkTerms[$this->analyzer->stem($word)]) ? TermMatcher::EXACT : 0.0));
+                }
+
+                $score += $best;
             }
 
             if ($score > 0) {
-                $found[(string) $row->chunk_id] = $score / count($words);
+                $found[(string) $row->chunk_id] = $score / count($wordGroups);
             }
         }
 
-        arsort($found);
+        // Equal scores keep the chunk-id order of the query, so the result does not depend on the sort.
+        uksort($found, fn (string $a, string $b): int => [$found[$b], $a] <=> [$found[$a], $b]);
 
         return array_slice($found, 0, $limit, true);
     }
