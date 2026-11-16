@@ -80,6 +80,7 @@ class ConversationPresenter
             ], $meta['handoffs'] ?? []),
             'notes' => $meta['notes'] ?? [],
             'links' => $meta['links'] ?? [],
+            'definitions' => $meta['definitions'] ?? [],
             'actions' => $meta['actions'] ?? [],
         ];
     }

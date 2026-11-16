@@ -16,8 +16,10 @@ use App\Modules\ChatbotRag\Models\ChatMessage;
 use App\Modules\ChatbotRag\Models\Conversation;
 use App\Modules\ChatbotRag\Services\Assistant\Tools\FacilityTool;
 use App\Modules\ChatbotRag\Services\Assistant\Tools\KnowledgeTool;
+use App\Modules\ChatbotRag\Services\Assistant\Tools\MetricTool;
 use App\Modules\ChatbotRag\Services\Assistant\Tools\OpenShopsTool;
 use App\Modules\ChatbotRag\Services\Assistant\Tools\ProductTool;
+use App\Modules\ChatbotRag\Services\Assistant\Tools\ReportDraftTool;
 use App\Modules\ChatbotRag\Services\Generation\TemplateAnswerGenerator;
 use App\Modules\ChatbotRag\Services\Text\LanguageDetector;
 use App\Modules\ChatbotRag\Services\Text\PersonalDataMasker;
@@ -58,6 +60,9 @@ class AssistantService
         private NavigationHandoff $handoff,
         private FacilityService $facilityDirectory,
         private ConversationService $conversations,
+        private MetricTool $metrics,
+        private ReportDraftTool $reportDrafts,
+        private InteractionLog $log,
     ) {}
 
     /**
@@ -65,7 +70,11 @@ class AssistantService
      */
     public function ask(Conversation $conversation, Mall $mall, ?User $user, string $message): ChatMessage
     {
-        return $this->conversations->record($conversation, $this->respond($mall, $conversation->access_scope, $user, $message));
+        $reply = $this->respond($mall, $conversation->access_scope, $user, $message);
+        $answer = $this->conversations->record($conversation, $reply);
+        $this->log->record($mall, $conversation->access_scope, $reply);
+
+        return $answer;
     }
 
     /**
@@ -83,7 +92,8 @@ class AssistantService
             return $this->refuse($question, $language, null, $refusal, __('I cannot help with that request. I can help with shops, products, facilities and information about this mall.', [], $language));
         }
 
-        $asked = $this->masker->withoutPlaceholders($question);
+        // What is searched for: the question without markup and without the masking placeholders.
+        $asked = $this->masker->withoutPlaceholders(strip_tags($question));
         $tool = $this->router->route($asked, $scope);
 
         if (! $tool->allowedIn($scope)) {
@@ -116,6 +126,8 @@ class AssistantService
             AssistantTool::ProductSearch => $this->products->run($mall, $question, $language),
             AssistantTool::FacilityLookup => $this->facilities->run($mall, $question, $language),
             AssistantTool::OpenShops => $this->openShops->run($mall, $language),
+            AssistantTool::MetricLookup => $user === null ? ToolResultData::nothing() : $this->metrics->run($mall, $user, $question),
+            AssistantTool::ReportDraft => $user === null ? ToolResultData::nothing() : $this->reportDrafts->run($mall, $user, $question),
             default => ToolResultData::nothing(),
         };
     }
@@ -144,7 +156,7 @@ class AssistantService
         if ($result->fixedText !== null) {
             $text = $result->fixedText;
         } elseif ($outcome === AnswerOutcome::NoAnswer) {
-            $result = $this->informationDesk($mall, $language, AnswerOutcome::NoAnswer);
+            $result = $this->nothingFound($mall, $scope, $language);
             $text = (string) $result->fixedText;
         } else {
             $sources = $this->readableBy($scope, $result->sources);
@@ -163,7 +175,7 @@ class AssistantService
                 $cited = array_values(array_filter($sources, fn (SourceSnippetData $source): bool => in_array($source->number, $answer->cited, true)));
             } else {
                 $outcome = AnswerOutcome::NoAnswer;
-                $desk = $this->informationDesk($mall, $language, AnswerOutcome::NoAnswer);
+                $desk = $this->nothingFound($mall, $scope, $language);
                 $result = new ToolResultData(AnswerOutcome::NoAnswer, handoffs: $desk->handoffs);
                 $text = (string) $desk->fixedText;
             }
@@ -182,6 +194,7 @@ class AssistantService
             driver: $answer?->driver ?? GeneratedAnswerData::TEMPLATE,
             modelLabel: $answer?->modelLabel,
             fallbackReason: $answer?->fallbackReason,
+            refusalReason: $outcome === AnswerOutcome::Refused ? ($result->meta['refusal_reason'] ?? null) : null,
             citations: array_map(fn (SourceSnippetData $source): array => [
                 'chunk_id' => (string) $source->chunkId,
                 'number' => $source->number,
@@ -273,6 +286,17 @@ class AssistantService
         return $scope === AccessScope::MallAdmin
             ? __('I am the assistant of :mall for its administrators. Ask me for a figure of the metric catalogue for a period (sales, orders, complaints, ratings, searches), for a draft of a monthly report, or about the mall\'s documents. I answer only from recorded figures and documents, and I cannot change anything from this chat.', ['mall' => $mall->name], $language)
             : __('I am the assistant of :mall. Ask me where a shop or facility is, which shops sell a product and what it costs, which shops are open now, or about parking, opening hours and other mall information. I answer only from the mall\'s own information and tell you when I do not know.', ['mall' => $mall->name], $language);
+    }
+
+    /**
+     * The reply when nothing relevant was found: a visitor is sent to the information desk, an
+     * administrator is told what the assistant can report.
+     */
+    private function nothingFound(Mall $mall, AccessScope $scope, string $language): ToolResultData
+    {
+        return $scope === AccessScope::MallAdmin
+            ? new ToolResultData(AnswerOutcome::NoAnswer, fixedText: __('I could not find that in the mall\'s documents, and it is not a figure of the metric catalogue, so I will not guess. I can report sales, orders, returns, reviews and ratings, promotions, complaints, searches and rankings of shops for a period, for example "complaints last month".', [], $language))
+            : $this->informationDesk($mall, $language, AnswerOutcome::NoAnswer);
     }
 
     /**

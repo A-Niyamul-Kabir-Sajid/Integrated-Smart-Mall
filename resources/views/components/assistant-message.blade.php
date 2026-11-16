@@ -60,6 +60,20 @@
                 </form>
             @endforeach
 
+            @if ($message['definitions'] !== [])
+                <details class="text-sm">
+                    <summary class="cursor-pointer font-medium text-slate-700">{{ __('How these figures are counted') }}</summary>
+                    <dl class="mt-2 space-y-2">
+                        @foreach ($message['definitions'] as $definition)
+                            <div class="rounded-lg bg-slate-50 px-3 py-2">
+                                <dt class="font-medium">{{ $definition['label'] }}</dt>
+                                <dd class="mt-0.5 text-slate-700">{{ $definition['formula'] }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </details>
+            @endif
+
             @if ($message['links'] !== [])
                 <ul class="flex flex-wrap gap-3 text-sm">
                     @foreach ($message['links'] as $link)

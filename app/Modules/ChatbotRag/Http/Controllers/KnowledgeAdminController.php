@@ -8,6 +8,7 @@ use App\Modules\ChatbotRag\Enums\DocumentStatus;
 use App\Modules\ChatbotRag\Enums\SourceKind;
 use App\Modules\ChatbotRag\Http\Requests\KnowledgeDocumentRequest;
 use App\Modules\ChatbotRag\Models\KnowledgeDocument;
+use App\Modules\ChatbotRag\Services\Assistant\InputGuard;
 use App\Modules\ChatbotRag\Services\Knowledge\KnowledgeService;
 use App\Modules\ChatbotRag\Services\Knowledge\KnowledgeSyncService;
 use App\Modules\MallShopDirectory\Models\Mall;
@@ -22,7 +23,7 @@ use Illuminate\View\View;
  */
 class KnowledgeAdminController extends Controller
 {
-    public function __construct(private KnowledgeService $knowledge) {}
+    public function __construct(private KnowledgeService $knowledge, private InputGuard $guard) {}
 
     public function index(Request $request, Mall $mall): View
     {
@@ -50,7 +51,7 @@ class KnowledgeAdminController extends Controller
     {
         $document = $this->knowledge->create($request->user(), $mall, $request->document());
 
-        return redirect()->route('assistant.admin.knowledge.show', [$mall, $document])->with('status', __('":title" was added. The assistant can quote it now.', ['title' => $document->title]));
+        return redirect()->route('assistant.admin.knowledge.show', [$mall, $document])->with('status', __('":title" was added. The assistant can quote it now.', ['title' => $document->title]).$this->instructionNote($document));
     }
 
     public function show(Mall $mall, KnowledgeDocument $knowledgeDocument): View
@@ -72,9 +73,9 @@ class KnowledgeAdminController extends Controller
         $before = $knowledgeDocument->current_revision_id;
         $document = $this->knowledge->revise($request->user(), $knowledgeDocument, $request->document());
 
-        return redirect()->route('assistant.admin.knowledge.show', [$mall, $document])->with('status', $document->current_revision_id === $before
+        return redirect()->route('assistant.admin.knowledge.show', [$mall, $document])->with('status', ($document->current_revision_id === $before
             ? __('The document was saved. The text did not change, so no new revision was captured.')
-            : __('The document was saved as a new revision. The assistant quotes the new text from now on.'));
+            : __('The document was saved as a new revision. The assistant quotes the new text from now on.')).$this->instructionNote($document));
     }
 
     public function withdraw(Request $request, Mall $mall, KnowledgeDocument $knowledgeDocument): RedirectResponse
@@ -104,6 +105,19 @@ class KnowledgeAdminController extends Controller
         $result = $sync->syncMall($mall);
 
         return back()->with('status', __('Mall records read: :created added, :updated updated, :unchanged unchanged, :withdrawn withdrawn.', $result));
+    }
+
+    /**
+     * A note for the administrator when the saved text is worded like an instruction to the
+     * assistant. Such text changes nothing: it is quoted like any other text and never obeyed.
+     */
+    private function instructionNote(KnowledgeDocument $document): string
+    {
+        $text = (string) $document->currentRevision()->value('content_text');
+
+        return $this->guard->containsInstructions($text)
+            ? ' '.__('Note: part of this text reads like an instruction to the assistant. The assistant only ever quotes a document and never follows what it says; check that the wording is what you meant.')
+            : '';
     }
 
     /**

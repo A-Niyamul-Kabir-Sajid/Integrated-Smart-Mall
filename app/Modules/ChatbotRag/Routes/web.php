@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\ChatbotRag\Http\Controllers\AdminAssistantController;
 use App\Modules\ChatbotRag\Http\Controllers\AssistantHandoffController;
 use App\Modules\ChatbotRag\Http\Controllers\CustomerAssistantController;
 use App\Modules\ChatbotRag\Http\Controllers\KnowledgeAdminController;
@@ -15,11 +16,17 @@ Route::prefix('malls/{publicMall}/assistant')->name('assistant.')->group(functio
         ->whereIn('type', NavigationHandoff::TYPES)->whereUuid('id')->name('go');
 });
 
-// The assistant's knowledge of one mall: administrators of that mall (or the platform) only.
+// The administrators' assistant, its activity page and its knowledge of one mall: administrators of
+// that mall (or the platform) only. This check is what makes a conversation an administrators' one.
 Route::middleware(['auth', 'throttle:assistant-admin', 'can:administer-mall,mall'])
     ->prefix('admin/malls/{mall}/assistant')
     ->name('assistant.admin.')
     ->group(function (): void {
+        Route::get('/', [AdminAssistantController::class, 'show'])->name('show');
+        Route::post('/messages', [AdminAssistantController::class, 'store'])->name('messages.store');
+        Route::delete('/', [AdminAssistantController::class, 'destroy'])->name('destroy');
+        Route::get('/activity', [AdminAssistantController::class, 'activity'])->name('activity');
+
         Route::prefix('knowledge')->name('knowledge.')->group(function (): void {
             Route::get('/', [KnowledgeAdminController::class, 'index'])->name('index');
             Route::get('/create', [KnowledgeAdminController::class, 'create'])->name('create');
