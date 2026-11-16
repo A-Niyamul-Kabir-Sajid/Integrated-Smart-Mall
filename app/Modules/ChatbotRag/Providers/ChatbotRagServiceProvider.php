@@ -4,6 +4,7 @@ namespace App\Modules\ChatbotRag\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
 use App\Modules\ChatbotRag\Adapters\GeminiAnswerGenerator;
+use App\Modules\ChatbotRag\Console\EvaluateAssistant;
 use App\Modules\ChatbotRag\Console\PurgeAssistantData;
 use App\Modules\ChatbotRag\Console\SyncKnowledge;
 use App\Modules\ChatbotRag\Contracts\AnswerGenerator;
@@ -83,7 +84,7 @@ class ChatbotRagServiceProvider extends ModuleServiceProvider
             return KnowledgeDocument::query()->whereKey($id)->where('mall_id', $mall instanceof Mall ? $mall->getKey() : $mall)->firstOrFail();
         });
 
-        $this->commands([SyncKnowledge::class, PurgeAssistantData::class]);
+        $this->commands([SyncKnowledge::class, PurgeAssistantData::class, EvaluateAssistant::class]);
 
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
             $schedule->command(SyncKnowledge::class)->hourly()->withoutOverlapping(30)->onOneServer();
