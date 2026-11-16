@@ -46,6 +46,20 @@ class MonthlyReportService
 
     public function generateForMall(User $administrator, Mall $mall, string $month): MonthlyReport
     {
+        $payload = $this->draftForMall($administrator, $mall, $month);
+
+        return $this->store($administrator, 'mall', $mall, null, $month, $payload['partial'], $payload);
+    }
+
+    /**
+     * The mall report of a month exactly as generateForMall() would store it, without storing it:
+     * the figures, the comparison month and the narrative drafted from them. For a reader who wants
+     * to see the report before deciding to keep it.
+     *
+     * @return array<string, mixed>
+     */
+    public function draftForMall(User $administrator, Mall $mall, string $month): array
+    {
         Gate::forUser($administrator)->authorize(Ability::AdministerMall->value, $mall);
 
         [$period, $previous, $partial] = $this->periods($mall, $month);
@@ -53,7 +67,7 @@ class MonthlyReportService
         $payload = $this->payload('mall', ['id' => (string) $mall->getKey(), 'name' => $mall->name], $month, $period, $partial, $this->mallDashboards->dashboard($administrator, $mall, $period), $this->mallDashboards->dashboard($administrator, $mall, $previous)['metrics'], $previous);
         $payload['narrative'] = $this->narrative->mall($payload);
 
-        return $this->store($administrator, 'mall', $mall, null, $month, $partial, $payload);
+        return $payload;
     }
 
     /**
