@@ -53,3 +53,18 @@ Suspended or anonymised accounts hold no ability, and `EnsureAccountIsActive` (w
 | Any password change or reset | `account.password_changed` / `account.password_reset` audited (no password data) and a `PasswordChanged` notice emailed |
 
 Session cookies are HttpOnly and SameSite=Lax (framework defaults) and live for `SESSION_LIFETIME` minutes. Production must set `SESSION_SECURE_COOKIE=true` so the cookie only travels over HTTPS. Accounts registered with a mobile number only cannot use the email reset; until an SMS reset exists, the information desk helps them.
+
+## Assistant (EPIC-13, decision D-018)
+
+| Control | Where | Behaviour |
+|---|---|---|
+| One access filter | `ChatbotRag\Services\Retrieval\RetrievableChunks::query()` | Every chunk read is limited to the mall, active documents, the current revision and the conversation's scopes: `public` for visitors, `public` and `mall_admin` for that mall's administrators. The scope comes from the route and the account (`can:administer-mall,mall`), never from the message |
+| Model context | `GeminiAnswerGenerator`, `FallbackAnswerGenerator` | Only the question and retrieved `public` passages are sent; a non-public passage makes the driver refuse to call (`restricted_context`). The administrators' assistant never calls a model. Requests use `store: false` |
+| API key | `config/services.php` `gemini.key` from `GEMINI_API_KEY` | Sent only in the `x-goog-api-key` header; logs carry a reason code (`missing_key`, `rate_limited`, `api_error`, ...), never the key, the prompt or the answer. Tests use `Http::preventStrayRequests()` and fakes |
+| Untrusted text | `InputGuard`, `GeneratedAnswerValidator` | Attempts to change the assistant's rules and requests for other people's data are refused before retrieval; documents are quoted, never obeyed; a model answer with an unknown source, no source, a number not in the sources, the wrong language or too much text is replaced by the template answer |
+| Tool allow-list | `AssistantTool::allowedIn()` | Visitors: documents, products, facilities, open shops. Administrators: also figures and report drafts. Actions (`admin_action`) are never allowed; shop-private figures such as stock are refused |
+| Personal data | `PersonalDataMasker` | Email addresses and phone-like numbers are masked before a question is stored, searched or sent |
+| Rate limits | `ChatbotRagServiceProvider` | `throttle:assistant` 20/min, `throttle:assistant-admin` 60/min, per account or IP; a model rate limit starts a 60-second cool-down on the template driver |
+| Audit and records | `AuditLogger`, `assistant_interactions` | `assistant.request_refused`, `assistant.figures_read`, `assistant.report_drafted` and `knowledge.document_*` are audited without question text; interaction records hold no account, session or conversation |
+| Retention | `assistant:purge` (daily) | Visitors' conversations 1 day (server session only), accounts' 30 days, interaction records 90 days |
+| Directions | `AssistantHandoffController` | A directions link is re-checked when clicked (same mall, still listed) and 404s otherwise |

@@ -43,6 +43,10 @@ PostgreSQL is the project database (`DB_CONNECTION=pgsql`). The compose service 
 
 Start the application with `composer run dev` (server, queue, logs and Vite together) or `php artisan serve`.
 
+## Mall assistant (optional AI key)
+
+The assistant works without any key: its built-in templates quote the mall's own information. To let Google Gemini word the visitors' answers, set `GEMINI_API_KEY` in `.env` (optionally `GEMINI_MODEL`) and run `php artisan config:clear`; `ASSISTANT_DRIVER=template` turns the model off again. Never commit a key. The model receives only the question and the public sources of the answer, and the templates take over whenever it fails or is rate-limited (decision D-018 in [DOCS/DECISIONS.md](DOCS/DECISIONS.md)). `php artisan assistant:evaluate` runs the evaluation cases on the seeded demonstration mall.
+
 ## Checks
 
 ```bash
