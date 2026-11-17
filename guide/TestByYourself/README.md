@@ -45,12 +45,12 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [34_sales_dashboards_and_metric_catalogue](34_sales_dashboards_and_metric_catalogue.md) | Shop and mall dashboards, quality flags, date filters, metric catalogue | EPIC-12 |
 | [35_sales_forecast_prototype](35_sales_forecast_prototype.md) | Forecast with baselines, evaluation, run id and limits | EPIC-12 |
 | [36_monthly_reports_and_exports](36_monthly_reports_and_exports.md) | Monthly reports, summaries from figures, CSV and print, visitor figures in exports | EPIC-12 |
-
+| [37_assistant_knowledge_and_retrieval](37_assistant_knowledge_and_retrieval.md) | Assistant knowledge: written and captured documents, revisions, withdrawal, public versus internal retrieval | EPIC-13 |
 ## Helpers
 
 | Script | Run with | Does |
 |---|---|---|
-| [scripts/show-links.php](scripts/show-links.php) | `php artisan tinker guide/TestByYourself/scripts/show-links.php` | Prints every full URL and id (shops, workspaces, CSV import, listings, products, moderation desk, existing reviews). Read-only. |
+| [scripts/show-links.php](scripts/show-links.php) | `php artisan tinker guide/TestByYourself/scripts/show-links.php` | Prints every full URL and id (shops, workspaces, CSV import, listings, products, moderation desk, assistant pages, existing reviews). Read-only. |
 | [scripts/issue-purchase-code.php](scripts/issue-purchase-code.php) | `PRODUCT` and `OPTION` (or `LISTING_ID`) set, then `php artisan tinker guide/TestByYourself/scripts/issue-purchase-code.php` | Plays the seller: records a sale and prints a one-time purchase code, until the sales screen exists |
 
 CSV test files: [samples/good.csv](samples/good.csv), [samples/bad.csv](samples/bad.csv), [samples/wrongheader.csv](samples/wrongheader.csv).

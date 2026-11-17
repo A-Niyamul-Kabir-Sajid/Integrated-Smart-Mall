@@ -43,6 +43,10 @@ echo "Sales and performance : {$base}/admin/malls/{$mall->getKey()}/analytics   
 echo "Sales forecast   : {$base}/admin/malls/{$mall->getKey()}/analytics/forecast\n";
 echo "Monthly reports  : {$base}/admin/malls/{$mall->getKey()}/analytics/reports\n";
 echo "Metric catalogue : {$base}/admin/malls/{$mall->getKey()}/analytics/metrics\n";
+echo "Visitor assistant: {$mallUrl}/assistant   (anyone, also signed out)\n";
+echo "Admin assistant  : {$base}/admin/malls/{$mall->getKey()}/assistant   (mall.admin@demo.test)\n";
+echo "Assistant knowledge : {$base}/admin/malls/{$mall->getKey()}/assistant/knowledge\n";
+echo "Assistant activity  : {$base}/admin/malls/{$mall->getKey()}/assistant/activity\n";
 
 echo "\n== SHOPS ==\n";
 Shop::query()->whereBelongsTo($mall)->orderBy('name')->get()->each(function (Shop $shop) use ($base, $mallUrl): void {
