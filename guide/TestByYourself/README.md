@@ -46,6 +46,7 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [35_sales_forecast_prototype](35_sales_forecast_prototype.md) | Forecast with baselines, evaluation, run id and limits | EPIC-12 |
 | [36_monthly_reports_and_exports](36_monthly_reports_and_exports.md) | Monthly reports, summaries from figures, CSV and print, visitor figures in exports | EPIC-12 |
 | [37_assistant_knowledge_and_retrieval](37_assistant_knowledge_and_retrieval.md) | Assistant knowledge: written and captured documents, revisions, withdrawal, public versus internal retrieval | EPIC-13 |
+| [38_customer_assistant](38_customer_assistant.md) | Visitors' assistant: grounded answers, product finder, directions, Bangla, Gemini key on and off | EPIC-13 |
 ## Helpers
 
 | Script | Run with | Does |
