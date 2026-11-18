@@ -118,6 +118,33 @@ class MonthlyReportTest extends ReportTestCase
         $this->assertSame(3, $again->payload['dashboard']['metrics']['sales_count']);
     }
 
+    public function test_a_draft_holds_what_the_report_would_store_and_stores_nothing(): void
+    {
+        $this->seedMonths();
+        $reports = app(MonthlyReportService::class);
+
+        $draft = $reports->draftForMall($this->admin, $this->mall, '2026-02');
+
+        $this->assertSame(0, MonthlyReport::query()->count());
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'report.generated']);
+        $this->assertSame(2, $draft['dashboard']['metrics']['sales_count']);
+        $this->assertFalse($draft['partial']);
+        $this->assertNotEmpty($draft['narrative']);
+
+        $stored = $reports->generateForMall($this->admin, $this->mall, '2026-02');
+
+        // A stored report went through JSON, so the draft is compared in the same form.
+        $this->assertSame($draft['narrative'], $stored->payload['narrative']);
+        $this->assertSame(json_decode((string) json_encode($draft['dashboard']['metrics']), true), $stored->payload['dashboard']['metrics']);
+    }
+
+    public function test_only_an_administrator_of_the_mall_may_draft_its_report(): void
+    {
+        $this->expectException(AuthorizationException::class);
+
+        app(MonthlyReportService::class)->draftForMall($this->owner, $this->mall, '2026-02');
+    }
+
     public function test_future_and_malformed_months_are_refused(): void
     {
         foreach (['2026-04' => 'report.future_month', '2026-13' => 'report.invalid_month', 'February' => 'report.invalid_month', '2026-2' => 'report.invalid_month'] as $month => $rule) {

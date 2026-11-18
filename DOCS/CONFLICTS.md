@@ -23,7 +23,7 @@
 | C-06 | Shared product definitions versus shop-owned catalogue curation | **Resolved 2026-11-03 by D-011:** shared products, shop-owned listings, shared details editable by the sole lister or the mall administrator. |
 | C-07 | QR start point and requested WebAR versus unvalidated continuous localization | Select target devices and a measured alignment/tracking approach; preserve usable non-AR navigation. |
 | C-08 | Nine-week roadmap and nine-month horizon, unfinished PRD, no acceptance matrix | Confirm milestone scope/dates and measurable criteria before claiming a delivery schedule. |
-| C-09 | Forecasts, RAG, live parking and integrations lack final data/provider/evaluation choices | Record data provenance, permissions, baselines and prototype limits before implementation claims. |
+| C-09 | Forecasts, RAG, live parking and integrations lack final data/provider/evaluation choices | Record data provenance, permissions, baselines and prototype limits before implementation claims. **RAG resolved 2026-11-17 by D-018** (PostgreSQL full-text and trigram retrieval over public records, Gemini with a template fallback, evaluation set); the forecast prototype is recorded in D-017. Live parking and external integrations stay open. |
 
 Read [ERD open decisions](references/erd/DOC/03-database/OPEN-DECISIONS.md), [functional contracts](references/functional/DOC/integration/CONTRACTS.md), [full catalogue](references/functional/DOC/project/FEATURE_CATALOGUE.md) and [historical context](references/functional/DOC/project/PROJECT_CONTEXT.md) for details. Retention durations and additional schema assumptions remain open there.
 
