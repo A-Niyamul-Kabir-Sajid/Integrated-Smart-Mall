@@ -45,7 +45,7 @@ Status: implemented for EPIC-13 (decision D-018): knowledge documents and captur
 
 ### Limits
 
-Lexical retrieval only (no embeddings); Bangla is matched through a fixed word list and Bangla text; the template driver quotes sources in their own language; the Gemini driver is tested against a faked API only; directions stop at the shop page or facility finder until EPIC-05; administrators' screens are English only; thresholds, retention and limits are defaults to confirm (D-018).
+Lexical retrieval only (no embeddings); Bangla is matched through a fixed word list and Bangla text; the template driver quotes sources in their own language; the automatic tests fake the Gemini API (one manual call with a real key on 2026-11-19 answered in English and Bangla and passed the answer check); directions stop at the shop page or facility finder until EPIC-05; administrators' screens are English only; thresholds, retention and limits are defaults to confirm (D-018).
 
 Manual checks: [guide 37](../../../guide/TestByYourself/37_assistant_knowledge_and_retrieval.md), [guide 38](../../../guide/TestByYourself/38_customer_assistant.md), [guide 39](../../../guide/TestByYourself/39_admin_assistant_safety_and_evaluation.md).
 

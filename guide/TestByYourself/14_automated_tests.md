@@ -64,7 +64,7 @@ The numbers are the files in `guide/TestByYourself/` (for example `10_verified_r
 ## Known gaps
 
 - `composer test:pgsql` passed on 2026-11-17 (1169 tests, including EPIC-13's PostgreSQL search); true parallel redemption of one code is still unproven.
-- The Gemini driver is tested only against a faked API (`Http::fake`); no test calls the real model.
+- The Gemini driver is tested only against a faked API (`Http::fake`); no test calls the real model (a manual real call is step 10 of guide 38).
 - No automatic browser tests exist; the manual files in this folder cover the visible behaviour.
 
 ## Result
