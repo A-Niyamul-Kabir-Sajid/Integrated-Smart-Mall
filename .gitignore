@@ -31,3 +31,7 @@ Thumbs.db
 
 # Local demo credentials
 /demo-logins.txt
+
+# LiDAR scans, .blend files and map packages being worked on (large; show shop interiors)
+/tools/blender/work/
+__pycache__/
