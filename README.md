@@ -52,6 +52,8 @@ vendor/bin/pint --test    # code style
 composer audit            # dependency advisories
 ```
 
+The indoor map pipeline runs in Blender, outside the app: see [tools/blender/README.md](tools/blender/README.md). Its own test is `blender -b --factory-startup --python-exit-code 1 -P tests/Blender/test_ism_map.py`.
+
 ## Troubleshooting
 
 - `Undefined array key "url"` from Composer: an older global Composer is running under PHP 8.5. Use the Composer installed by php.new (`%USERPROFILE%\.config\herd-lite\bin\composer`) or update Composer.

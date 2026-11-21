@@ -4,7 +4,7 @@
 
 Versioned maps, checkpoints, graph routing and AR coordination. Source folder: [app/Modules/MapsNavigation](../../../app/Modules/MapsNavigation/).
 
-Status: folder architecture only; this page routes to existing requirements, not implemented APIs.
+Status: no application code yet. The offline map preparation pipeline exists (ISM-57/ISM-58, decision D-018): [tools/blender/README.md](../../../tools/blender/README.md) turns iPhone LiDAR scans into a map package ([format and sample](../../../tools/blender/samples/pilot_map_package.json)) whose fields follow the ERD below. How to scan: [tools/blender/SCANNING.md](../../../tools/blender/SCANNING.md). Importing that package (migrations, models, import command) is ISM-59.
 
 ## Read before implementation
 
@@ -27,6 +27,6 @@ Read [table ownership](../../references/erd/DOC/03-database/TABLE-OWNERSHIP.md) 
 
 Related modules: MallShopDirectory, ParkingFacilities, MallOwnerAdmin, ChatbotRag. Review their contracts and authorization boundaries before changing shared behavior.
 
-Relevant [open questions](../../CONFLICTS.md): C-07. [API guidance](../../07_API_CONTRACTS.md) applies before defining cross-module inputs, outputs and events.
+Relevant [open questions](../../CONFLICTS.md): C-07 (target devices decided by D-018; the alignment accuracy still has to be measured). [API guidance](../../07_API_CONTRACTS.md) applies before defining cross-module inputs, outputs and events.
 
 Use the source guides' completion checks and [test guidance](../../09_TESTING.md); record actual results in [progress](../../PROGRESS.md). Keep business logic in Services and add patterns only when justified.
