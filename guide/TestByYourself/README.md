@@ -46,6 +46,7 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [35_sales_forecast_prototype](35_sales_forecast_prototype.md) | Forecast with baselines, evaluation, run id and limits | EPIC-12 |
 | [36_monthly_reports_and_exports](36_monthly_reports_and_exports.md) | Monthly reports, summaries from figures, CSV and print, visitor figures in exports | EPIC-12 |
 | [37_blender_map_pipeline](37_blender_map_pipeline.md) | Blender map pipeline: prepare a LiDAR scan, draft the graph, place QR checkpoints and markers, refusals, export the map package | EPIC-05 |
+| [38_map_service_and_api_keys](38_map_service_and_api_keys.md) | Separate map service: import a map, shop signs and advertisements in 3D, publish, API keys, the Smart Mall app reading with its key, revoking | EPIC-05 |
 
 ## Helpers
 

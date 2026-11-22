@@ -159,6 +159,10 @@ Codes: junctions `<floor>-N0001`; checkpoints keep their QR code; entrances `E-<
 
 Timing uses scene custom properties (Scene properties > Custom Properties): `ism_walk_mps` 1.2, `ism_elevator_wait_s` 30, `ism_elevator_mps` 1.0, `ism_escalator_mps` 0.5, `ism_stairs_vertical_mps` 0.4, plus `ism_link_max_m` 6 and `ism_checkpoint_standoff_m` 0.8. These are defaults for the team to confirm.
 
+## View it in 3D and add signs and advertisements
+
+Import the package into the separate map service ([map-service/README.md](../../map-service/README.md)) and open its 3D editor. You can also look at a package without the service: start the service, open `http://127.0.0.1:8100/viewer/index.html` and choose "Open package folder…".
+
 ## Tests
 
 ```powershell

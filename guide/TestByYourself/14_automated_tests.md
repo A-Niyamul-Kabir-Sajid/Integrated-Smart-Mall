@@ -25,6 +25,7 @@ Manual checks prove what a person sees. The automatic suite proves the same rule
 | Dependency advisories | `composer audit` |
 | Documentation links | `python DOCS/maintenance/validate_docs.py` |
 | Map pipeline, inside Blender (needs Blender 4.2+, about 15 s) | `& "C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python-exit-code 1 -P tests/Blender/test_ism_map.py` |
+| Map service (separate app, run inside `map-service/`) | `php artisan test --compact` and `node --test tests/js/annotations.test.mjs` |
 
 Expected: all pass; two tests are skipped (recorded in `DOCS/PROGRESS.md`). The docs validator reports one known hash mismatch for `archive/project-guide/legacy-inventory/CURRENT_DIRECTORY_INVENTORY.txt`.
 
@@ -48,6 +49,7 @@ Expected: all pass; two tests are skipped (recorded in `DOCS/PROGRESS.md`). The 
 | Reviews | `tests/Feature/Modules/ReviewsModeration/` | Data layer, review service, rating maths, pages, reports, moderation | 10, 12 |
 | Facilities and parking | `tests/Feature/Modules/ParkingFacilities/`, `tests/Feature/Modules/MallShopDirectory/Services/FacilityServiceTest.php`, `tests/Unit/ParkingFacilities/` | Facility rules and finder, admin screens, parking zones, saved spot privacy, directions back, simulated occupancy | 18, 19 |
 | Map pipeline | `tests/Blender/test_ism_map.py` (runs in Blender, not in `php artisan test`), `tests/Unit/MapsNavigation/` | Scan levelling and squaring to the layout within centimetres, draft graph shape (junction, doorways, no lines in pillars or wall gaps), marker validation refusals, QR headings, escalator direction, routes across floors, plan image pixels; the PHP test checks the exported package against the ERD rules | 37 |
+| Map service and its API | `map-service/tests/Feature/` (own suite), `map-service/tests/js/`, main app `tests/Feature/Modules/MapsNavigation/MapServiceGatewayTest.php` | API keys (missing, unknown, revoked, expired, wrong ability, hashed storage, rate limit, checked before the map lookup), published-only maps, signed file links (tampered, expired, outside the package), package import and rollback, annotation create/update/delete with images, admin sign-in, viewer save, key create once and revoke; viewer coordinate and yaw maths; the main app's client (bearer key, filters, clear errors, check command) | 38 |
 | Route protection | `tests/Feature/Security/RouteProtectionTest.php` | Every route that needs sign-in or an ability is protected | 13 |
 | Seeders | `tests/Feature/Seeders/` | Demo mall and accounts are seeded consistently | 00 |
 

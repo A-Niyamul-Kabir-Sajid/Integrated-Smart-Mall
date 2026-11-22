@@ -6,6 +6,8 @@ Versioned maps, checkpoints, graph routing and AR coordination. Source folder: [
 
 Status: no application code yet. The offline map preparation pipeline exists (ISM-57/ISM-58, decision D-018): [tools/blender/README.md](../../../tools/blender/README.md) turns iPhone LiDAR scans into a map package ([format and sample](../../../tools/blender/samples/pilot_map_package.json)) whose fields follow the ERD below. How to scan: [tools/blender/SCANNING.md](../../../tools/blender/SCANNING.md). Importing that package (migrations, models, import command) is ISM-59.
 
+Map service (D-019): the separate app [map-service/](../../../map-service/README.md) holds imported maps and the shop signs and advertisements placed on them in 3D, and serves them through `/api/v1` with API keys. This module reads it through `Contracts/MapServiceGateway` (adapter `Adapters/HttpMapServiceGateway`, configuration `services.map_service`, check command `php artisan maps:service-check`).
+
 ## Read before implementation
 
 Start with [the reading order](../../00_START_HERE.md) and [task checklist](../../IMPLEMENTATION_CHECKLIST.md).

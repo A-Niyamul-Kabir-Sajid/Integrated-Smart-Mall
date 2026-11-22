@@ -193,6 +193,18 @@ Evidence: `tests/Blender/test_ism_map.py` 65 checks passed inside Blender 5.3.0 
 
 Limitations: only synthetic scans so far (no real mall scan yet); nothing was checked in the Blender window by a person; the draft graph needs a human check; tilted scans, ramps inside a floor and automatic alignment between floors are not handled; glass fronts scan poorly; timing and clearance values are defaults to confirm. Next: ISM-59 migrations, models and an import command for this package, then ISM-60/61/62 checkpoints and routing, and ISM-63/64/65 map UI and the Android WebXR prototype with measured alignment error.
 
+## 2026-11-22: EPIC-05 first real scan, 3D viewer and separate map service (ISM-57, ISM-63)
+
+Same branch. Decision D-019.
+
+- First real iPhone 17 Pro LiDAR scan (Scaniverse GLB, 275k triangles, 8 by 17 m L-shaped corridor) went through prepare (279 fragments removed, rotation -0.41 degrees, floor found), draft-graph (one corridor line) and export. Fixed: export with a relative `--out` folder silently wrote no plan or preview images; paths are now absolute and a missing image stops the export (new Blender check, 66 in total).
+- `map-service/`: separate Laravel 13.43 app (own SQLite database). Administrators sign in, import packages from `tools/blender/work` (or `php artisan map:import`), publish or unpublish them, and place shop signs and advertisements in the 3D editor (`public/viewer`, three.js 0.170.0 from jsDelivr) with automatic save. API keys are created on a page or with `php artisan api-key:create`, shown once, stored as SHA-256 hashes, and can be limited to `maps:read` and/or `annotations:write`, given an expiry, revoked and rate-limited. API `/api/v1` lists maps and returns the package and the signs and advertisements; files come behind 120-minute signed links.
+- Main app: `MapsNavigation` registered with `MapServiceGateway` (HTTP adapter with the bearer key and clear errors), configuration `services.map_service` (`MAP_SERVICE_URL`, `MAP_SERVICE_KEY` in `.env.example`) and `php artisan maps:service-check`.
+
+Evidence: map-service `php artisan test` 33 passed (keys, ordering of key check before map lookup, published-only, signed links including tampered, expired and outside-package, import rollback, annotation images, admin flows); `node --test tests/js/annotations.test.mjs` 8 passed (it caught a heading that could round to 360 degrees and be refused; fixed). Main app `tests/Feature/Modules/MapsNavigation` 5 passed. Live run: the service on port 8100 with the real scan; headless Edge signed in, opened the 3D editor, placed a wall sign and an advertisement that were saved, survived a reload and were read back by the main app's key through the API; `maps:service-check` listed the map; requests without a key (401), with an unknown key (401) and a read-only key writing (403) were refused.
+
+Limitations: the 3D editor was checked in headless Edge with software WebGL, not on a phone; three.js loads from a CDN, so the editor needs internet; the map service has one kind of user (every account is an administrator); images are limited to 1 MB; Laravel Boost was not installed in map-service. Next: ISM-59 import into the main app's own tables or a decision to keep maps only in the service, then the map UI and Android WebXR page reading signs and advertisements through the gateway.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
