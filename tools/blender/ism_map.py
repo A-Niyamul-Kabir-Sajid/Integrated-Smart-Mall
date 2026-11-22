@@ -1777,10 +1777,13 @@ def save_png(rgba, path):
     height, width = rgba.shape[:2]
     image = bpy.data.images.new("ism_export_tmp", width, height, alpha=True)
     image.pixels.foreach_set(np.ascontiguousarray(np.flipud(rgba), dtype=np.float32).ravel())
+    path = os.path.abspath(path)
     image.filepath_raw = path
     image.file_format = "PNG"
     image.save()
     bpy.data.images.remove(image)
+    if not os.path.isfile(path):
+        raise PipelineError(f"Blender did not write {path}.")
 
 
 def draw_disc(rgba, cx, cy, radius, colour):
@@ -1912,6 +1915,7 @@ def export_floor_glb(scan, path, max_triangles, max_texture, draco):
 
 def export_package(out_dir, **options):
     """Validate and write the package; raises PipelineError with the report when invalid."""
+    out_dir = os.path.abspath(out_dir)
     os.makedirs(out_dir, exist_ok=True)
     package, report = build_package(out_dir, **options)
     with open(os.path.join(out_dir, "report.json"), "w", encoding="utf-8") as handle:

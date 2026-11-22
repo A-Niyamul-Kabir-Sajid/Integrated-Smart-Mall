@@ -308,6 +308,14 @@ def test_export(out_dir, at):
         check(handle.read(4) == b"glTF", "floor model is a GLB file")
     check(os.path.isfile(os.path.join(out_dir, floor_g["graph_preview_file"])), "graph preview written")
     check(os.path.isfile(os.path.join(out_dir, "report.json")), "report written")
+
+    previous = os.getcwd()
+    os.chdir(os.path.dirname(out_dir))
+    try:
+        ism_map.export_package("relative_export")
+        check(os.path.isfile(os.path.join("relative_export", "floors", "G_plan.png")), "a relative --out folder gets its plan images too")
+    finally:
+        os.chdir(previous)
     return package
 
 
