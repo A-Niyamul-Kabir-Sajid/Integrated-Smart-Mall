@@ -5,6 +5,7 @@ use App\Modules\AnalyticsReports\Providers\AnalyticsReportsServiceProvider;
 use App\Modules\FavouritesPreferences\Providers\FavouritesPreferencesServiceProvider;
 use App\Modules\MallOwnerAdmin\Providers\MallOwnerAdminServiceProvider;
 use App\Modules\MallShopDirectory\Providers\MallShopDirectoryServiceProvider;
+use App\Modules\MapsNavigation\Providers\MapsNavigationServiceProvider;
 use App\Modules\ParkingFacilities\Providers\ParkingFacilitiesServiceProvider;
 use App\Modules\ProductsCatalogue\Providers\ProductsCatalogueServiceProvider;
 use App\Modules\PurchaseVerification\Providers\PurchaseVerificationServiceProvider;
@@ -38,6 +39,7 @@ return [
         'ParkingFacilities' => ParkingFacilitiesServiceProvider::class,
         'MallOwnerAdmin' => MallOwnerAdminServiceProvider::class,
         'AnalyticsReports' => AnalyticsReportsServiceProvider::class,
+        'MapsNavigation' => MapsNavigationServiceProvider::class,
     ],
 
 ];
