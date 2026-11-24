@@ -41,6 +41,14 @@ interface DirectoryLookup
     public function listedShopIds(string $mallId): array;
 
     /**
+     * The mall's shops customers may see (active or closed) with their units and floors loaded,
+     * by name. For consumers that need names and locations of every listed shop at once.
+     *
+     * @return Collection<int, Shop>
+     */
+    public function listedShops(string $mallId): Collection;
+
+    /**
      * Ids of the mall's active shops, the only ones whose listings customers may buy from.
      *
      * @return list<string>

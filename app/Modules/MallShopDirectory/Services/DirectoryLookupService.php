@@ -36,6 +36,14 @@ class DirectoryLookupService implements DirectoryLookup
     }
 
     /**
+     * @return Collection<int, Shop>
+     */
+    public function listedShops(string $mallId): Collection
+    {
+        return Shop::query()->where('mall_id', $mallId)->listed()->with('units.floor')->orderBy('name')->orderBy('shop_id')->get();
+    }
+
+    /**
      * @return list<string>
      */
     public function operationalShopIds(string $mallId): array

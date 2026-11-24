@@ -4,9 +4,11 @@ namespace App\Modules\ShopOwnerOperations\Providers;
 
 use App\Core\Modules\ModuleServiceProvider;
 use App\Modules\AccountsAccess\Models\User;
+use App\Modules\ChatbotRag\Contracts\PublicOfferSource;
 use App\Modules\MallShopDirectory\Models\Shop;
 use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use App\Modules\PurchaseVerification\Models\Purchase;
+use App\Modules\ShopOwnerOperations\Adapters\PromotionOfferSource;
 use App\Modules\ShopOwnerOperations\Console\ExpireOverdueOrders;
 use App\Modules\ShopOwnerOperations\Enums\ShopArea;
 use App\Modules\ShopOwnerOperations\Models\MaintenanceRequest;
@@ -31,6 +33,12 @@ use Illuminate\Support\Str;
  */
 class ShopOwnerOperationsServiceProvider extends ModuleServiceProvider
 {
+    public function register(): void
+    {
+        // The assistant quotes a shop's public offers; this module owns them, so it provides them.
+        $this->app->bind(PublicOfferSource::class, PromotionOfferSource::class);
+    }
+
     public function boot(): void
     {
         parent::boot();

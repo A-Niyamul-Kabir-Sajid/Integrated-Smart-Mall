@@ -121,4 +121,30 @@ class ProductDiscoveryServiceTest extends TestCase
         $this->assertNull(app(CatalogueLookup::class)->visibleListing($this->mall, $archived->getKey()));
         $this->assertNull(app(CatalogueLookup::class)->visibleListing($this->mall, $elsewhere->getKey()));
     }
+
+    public function test_visible_listings_returns_all_buyable_offers_or_only_the_requested_ones(): void
+    {
+        $water = $this->offer('Water', $this->fresh, 20);
+        $tea = $this->offer('Tea', $this->corner, 30);
+        $archived = $this->offer('Juice', $this->fresh, 20, ['status' => 'archived']);
+        $elsewhere = $this->offer('Cola', Shop::factory()->create(), 20);
+        $lookup = app(CatalogueLookup::class);
+
+        $all = $lookup->visibleListings($this->mall);
+        $requested = $lookup->visibleListings($this->mall, [$tea->getKey(), $archived->getKey(), $elsewhere->getKey()]);
+
+        $this->assertEqualsCanonicalizing([$water->getKey(), $tea->getKey()], $all->modelKeys());
+        $this->assertSame([$tea->getKey()], $requested->modelKeys());
+        $this->assertTrue($requested->first()->variant->product->relationLoaded('category'));
+        $this->assertTrue($requested->first()->shop->relationLoaded('units'));
+        $this->assertCount(0, $lookup->visibleListings($this->mall, []));
+    }
+
+    public function test_categories_are_listed_by_name(): void
+    {
+        ProductCategory::factory()->create(['name' => 'Snacks', 'slug' => 'snacks']);
+        ProductCategory::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+
+        $this->assertSame(['drinks', 'snacks'], app(CatalogueLookup::class)->categories()->pluck('slug')->all());
+    }
 }

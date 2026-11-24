@@ -65,6 +65,23 @@ class DirectoryLookupTest extends TestCase
         $this->assertEqualsCanonicalizing([$active->getKey(), $closed->getKey()], $this->lookup()->listedShopIds($mall->getKey()));
     }
 
+    public function test_listed_shops_are_the_malls_visible_shops_by_name_with_their_locations(): void
+    {
+        $mall = Mall::factory()->create();
+        $zebra = Shop::factory()->for($mall)->create(['name' => 'Zebra Toys']);
+        Shop::factory()->for($mall)->closed()->create(['name' => 'Apple Books']);
+        Shop::factory()->for($mall)->draft()->create(['name' => 'Draft Shop']);
+        Shop::factory()->for($mall)->archived()->create(['name' => 'Old Shop']);
+        Shop::factory()->create(['name' => 'Elsewhere']);
+        ShopUnit::factory()->for($zebra)->create(['unit_code' => 'G-09']);
+
+        $shops = $this->lookup()->listedShops($mall->getKey());
+
+        $this->assertSame(['Apple Books', 'Zebra Toys'], $shops->pluck('name')->all());
+        $this->assertSame('G-09', $shops->last()->units->sole()->unit_code);
+        $this->assertTrue($shops->last()->units->sole()->relationLoaded('floor'));
+    }
+
     public function test_operational_shop_ids_are_the_malls_active_shops_only(): void
     {
         $mall = Mall::factory()->create();

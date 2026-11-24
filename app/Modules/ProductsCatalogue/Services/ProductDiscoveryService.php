@@ -6,6 +6,7 @@ use App\Modules\MallShopDirectory\Contracts\DirectoryLookup;
 use App\Modules\MallShopDirectory\Models\Mall;
 use App\Modules\ProductsCatalogue\Contracts\CatalogueLookup;
 use App\Modules\ProductsCatalogue\Models\Product;
+use App\Modules\ProductsCatalogue\Models\ProductCategory;
 use App\Modules\ProductsCatalogue\Models\ShopProduct;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -89,6 +90,32 @@ class ProductDiscoveryService implements CatalogueLookup
             ->whereHas('variant.product', fn (Builder $product) => $product->where('status', 'active'))
             ->with(['variant.product', 'shop.units.floor'])
             ->first();
+    }
+
+    /**
+     * @return Collection<int, ProductCategory>
+     */
+    public function categories(): Collection
+    {
+        return ProductCategory::query()->orderBy('name')->orderBy('product_category_id')->get();
+    }
+
+    /**
+     * @param  list<string>|null  $listingIds
+     * @return Collection<int, ShopProduct>
+     */
+    public function visibleListings(Mall $mall, ?array $listingIds = null): Collection
+    {
+        if ($listingIds === []) {
+            return new Collection;
+        }
+
+        return $this->visibleOffers(ShopProduct::query(), $this->directory->operationalShopIds($mall->getKey()), [])
+            ->when($listingIds !== null, fn (Builder $query) => $query->whereKey($listingIds))
+            ->whereHas('variant.product', fn (Builder $product) => $product->where('status', 'active'))
+            ->with(['variant.product.category', 'shop.units.floor'])
+            ->orderBy('shop_product_id')
+            ->get();
     }
 
     /**

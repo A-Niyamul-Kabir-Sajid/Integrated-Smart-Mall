@@ -46,6 +46,7 @@ Expected: all pass; two tests are skipped (recorded in `DOCS/PROGRESS.md`). The 
 | Purchases | `tests/Feature/Modules/PurchaseVerification/` | Sale records, credential lifecycle, redemption rules | 09 |
 | Reviews | `tests/Feature/Modules/ReviewsModeration/` | Data layer, review service, rating maths, pages, reports, moderation | 10, 12 |
 | Facilities and parking | `tests/Feature/Modules/ParkingFacilities/`, `tests/Feature/Modules/MallShopDirectory/Services/FacilityServiceTest.php`, `tests/Unit/ParkingFacilities/` | Facility rules and finder, admin screens, parking zones, saved spot privacy, directions back, simulated occupancy | 18, 19 |
+| Assistant (chatbot and retrieval) | `tests/Feature/Modules/ChatbotRag/` (services, HTTP), `tests/Unit/ChatbotRag/` (text analysis, parsing, matching), `tests/Feature/Seeders/DemoKnowledgeSeederTest.php` (the 37 evaluation cases), `tests/Fixtures/Assistant/FakeAnswerGenerator.php` (fake model driver) | Immutable revisions and chunking, the single retrieval access filter (mall, status, scope, current revision), PostgreSQL full-text and trigram search, capture of public mall records, grounded answers and "I will not guess", product filters from plain words, directions links, English and Bangla, the Gemini driver against a faked API with fallback to the templates, prompt-injection and private-data refusals, administrators' figures and report drafts, audit and interaction logging, retention | 37, 38, 39 |
 | Route protection | `tests/Feature/Security/RouteProtectionTest.php` | Every route that needs sign-in or an ability is protected | 13 |
 | Seeders | `tests/Feature/Seeders/` | Demo mall and accounts are seeded consistently | 00 |
 
@@ -62,7 +63,8 @@ The numbers are the files in `guide/TestByYourself/` (for example `10_verified_r
 
 ## Known gaps
 
-- `composer test:pgsql` passed on 2026-11-12 (527 tests, including EPIC-06 to EPIC-09); true parallel redemption of one code is still unproven.
+- `composer test:pgsql` passed on 2026-11-17 (1169 tests, including EPIC-13's PostgreSQL search); true parallel redemption of one code is still unproven.
+- The Gemini driver is tested only against a faked API (`Http::fake`); no test calls the real model (a manual real call is step 10 of guide 38).
 - No automatic browser tests exist; the manual files in this folder cover the visible behaviour.
 
 ## Result

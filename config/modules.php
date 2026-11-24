@@ -2,6 +2,7 @@
 
 use App\Modules\AccountsAccess\Providers\AccountsAccessServiceProvider;
 use App\Modules\AnalyticsReports\Providers\AnalyticsReportsServiceProvider;
+use App\Modules\ChatbotRag\Providers\ChatbotRagServiceProvider;
 use App\Modules\FavouritesPreferences\Providers\FavouritesPreferencesServiceProvider;
 use App\Modules\MallOwnerAdmin\Providers\MallOwnerAdminServiceProvider;
 use App\Modules\MallShopDirectory\Providers\MallShopDirectoryServiceProvider;
@@ -38,6 +39,7 @@ return [
         'ParkingFacilities' => ParkingFacilitiesServiceProvider::class,
         'MallOwnerAdmin' => MallOwnerAdminServiceProvider::class,
         'AnalyticsReports' => AnalyticsReportsServiceProvider::class,
+        'ChatbotRag' => ChatbotRagServiceProvider::class,
     ],
 
 ];
