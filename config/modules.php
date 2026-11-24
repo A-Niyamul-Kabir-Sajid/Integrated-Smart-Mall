@@ -6,6 +6,7 @@ use App\Modules\ChatbotRag\Providers\ChatbotRagServiceProvider;
 use App\Modules\FavouritesPreferences\Providers\FavouritesPreferencesServiceProvider;
 use App\Modules\MallOwnerAdmin\Providers\MallOwnerAdminServiceProvider;
 use App\Modules\MallShopDirectory\Providers\MallShopDirectoryServiceProvider;
+use App\Modules\MapsNavigation\Providers\MapsNavigationServiceProvider;
 use App\Modules\ParkingFacilities\Providers\ParkingFacilitiesServiceProvider;
 use App\Modules\ProductsCatalogue\Providers\ProductsCatalogueServiceProvider;
 use App\Modules\PurchaseVerification\Providers\PurchaseVerificationServiceProvider;
@@ -40,6 +41,7 @@ return [
         'MallOwnerAdmin' => MallOwnerAdminServiceProvider::class,
         'AnalyticsReports' => AnalyticsReportsServiceProvider::class,
         'ChatbotRag' => ChatbotRagServiceProvider::class,
+        'MapsNavigation' => MapsNavigationServiceProvider::class,
     ],
 
 ];

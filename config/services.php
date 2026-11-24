@@ -46,4 +46,14 @@ return [
         ],
     ],
 
+    /*
+    | The separate map service (map-service/, decision D-020): maps, signs and
+    | advertisements read through its /api/v1 with an API key created there.
+    */
+    'map_service' => [
+        'url' => env('MAP_SERVICE_URL', 'http://127.0.0.1:8100'),
+        'key' => env('MAP_SERVICE_KEY'),
+        'timeout' => (int) env('MAP_SERVICE_TIMEOUT', 10),
+    ],
+
 ];

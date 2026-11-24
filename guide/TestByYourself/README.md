@@ -48,6 +48,9 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [37_assistant_knowledge_and_retrieval](37_assistant_knowledge_and_retrieval.md) | Assistant knowledge: written and captured documents, revisions, withdrawal, public versus internal retrieval | EPIC-13 |
 | [38_customer_assistant](38_customer_assistant.md) | Visitors' assistant: grounded answers, product finder, directions, Bangla, Gemini key on and off | EPIC-13 |
 | [39_admin_assistant_safety_and_evaluation](39_admin_assistant_safety_and_evaluation.md) | Administrators' assistant: figures, report drafts, refusals, activity page, audit trail, evaluation run | EPIC-13 |
+| [40_blender_map_pipeline](40_blender_map_pipeline.md) | Blender map pipeline: prepare a LiDAR scan, draft the graph, place QR checkpoints and markers, refusals, export the map package | EPIC-05 |
+| [41_map_service_and_api_keys](41_map_service_and_api_keys.md) | Separate map service: import a map, shop signs and advertisements in 3D, publish, API keys, the Smart Mall app reading with its key, revoking | EPIC-05 |
+
 ## Helpers
 
 | Script | Run with | Does |
