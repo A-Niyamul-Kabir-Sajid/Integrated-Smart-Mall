@@ -36,7 +36,7 @@ return [
     ],
 
     /*
-    | The separate map service (map-service/, decision D-019): maps, signs and
+    | The separate map service (map-service/, decision D-020): maps, signs and
     | advertisements read through its /api/v1 with an API key created there.
     */
     'map_service' => [

@@ -1,6 +1,6 @@
 # ISM Map Service
 
-A separate small Laravel 13 app that holds the indoor maps made with the [Blender pipeline](../tools/blender/README.md). Administrators place **shop signs and advertisements in 3D** on them. Other apps, first of all the Smart Mall app, read everything through a versioned API **with an API key** (decision D-019).
+A separate small Laravel 13 app that holds the indoor maps made with the [Blender pipeline](../tools/blender/README.md). Administrators place **shop signs and advertisements in 3D** on them. Other apps, first of all the Smart Mall app, read everything through a versioned API **with an API key** (decision D-020).
 
 ```
 tools/blender export  ->  map-service (import, 3D editor, API keys)  ->  /api/v1  ->  Smart Mall app (MAP_SERVICE_KEY)
@@ -87,4 +87,4 @@ php artisan test --compact          # 33 PHP tests: keys, API, files, import, ad
 node --test tests/js/annotations.test.mjs   # 8 tests of the viewer's annotation logic (Node 20+, no packages)
 ```
 
-The manual check is [guide/TestByYourself/38_map_service_and_api_keys.md](../guide/TestByYourself/38_map_service_and_api_keys.md).
+The manual check is [guide/TestByYourself/41_map_service_and_api_keys.md](../guide/TestByYourself/41_map_service_and_api_keys.md).

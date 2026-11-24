@@ -9,7 +9,7 @@ use App\Modules\MapsNavigation\Contracts\MapServiceGateway;
 
 /**
  * Registers MapsNavigation. For now it connects to the separate map service
- * (decision D-019); the module's own tables come with ISM-59.
+ * (decision D-020); the module's own tables come with ISM-59.
  */
 class MapsNavigationServiceProvider extends ModuleServiceProvider
 {

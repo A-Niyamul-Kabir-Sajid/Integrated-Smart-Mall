@@ -1,4 +1,4 @@
-# 37 Blender map pipeline (scan to map package)
+# 40 Blender map pipeline (scan to map package)
 
 **Covers:** EPIC-05 Maps & Navigation, Jira ISM-57 / ISM-58, tools in `tools/blender/` (MapsNavigation)
 **Automated tests:** `tests/Blender/test_ism_map.py` (run inside Blender), `tests/Unit/MapsNavigation/MapPackageContractTest.php`
@@ -16,7 +16,7 @@ A LiDAR scan (here a synthetic one with a known layout) becomes a level, squared
 
 ```powershell
 $blender = "C:\Program Files\Blender Foundation\Blender 5.3\blender.exe"
-$work = "tools/blender/work/manual37"
+$work = "tools/blender/work/manual40"
 Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 ```
 
@@ -28,7 +28,7 @@ No database, web server or accounts are needed.
 & $blender -b --factory-startup -P tools/blender/ism_map.py -- make-test-scan --out $work
 ```
 
-**Expect:** the last lines say `test scans written to tools/blender/work/manual37`. The folder holds `test_scan_G.glb`, `test_scan_1.glb` and `truth.json`.
+**Expect:** the last lines say `test scans written to tools/blender/work/manual40`. The folder holds `test_scan_G.glb`, `test_scan_1.glb` and `truth.json`.
 
 ## Steps
 

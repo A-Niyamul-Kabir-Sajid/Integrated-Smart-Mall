@@ -1,6 +1,6 @@
 # Blender map pipeline
 
-Turns iPhone LiDAR scans of the mall into the **map package** that the MapsNavigation module imports (Jira ISM-57, ISM-58; decision D-018). One Python file, [ism_map.py](ism_map.py), works three ways: from the command line without a window, as a sidebar tab inside Blender, or as an installed add-on.
+Turns iPhone LiDAR scans of the mall into the **map package** that the MapsNavigation module imports (Jira ISM-57, ISM-58; decision D-019). One Python file, [ism_map.py](ism_map.py), works three ways: from the command line without a window, as a sidebar tab inside Blender, or as an installed add-on.
 
 ```
 iPhone LiDAR scan (one GLB/OBJ/USDZ per floor)
@@ -170,7 +170,7 @@ Import the package into the separate map service ([map-service/README.md](../../
 php artisan test --compact tests/Unit/MapsNavigation
 ```
 
-The Blender test (about 15 seconds) builds the test scans, runs every command, places markers and checks the results against the known layout. It checks alignment to within centimetres, the junction position, that no graph point is inside a pillar or in the gaps beside the wall, the doorway branches, the validation refusals, the QR headings, escalator direction, routes across floors and the plan pixels. Add `-- --write-sample` to refresh the sample after a deliberate change to the format, then run the PHP test. Manual checks: [guide/TestByYourself/37_blender_map_pipeline.md](../../guide/TestByYourself/37_blender_map_pipeline.md).
+The Blender test (about 15 seconds) builds the test scans, runs every command, places markers and checks the results against the known layout. It checks alignment to within centimetres, the junction position, that no graph point is inside a pillar or in the gaps beside the wall, the doorway branches, the validation refusals, the QR headings, escalator direction, routes across floors and the plan pixels. Add `-- --write-sample` to refresh the sample after a deliberate change to the format, then run the PHP test. Manual checks: [guide/TestByYourself/40_blender_map_pipeline.md](../../guide/TestByYourself/40_blender_map_pipeline.md).
 
 ## Limits
 

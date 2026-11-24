@@ -3,7 +3,7 @@
 namespace App\Modules\MapsNavigation\Contracts;
 
 /**
- * Read access to the separate map service (map-service/, decision D-019):
+ * Read access to the separate map service (map-service/, decision D-020):
  * published maps, their map package and their shop signs and advertisements.
  * Floor files and images come back as temporary signed URLs that a browser
  * can load directly; the API key never leaves the server.

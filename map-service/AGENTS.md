@@ -1,6 +1,6 @@
 # map-service: instructions for AI coding agents
 
-This is the separate map service of the Integrated Smart Mall project (decision D-019 in `../DOCS/DECISIONS.md`). Follow the root project's rules in `../CLAUDE.md` and `../AGENTS.md`: Laravel conventions, PHPDoc and explicit types, Pint, a test for every change, a manual check in `../guide/TestByYourself/`, and no new dependencies without the user's approval.
+This is the separate map service of the Integrated Smart Mall project (decision D-020 in `../DOCS/DECISIONS.md`). Follow the root project's rules in `../CLAUDE.md` and `../AGENTS.md`: Laravel conventions, PHPDoc and explicit types, Pint, a test for every change, a manual check in `../guide/TestByYourself/`, and no new dependencies without the user's approval.
 
 What is different here:
 

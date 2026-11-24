@@ -1,6 +1,6 @@
-# 38 Map service: 3D signs and advertisements, API keys, main app connection
+# 41 Map service: 3D signs and advertisements, API keys, main app connection
 
-**Covers:** EPIC-05 Maps & Navigation, Jira ISM-57 / ISM-63, the separate app `map-service/` and `app/Modules/MapsNavigation` (decision D-019)
+**Covers:** EPIC-05 Maps & Navigation, Jira ISM-57 / ISM-63, the separate app `map-service/` and `app/Modules/MapsNavigation` (decision D-020)
 **Automated tests:** `map-service/tests/Feature/*` (33 tests), `map-service/tests/js/annotations.test.mjs` (8), `tests/Feature/Modules/MapsNavigation/MapServiceGatewayTest.php` (5)
 **Needs:** nothing else; this file is self-contained
 **Time:** about 30 minutes
@@ -17,7 +17,7 @@ An administrator imports a map into the separate map service, places a shop sign
 
 ```powershell
 $blender = "C:\Program Files\Blender Foundation\Blender 5.3\blender.exe"
-$work = "tools/blender/work/manual38"
+$work = "tools/blender/work/manual41"
 Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 & $blender -b --factory-startup -P tools/blender/ism_map.py -- make-test-scan --out $work
 & $blender -b --factory-startup -P tools/blender/ism_map.py -- prepare --blend $work/mall.blend --scan $work/test_scan_G.glb --floor G --elevation 0 --name "Ground floor"
@@ -25,7 +25,7 @@ Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 & $blender -b --factory-startup -P tools/blender/ism_map.py -- export --blend $work/mall.blend --out $work/package
 ```
 
-**Expect:** the last line says `package written to ...manual38\package`.
+**Expect:** the last line says `package written to ...manual41\package`.
 
 4. Start the map service in a **second** PowerShell window:
 
@@ -55,11 +55,11 @@ Account (map service only): `admin@map.test`, password `password`, sign in at <h
 
 3. Sign in with password `password`.
 
-**Expect:** the **Maps** page, with "Import a map package" listing `manual38/package` (and any other exported packages).
+**Expect:** the **Maps** page, with "Import a map package" listing `manual41/package` (and any other exported packages).
 
 ### 2. Import the map
 
-1. Choose `manual38/package`, name `Test corridor`, leave "Publish to the API now" unticked, click **Import**.
+1. Choose `manual41/package`, name `Test corridor`, leave "Publish to the API now" unticked, click **Import**.
 
 **Expect:** "Imported “Test corridor”." The table shows it as **draft**: floors G, 13 nodes, 0 signs and advertisements.
 
