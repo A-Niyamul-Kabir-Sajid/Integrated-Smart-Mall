@@ -31,3 +31,12 @@ Thumbs.db
 
 # Local demo credentials
 /demo-logins.txt
+
+# Map service: installed packages, caches, local database and imported map packages
+/map-service/vendor/
+/map-service/node_modules/
+/map-service/bootstrap/cache/*.php
+/map-service/database/*.sqlite
+/map-service/storage/app/private/
+/map-service/storage/framework/views/*.php
+/map-service/.phpunit.result.cache
