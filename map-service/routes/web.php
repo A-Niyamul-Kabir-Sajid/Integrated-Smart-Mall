@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\CheckpointController;
 use App\Http\Controllers\Admin\ClosureController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\MapController;
+use App\Http\Controllers\DocsController;
+use App\Http\Controllers\EmbedController;
 use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +38,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/api-keys', [ApiKeyController::class, 'index'])->name('api-keys.index');
     Route::post('/api-keys', [ApiKeyController::class, 'store'])->name('api-keys.store');
+    Route::patch('/api-keys/{apiKey}/origins', [ApiKeyController::class, 'origins'])->name('api-keys.origins');
     Route::post('/api-keys/{apiKey}/revoke', [ApiKeyController::class, 'revoke'])->name('api-keys.revoke');
 });
 
@@ -43,3 +46,14 @@ Route::get('/files/maps/{mallMap}/{path}', [FileController::class, 'show'])
     ->where('path', '.*')
     ->middleware('signed')
     ->name('files.show');
+
+// Public API documentation.
+Route::get('/docs', DocsController::class)->name('docs');
+
+// The embedded map: the page opens from a signed link created through POST /api/v1/embed-links;
+// its JSON calls carry the page's session token.
+Route::get('/embed/maps/{mallMap}', [EmbedController::class, 'show'])->middleware('signed')->name('embed.show');
+Route::middleware(['embed.session', 'throttle:embed'])->group(function () {
+    Route::get('/embed/maps/{mallMap}/data', [EmbedController::class, 'data'])->name('embed.data');
+    Route::get('/embed/maps/{mallMap}/route', [EmbedController::class, 'route'])->name('embed.route');
+});

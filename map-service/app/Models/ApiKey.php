@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property string $prefix
  * @property string $key_hash
  * @property list<string> $abilities
+ * @property list<string>|null $allowed_origins web origins that may frame the embedded map
  * @property Carbon|null $last_used_at
  * @property Carbon|null $expires_at
  * @property Carbon|null $revoked_at
@@ -26,7 +27,7 @@ class ApiKey extends Model
         'graph:write' => 'Close and reopen walkways of published maps',
     ];
 
-    protected $fillable = ['name', 'prefix', 'key_hash', 'abilities', 'last_used_at', 'expires_at', 'revoked_at'];
+    protected $fillable = ['name', 'prefix', 'key_hash', 'abilities', 'allowed_origins', 'last_used_at', 'expires_at', 'revoked_at'];
 
     protected $hidden = ['key_hash'];
 
@@ -37,6 +38,7 @@ class ApiKey extends Model
     {
         return [
             'abilities' => 'array',
+            'allowed_origins' => 'array',
             'last_used_at' => 'datetime',
             'expires_at' => 'datetime',
             'revoked_at' => 'datetime',
@@ -51,6 +53,14 @@ class ApiKey extends Model
     public function isActive(): bool
     {
         return $this->revoked_at === null && ($this->expires_at === null || $this->expires_at->isFuture());
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function origins(): array
+    {
+        return array_values($this->allowed_origins ?? []);
     }
 
     public function can(string $ability): bool

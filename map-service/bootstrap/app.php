@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthenticateApiKey;
+use App\Http\Middleware\AuthenticateEmbedSession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,8 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['api.key' => AuthenticateApiKey::class]);
+        $middleware->alias(['api.key' => AuthenticateApiKey::class, 'embed.session' => AuthenticateEmbedSession::class]);
         $middleware->prependToPriorityList(SubstituteBindings::class, AuthenticateApiKey::class);
+        $middleware->prependToPriorityList(SubstituteBindings::class, AuthenticateEmbedSession::class);
         $middleware->redirectGuestsTo(fn (Request $request) => $request->expectsJson() ? null : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -52,6 +52,7 @@
         <a href="{{ route('admin.maps.index') }}" class="{{ request()->routeIs('admin.maps.*') ? 'on' : '' }}">Maps</a>
         <a href="{{ route('admin.checkpoints.index') }}" class="{{ request()->routeIs('admin.checkpoints.*') ? 'on' : '' }}">QR codes</a>
         <a href="{{ route('admin.api-keys.index') }}" class="{{ request()->routeIs('admin.api-keys.*') ? 'on' : '' }}">API keys</a>
+        <a href="{{ route('docs') }}" class="{{ request()->routeIs('docs') ? 'on' : '' }}">API docs</a>
     </nav>
     <span class="muted">{{ auth()->user()->email }}</span>
     <form method="post" action="{{ route('logout') }}" class="inline">@csrf<button>Sign out</button></form>

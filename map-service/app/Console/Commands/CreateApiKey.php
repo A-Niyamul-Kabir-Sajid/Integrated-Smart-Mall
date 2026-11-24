@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 
-#[Signature('api-key:create {name : Who uses it, e.g. "Smart Mall app"} {--ability=* : maps:read (default) and/or annotations:write} {--days= : Expire after this many days}')]
+#[Signature('api-key:create {name : Who uses it, e.g. "Smart Mall app"} {--ability=* : maps:read (default), annotations:write and/or graph:write} {--origin=* : Web origin allowed to frame the embedded map, e.g. http://127.0.0.1:8000} {--days= : Expire after this many days}')]
 #[Description('Create an API key for another app; the key is printed once')]
 class CreateApiKey extends Command
 {
@@ -19,7 +19,7 @@ class CreateApiKey extends Command
         $days = $this->option('days');
 
         try {
-            [$key, $plain] = $issuer->issue((string) $this->argument('name'), $abilities, $days ? now()->addDays((int) $days) : null);
+            [$key, $plain] = $issuer->issue((string) $this->argument('name'), $abilities, $days ? now()->addDays((int) $days) : null, $this->option('origin'));
         } catch (InvalidArgumentException $error) {
             $this->error($error->getMessage());
 
@@ -27,6 +27,9 @@ class CreateApiKey extends Command
         }
 
         $this->info("Key “{$key->name}” with ".implode(', ', $key->abilities).($key->expires_at ? ', expires '.$key->expires_at->toDateString() : '').'.');
+        if ($key->origins() !== []) {
+            $this->line('Embedded map allowed on: '.implode(', ', $key->origins()));
+        }
         $this->line('Copy it now, it is not shown again:');
         $this->line($plain);
         $this->line('Abilities available: '.implode(', ', array_keys(ApiKey::ABILITIES)));

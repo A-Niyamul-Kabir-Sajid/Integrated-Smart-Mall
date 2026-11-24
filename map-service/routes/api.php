@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AnnotationController;
 use App\Http\Controllers\Api\CheckpointController;
 use App\Http\Controllers\Api\EdgeController;
+use App\Http\Controllers\Api\EmbedLinkController;
 use App\Http\Controllers\Api\MapController;
 use App\Http\Controllers\Api\PlaceController;
 use App\Http\Controllers\Api\RouteController;
@@ -25,6 +26,7 @@ Route::prefix('v1')->middleware('throttle:api-key')->name('api.')->group(functio
         Route::get('/maps/{mallMap}/closures', [EdgeController::class, 'closed'])->name('maps.closures');
         Route::get('/malls/{mallRef}', [PlaceController::class, 'mall'])->where('mallRef', '[a-z0-9][a-z0-9-]*')->name('malls.show');
         Route::match(['get', 'post'], '/malls/{mallRef}/routes', [RouteController::class, 'forMall'])->where('mallRef', '[a-z0-9][a-z0-9-]*')->name('malls.routes');
+        Route::post('/embed-links', [EmbedLinkController::class, 'store'])->name('embed-links.store');
         Route::get('/checkpoints/{slug}', [CheckpointController::class, 'show'])->where('slug', '[a-z0-9]{1,24}')->name('checkpoints.show');
     });
 

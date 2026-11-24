@@ -1,6 +1,7 @@
 @extends('layouts.app', ['title' => 'API keys'])
 
 @section('content')
+<style>textarea { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:8px 10px; font:13px ui-monospace,Consolas,monospace; width:100%; } form.origins { margin-top:8px; display:grid; gap:6px; max-width:320px; }</style>
 <h1>API keys</h1>
 <p class="lead">Other apps, such as the Smart Mall app, call <code>{{ url('/api/v1') }}</code> with one of these keys in the header <code>Authorization: Bearer &lt;key&gt;</code>. Only a fingerprint of each key is stored, so a key can be copied only right after it is created.</p>
 
@@ -18,6 +19,7 @@
         @csrf
         <label>Name (who uses it) <input type="text" name="name" value="{{ old('name', 'Smart Mall app') }}" maxlength="80" required></label>
         <label>Expires after (days, empty = never) <input type="number" name="expires_in_days" value="{{ old('expires_in_days') }}" min="1" max="3650"></label>
+        <label>Sites that may show the embedded map (one origin per line) <textarea name="allowed_origins" rows="2" placeholder="http://127.0.0.1:8000">{{ old('allowed_origins', 'http://127.0.0.1:8000') }}</textarea></label>
         <div>
             @foreach ($abilities as $ability => $description)
                 <label class="check" title="{{ $description }}"><input type="checkbox" name="abilities[]" value="{{ $ability }}" @checked(in_array($ability, old('abilities', ['maps:read']), true))> <code>{{ $ability }}</code></label>
@@ -51,7 +53,18 @@
                             <span class="badge ok">active</span>@if ($key->expires_at)<div class="muted" style="font-size:12px">until {{ $key->expires_at->format('Y-m-d') }}</div>@endif
                         @endif
                     </td>
-                    <td>@foreach ($key->abilities as $ability)<code>{{ $ability }}</code> @endforeach</td>
+                    <td>
+                        @foreach ($key->abilities as $ability)<code>{{ $ability }}</code> @endforeach
+                        @unless ($key->revoked_at)
+                            <form method="post" action="{{ route('admin.api-keys.origins', $key) }}" class="origins">
+                                @csrf @method('patch')
+                                <label>Embedded map allowed on
+                                    <textarea name="allowed_origins" rows="2" aria-label="Embedded map origins of {{ $key->name }}">{{ implode(PHP_EOL, $key->origins()) }}</textarea>
+                                </label>
+                                <button type="submit">Save origins</button>
+                            </form>
+                        @endunless
+                    </td>
                     <td class="actions">
                         @if (! $key->revoked_at)
                             <form method="post" action="{{ route('admin.api-keys.revoke', $key) }}" class="inline" onsubmit="return confirm('Revoke {{ addslashes($key->name) }}? Apps using it stop working.')">

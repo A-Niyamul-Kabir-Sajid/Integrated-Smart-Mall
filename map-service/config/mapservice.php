@@ -51,4 +51,18 @@ return [
 
     'qr_url' => env('MAP_QR_URL', 'http://127.0.0.1:8000/malls/{mall}/map/qr/{slug}'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Embedded map
+    |--------------------------------------------------------------------------
+    |
+    | Minutes a signed embed link may be opened (the app creates one per page
+    | view), and minutes the opened page may keep asking for routes.
+    |
+    */
+
+    'embed_link_minutes' => (int) env('MAP_EMBED_LINK_MINUTES', 15),
+
+    'embed_session_minutes' => (int) env('MAP_EMBED_SESSION_MINUTES', 240),
+
 ];

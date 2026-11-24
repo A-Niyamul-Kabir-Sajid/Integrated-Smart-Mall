@@ -28,5 +28,7 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute((int) config('mapservice.api_per_minute', 120))
                 ->by(is_string($key) && $key !== '' ? 'key:'.hash('sha256', $key) : 'ip:'.$request->ip());
         });
+
+        RateLimiter::for('embed', fn (Request $request): Limit => Limit::perMinute(60)->by('embed:'.$request->ip()));
     }
 }
