@@ -16,6 +16,9 @@ class RoutePlanner
 {
     private const TURN_DEGREES = 30.0;
 
+    /** Walking pieces shorter than this are folded into a neighbouring walk step. */
+    private const SHORT_WALK_METRES = 2.0;
+
     public function __construct(private PlaceResolver $places) {}
 
     /**
@@ -114,11 +117,6 @@ class RoutePlanner
         $heading = null;
         $flush = function () use (&$walk, &$steps): void {
             if ($walk !== null) {
-                $metres = (int) max(1, round($walk['length_m']));
-                $walk['instruction'] = ($walk['turn'] === null ? 'Walk' : $walk['turn'].' and walk')." {$metres} m.";
-                $walk['length_m'] = round($walk['length_m'], 1);
-                $walk['seconds'] = round($walk['seconds'], 1);
-                unset($walk['turn']);
                 $steps[] = $walk;
                 $walk = null;
             }
@@ -134,25 +132,24 @@ class RoutePlanner
                 $connector = $graph->connectors[$edge['connector']];
                 $direction = $to['z'] > $from['z'] ? 'up' : 'down';
                 $floorName = $graph->floorNames[$to['floor']] ?? "floor {$to['floor']}";
-                $steps[] = ['type' => 'connector', 'instruction' => "Take {$connector['name']} {$direction} to {$floorName}.", 'floor_code' => $from['floor'], 'node_code' => $from['code'], 'to_floor_code' => $to['floor'], 'connector' => $connector['name'], 'connector_type' => $connector['type'], 'length_m' => round($edge['length'], 1), 'seconds' => round($edge['seconds'], 1)];
+                $saysDirection = preg_match('/\b'.$direction.'\b/i', $connector['name']) === 1;
+                $steps[] = ['type' => 'connector', 'instruction' => "Take {$connector['name']}".($saysDirection ? '' : " {$direction}")." to {$floorName}.", 'floor_code' => $from['floor'], 'node_code' => $from['code'], 'to_floor_code' => $to['floor'], 'connector' => $connector['name'], 'connector_type' => $connector['type'], 'length_m' => round($edge['length'], 1), 'seconds' => round($edge['seconds'], 1)];
             } else {
                 $dx = $to['x'] - $from['x'];
                 $dy = $to['y'] - $from['y'];
-                $turn = null;
+                $turns = false;
+                $before = $heading;
+                $newHeading = null;
                 if (hypot($dx, $dy) >= 0.01) {
                     $newHeading = rad2deg(atan2($dy, $dx));
-                    if ($heading !== null) {
-                        $change = fmod($newHeading - $heading + 540.0, 360.0) - 180.0;
-                        if (abs($change) >= self::TURN_DEGREES) {
-                            $turn = $this->turnWords($change);
-                        }
-                    }
+                    $turns = $heading !== null && abs($this->headingChange($heading, $newHeading)) >= self::TURN_DEGREES;
                     $heading = $newHeading;
                 }
-                if ($walk === null || $turn !== null) {
+                if ($walk === null || $turns) {
                     $flush();
-                    $walk = ['type' => 'walk', 'instruction' => '', 'floor_code' => $from['floor'], 'node_code' => $from['code'], 'turn' => $turn, 'length_m' => 0.0, 'seconds' => 0.0];
+                    $walk = ['type' => 'walk', 'instruction' => '', 'floor_code' => $from['floor'], 'node_code' => $from['code'], 'before' => $before, 'first' => $newHeading, 'length_m' => 0.0, 'seconds' => 0.0];
                 }
+                $walk['first'] ??= $newHeading;
                 $walk['length_m'] += $edge['length'];
                 $walk['seconds'] += $edge['seconds'];
             }
@@ -165,12 +162,89 @@ class RoutePlanner
             }
         }
         $flush();
+        $steps = $this->foldShortWalks($steps);
 
         if (end($steps)['type'] === 'start') {
             $steps[] = ['type' => 'arrive', 'instruction' => 'You are already there.', 'floor_code' => $first['floor'], 'node_code' => $first['code'], 'length_m' => 0.0, 'seconds' => 0.0];
         }
 
         return array_values($steps);
+    }
+
+    /**
+     * Fold walking pieces under 2 m (small jogs of the drawn graph) into the
+     * next walk step on the same floor, or else the previous one, then write
+     * each walk step's words.
+     *
+     * @param  list<array<string, mixed>>  $steps
+     * @return list<array<string, mixed>>
+     */
+    private function foldShortWalks(array $steps): array
+    {
+        $isWalk = fn (?array $step, string $floor): bool => $step !== null && $step['type'] === 'walk' && $step['floor_code'] === $floor;
+
+        for ($i = 0; $i < count($steps); $i++) {
+            $step = $steps[$i];
+            if ($step['type'] !== 'walk' || $step['length_m'] >= self::SHORT_WALK_METRES) {
+                continue;
+            }
+            $next = $steps[$i + 1] ?? null;
+            $previous = $steps[$i - 1] ?? null;
+            if ($isWalk($next, $step['floor_code'])) {
+                // The turn of the merged step is measured from before the short piece.
+                $steps[$i + 1]['length_m'] += $step['length_m'];
+                $steps[$i + 1]['seconds'] += $step['seconds'];
+                $steps[$i + 1]['node_code'] = $step['node_code'];
+                $steps[$i + 1]['before'] = $step['before'];
+            } elseif ($isWalk($previous, $step['floor_code'])) {
+                $steps[$i - 1]['length_m'] += $step['length_m'];
+                $steps[$i - 1]['seconds'] += $step['seconds'];
+            } else {
+                continue;
+            }
+            array_splice($steps, $i, 1);
+            $i = max(-1, $i - 2);
+        }
+
+        // Work out each walk step's turn; a walk step without a turn joins the walk step before it.
+        $joined = [];
+        foreach ($steps as $step) {
+            if ($step['type'] !== 'walk') {
+                $joined[] = $step;
+
+                continue;
+            }
+            $change = $step['before'] === null || $step['first'] === null ? 0.0 : $this->headingChange($step['before'], $step['first']);
+            $step['turn'] = abs($change) >= self::TURN_DEGREES ? $this->turnWords($change) : null;
+            $last = count($joined) - 1;
+            if ($step['turn'] === null && $last >= 0 && $joined[$last]['type'] === 'walk' && $joined[$last]['floor_code'] === $step['floor_code']) {
+                $joined[$last]['length_m'] += $step['length_m'];
+                $joined[$last]['seconds'] += $step['seconds'];
+
+                continue;
+            }
+            $joined[] = $step;
+        }
+
+        foreach ($joined as $index => $step) {
+            if ($step['type'] === 'walk') {
+                $metres = (int) max(1, round($step['length_m']));
+                $joined[$index]['instruction'] = ($step['turn'] === null ? 'Walk' : $step['turn'].' and walk')." {$metres} m.";
+                $joined[$index]['length_m'] = round($step['length_m'], 1);
+                $joined[$index]['seconds'] = round($step['seconds'], 1);
+                unset($joined[$index]['before'], $joined[$index]['first'], $joined[$index]['turn']);
+            }
+        }
+
+        return $joined;
+    }
+
+    /**
+     * The signed change from one heading to another, in (-180, 180].
+     */
+    private function headingChange(float $from, float $to): float
+    {
+        return fmod($to - $from + 540.0, 360.0) - 180.0;
     }
 
     /**

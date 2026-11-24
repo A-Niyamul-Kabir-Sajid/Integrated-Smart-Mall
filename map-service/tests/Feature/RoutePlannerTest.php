@@ -7,6 +7,7 @@ use App\Models\Checkpoint;
 use App\Models\MallMap;
 use App\Services\EdgeStatusService;
 use App\Services\Routing\RoutePlanner;
+use Database\Factories\MallMapFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -209,5 +210,38 @@ class RoutePlannerTest extends TestCase
 
         $this->expectException(RouteNotPossible::class);
         $this->route("checkpoint:{$slug}", 'unit:G-101');
+    }
+
+    public function test_small_jogs_are_folded_and_a_connector_named_up_is_not_said_twice(): void
+    {
+        $package = MallMapFactory::pilotPackage();
+        // A 1.1 m jog at the corner: (10,0) -> (10.5,1) -> (10,9).
+        $package['nodes'][] = ['node_code' => 'G-N0004', 'floor_code' => 'G', 'node_type' => 'junction', 'x_m' => 10.5, 'y_m' => 1.0, 'z_m' => 0.0, 'is_accessible' => true];
+        foreach ($package['edges'] as $index => $edge) {
+            if (in_array([$edge['from_node_code'], $edge['to_node_code']], [['G-N0001', 'G-N0003'], ['G-N0003', 'G-N0001']], true)) {
+                unset($package['edges'][$index]);
+            }
+        }
+        foreach ([['G-N0001', 'G-N0004', 1.118], ['G-N0004', 'G-N0003', 8.016]] as [$a, $b, $length]) {
+            foreach ([[$a, $b], [$b, $a]] as [$from, $to]) {
+                $package['edges'][] = ['from_node_code' => $from, 'to_node_code' => $to, 'length_m' => $length, 'expected_seconds' => round($length / 1.2, 2), 'is_accessible' => true, 'status' => 'open', 'connector' => null];
+            }
+        }
+        $package['edges'] = array_values($package['edges']);
+        $package['connectors'][2]['name'] = 'East Escalator Up';
+        foreach ($package['edges'] as $index => $edge) {
+            if ($edge['connector'] === 'East Escalator') {
+                $package['edges'][$index]['connector'] = 'East Escalator Up';
+            }
+        }
+        $this->map = $this->pilotMap('jog-mall', overrides: ['nodes' => $package['nodes'], 'edges' => $package['edges'], 'connectors' => $package['connectors']]);
+
+        $toToilets = $this->route('node:G-C01', 'facility:Toilets G');
+        $this->assertSame(['G-C01', 'G-N0001', 'G-N0004', 'G-N0003', 'G-F-Toilets-G'], $this->codes($toToilets));
+        $this->assertSame(['Start at G-C01.', 'Walk 10 m.', 'Turn left and walk 11 m.', 'Arrive at Toilets G.'], array_column($toToilets['steps'], 'instruction'));
+        $this->assertSame('G-N0001', $toToilets['steps'][2]['node_code']);
+
+        $upstairs = $this->route('node:G-C01', 'unit:1-205');
+        $this->assertContains('Take East Escalator Up to First floor.', array_column($upstairs['steps'], 'instruction'));
     }
 }
