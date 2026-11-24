@@ -38,6 +38,7 @@ svg .place.entrance { fill: var(--shop); }
 svg .place.facility { fill: var(--facility); }
 svg .place.checkpoint { fill: var(--qr); }
 svg .place.connector { fill: var(--lift); }
+svg .place.endpoint { fill: #c026d3; }
 svg .label { font-size: .9px; fill: var(--text); paint-order: stroke; stroke: #fff; stroke-width: .25px; }
 svg .marker-start { fill: #16a34a; stroke: #fff; stroke-width: .2; }
 svg .marker-end { fill: #dc2626; stroke: #fff; stroke-width: .2; }

@@ -10,11 +10,13 @@ use InvalidArgumentException;
 
 /**
  * Checks the graph part of a map package and writes it into the map_* tables
- * of one map (ISM-59). The Blender export validates too; this repeats the
+ * of one map (ISM-59), then joins the map's end points to it again (ISM-114). The Blender export validates too; this repeats the
  * structural rules on the server, because a package can be edited by hand.
  */
 class GraphBuilder
 {
+    public function __construct(private EndPointService $endPoints) {}
+
     private const CODE_PATTERN = '/^[A-Za-z0-9][A-Za-z0-9_.\-]*$/';
 
     /**
@@ -318,6 +320,9 @@ class GraphBuilder
                     'qr' => json_encode($checkpoint['qr'], JSON_THROW_ON_ERROR),
                 ]);
             }
+
+            // End points added by administrators are joined to the new graph again.
+            $this->endPoints->relinkAll($map);
         });
     }
 

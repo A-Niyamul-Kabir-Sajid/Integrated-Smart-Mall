@@ -12,7 +12,7 @@
     const TEXT = {
         en: {
             from: 'From', to: 'To', stepFree: 'Step-free', go: 'Show route', fit: 'Fit',
-            chooseStart: 'Where are you?', chooseDest: 'Where to?', qr: 'QR codes', shops: 'Shops', facilities: 'Facilities', nearest: 'Nearest',
+            chooseStart: 'Where are you?', chooseDest: 'Where to?', qr: 'QR codes', shops: 'Shops', facilities: 'Facilities', nearest: 'Nearest', points: 'Places',
             shop: 'Shop', min: 'min', m: 'm', s: 's', loading: 'Loading the map…', failed: 'Something went wrong. Try again.',
             expired: 'This map has expired. Reload the page.', pick: 'Choose where you are and where to go.', updated: 'Route updated: a walkway changed.',
             youAreHere: 'You are here', floor: 'Floor', start: 'Start',
@@ -20,7 +20,7 @@
         },
         bn: {
             from: 'কোথা থেকে', to: 'কোথায়', stepFree: 'সিঁড়ি ছাড়া', go: 'পথ দেখাও', fit: 'পুরো ম্যাপ',
-            chooseStart: 'আপনি কোথায় আছেন?', chooseDest: 'কোথায় যাবেন?', qr: 'কিউআর কোড', shops: 'দোকান', facilities: 'সুবিধা', nearest: 'সবচেয়ে কাছের',
+            chooseStart: 'আপনি কোথায় আছেন?', chooseDest: 'কোথায় যাবেন?', qr: 'কিউআর কোড', shops: 'দোকান', facilities: 'সুবিধা', nearest: 'সবচেয়ে কাছের', points: 'স্থান',
             shop: 'দোকান', min: 'মিনিট', m: 'মিটার', s: 'সেকেন্ড', loading: 'ম্যাপ লোড হচ্ছে…', failed: 'কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।',
             expired: 'এই ম্যাপের মেয়াদ শেষ। পাতাটি আবার লোড করুন।', pick: 'আপনি কোথায় আছেন এবং কোথায় যাবেন তা বেছে নিন।', updated: 'পথ বদলেছে: একটি হাঁটার পথ বন্ধ বা খোলা হয়েছে।',
             youAreHere: 'আপনি এখানে', floor: 'তলা', start: 'শুরু',
@@ -120,6 +120,10 @@
         if (places.facility_types.length) {
             const nearest = group(to, t('nearest'));
             places.facility_types.forEach((item) => option(to, item.place, `${t('nearest')}: ${typeName(item.type)}`, nearest));
+        }
+        if ((places.end_points || []).length) {
+            const pointsTo = group(to, t('points'));
+            places.end_points.forEach((item) => option(to, item.place, `${item.name} (${item.floor_code})`, pointsTo));
         }
         if (places.facilities.length) {
             const facilities = group(to, t('facilities'));
@@ -413,7 +417,7 @@
     function startFloor() {
         const places = state.data.places;
         const from = config.from || '';
-        const match = [...places.checkpoints, ...places.units, ...places.facilities].find((item) => item.place === from);
+        const match = [...places.checkpoints, ...places.units, ...places.facilities, ...(places.end_points || [])].find((item) => item.place === from);
         if (match) return match.floor_code;
         if (from.startsWith('node:')) return state.nodes.get(from.slice(5))?.floor ?? null;
         return null;

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ApiKeyController;
 use App\Http\Controllers\Admin\CheckpointController;
 use App\Http\Controllers\Admin\ClosureController;
+use App\Http\Controllers\Admin\EndPointController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\MapController;
 use App\Http\Controllers\DocsController;
@@ -30,6 +31,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('/maps/{mallMap}', [MapController::class, 'destroy'])->name('maps.destroy');
     Route::get('/maps/{mallMap}/closures', [ClosureController::class, 'index'])->name('maps.closures');
     Route::post('/maps/{mallMap}/closures', [ClosureController::class, 'update'])->name('maps.closures.update');
+    Route::get('/maps/{mallMap}/end-points', [EndPointController::class, 'index'])->name('maps.end-points');
+    Route::post('/maps/{mallMap}/end-points', [EndPointController::class, 'store'])->name('maps.end-points.store');
+    Route::patch('/maps/{mallMap}/end-points/{endPoint}', [EndPointController::class, 'update'])->name('maps.end-points.update');
+    Route::delete('/maps/{mallMap}/end-points/{endPoint}', [EndPointController::class, 'destroy'])->name('maps.end-points.destroy');
 
     Route::get('/checkpoints', [CheckpointController::class, 'index'])->name('checkpoints.index');
     Route::post('/checkpoints/{checkpoint}/retire', [CheckpointController::class, 'retire'])->name('checkpoints.retire');

@@ -18,10 +18,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property float $y_m
  * @property float $z_m
  * @property bool $is_accessible
+ * @property int|null $map_end_point_id set on the nodes an end point added
  */
 class MapNode extends Model
 {
-    public const TYPES = ['junction', 'checkpoint', 'entrance', 'connector', 'facility'];
+    /** "endpoint" nodes are added by administrators (MapEndPoint), never by a package. */
+    public const TYPES = ['junction', 'checkpoint', 'entrance', 'connector', 'facility', 'endpoint'];
 
     public $timestamps = false;
 

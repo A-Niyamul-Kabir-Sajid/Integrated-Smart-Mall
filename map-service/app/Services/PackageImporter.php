@@ -18,6 +18,7 @@ class PackageImporter
         private AnnotationStore $annotations,
         private GraphBuilder $graph,
         private MapPublisher $publisher,
+        private EndPointService $endPoints,
     ) {}
 
     /**
@@ -125,6 +126,7 @@ class PackageImporter
                 $map->id = $id;
                 $map->save();
                 $this->graph->build($map, $package);
+                $this->copyEndPoints($map);
 
                 $annotationsFile = $folder.DIRECTORY_SEPARATOR.'annotations.json';
                 if (is_file($annotationsFile)) {
@@ -142,6 +144,25 @@ class PackageImporter
             $disk->deleteDirectory($storageDir);
 
             throw $error;
+        }
+    }
+
+    /**
+     * A new version of a mall's map keeps the end points (and their keys) of
+     * the mall's published map, or else of its newest map that has any.
+     */
+    private function copyEndPoints(MallMap $map): void
+    {
+        if ($map->mall_ref === null) {
+            return;
+        }
+        $source = MallMap::query()->where('mall_ref', $map->mall_ref)->whereKeyNot($map->id)
+            ->whereHas('endPoints')
+            ->orderByRaw("case when status = 'published' then 0 else 1 end")
+            ->latest('created_at')
+            ->first();
+        if ($source !== null) {
+            $this->endPoints->copyInto($source, $map);
         }
     }
 

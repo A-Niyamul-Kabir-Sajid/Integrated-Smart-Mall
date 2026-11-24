@@ -6,6 +6,7 @@ use App\Models\Annotation;
 use App\Models\Checkpoint;
 use App\Models\MallMap;
 use App\Models\MapCheckpointAnchor;
+use App\Models\MapEndPoint;
 use App\Models\MapNode;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -139,6 +140,13 @@ class PackagePresenter
                 'count' => $group->count(),
                 'place' => 'facility-type:'.$type,
             ])->sortKeys()->values()->all(),
+            'end_points' => $map->endPoints()->whereNotNull('map_node_id')->get()
+                ->map(fn (MapEndPoint $point): array => [
+                    'key' => $point->key,
+                    'name' => $point->name,
+                    'floor_code' => $point->floor_code,
+                    'place' => $point->place(),
+                ])->values()->all(),
             'checkpoints' => $map->checkpointAnchors()->with('node')->orderBy('checkpoint_code')->get()
                 ->filter(fn (MapCheckpointAnchor $anchor): bool => isset($checkpoints[$anchor->checkpoint_code]))
                 ->map(fn (MapCheckpointAnchor $anchor): array => [

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title>{{ $map->name }}</title>
-    <link rel="stylesheet" href="{{ asset('embed/embed.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('embed/embed.css') }}?v=3">
 </head>
 <body>
 <div id="app" class="app" aria-busy="true">
@@ -34,6 +34,6 @@
     </div>
 </div>
 <script type="application/json" id="embed-config">@json($config)</script>
-<script src="{{ asset('embed/embed.js') }}?v=3" defer></script>
+<script src="{{ asset('embed/embed.js') }}?v=4" defer></script>
 </body>
 </html>

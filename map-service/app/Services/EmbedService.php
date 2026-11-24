@@ -110,7 +110,7 @@ class EmbedService
      */
     public function assertPlaceSyntax(?string $place, string $field): void
     {
-        if ($place !== null && ! preg_match('/^(checkpoint|node|unit|facility|facility-type):.{1,190}$/u', $place)) {
+        if ($place !== null && ! preg_match('/^(checkpoint|node|unit|facility|facility-type|point):.{1,190}$/u', $place)) {
             throw new RouteNotPossible('unknown_place', "Write {$field} as kind:value.", $field);
         }
     }

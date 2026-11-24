@@ -54,7 +54,7 @@
 <table>
     <thead><tr><th>Request</th><th>Ability</th><th>Answer</th></tr></thead>
     <tbody>
-        <tr><td><span class="method">GET</span><code>/malls/{mall}</code></td><td><code>maps:read</code></td><td>The mall's published map (<code>id</code>, <code>name</code>, <code>floor_codes</code>, <code>stats</code>) and its <code>places</code></td></tr>
+        <tr><td><span class="method">GET</span><code>/malls/{mall}</code></td><td><code>maps:read</code></td><td>The mall's published map (<code>id</code>, <code>name</code>, <code>floor_codes</code>, <code>stats</code>) and its <code>places</code>: floors, units, facilities, facility types, end points, QR codes</td></tr>
         <tr><td><span class="method">GET POST</span><code>/malls/{mall}/routes</code></td><td><code>maps:read</code></td><td>A <a href="#routes">route</a> on the mall's published map</td></tr>
         <tr><td><span class="method">GET</span><code>/checkpoints/{slug}</code></td><td><code>maps:read</code></td><td>Where a scanned <a href="#checkpoints">QR code</a> puts the visitor</td></tr>
         <tr><td><span class="method">POST</span><code>/embed-links</code></td><td><code>maps:read</code></td><td>A signed link for the <a href="#embed">embedded map</a> (201)</td></tr>
@@ -78,6 +78,7 @@
         <tr><td><code>unit:G-101</code></td><td>A shop by its unit code in the Smart Mall app; the nearest of its doors is used</td></tr>
         <tr><td><code>facility:Toilets G</code></td><td>One facility by name</td></tr>
         <tr><td><code>facility-type:toilet</code></td><td>The nearest facility of that type</td></tr>
+        <tr><td><code>point:k7m2x9q4ab</code></td><td>An end point an administrator added to the map; the key is shown on the map's End points page and in the 3D editor, and stays the same for new map versions of the mall</td></tr>
         <tr><td><code>node:G-N0001</code></td><td>One point of the navigation graph</td></tr>
     </tbody>
 </table>

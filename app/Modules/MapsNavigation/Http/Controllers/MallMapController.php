@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
  */
 class MallMapController extends Controller
 {
-    private const PLACE = '/^(checkpoint|node|unit|facility|facility-type):[^\x00-\x1F]{1,190}$/u';
+    private const PLACE = '/^(checkpoint|node|unit|facility|facility-type|point):[^\x00-\x1F]{1,190}$/u';
 
     public function __construct(private MapServiceGateway $maps) {}
 

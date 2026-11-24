@@ -56,6 +56,15 @@ class MallMapPageTest extends TestCase
             && ! isset($request['from']));
     }
 
+    public function test_an_end_point_key_is_passed_on_as_the_destination(): void
+    {
+        $this->fakeEmbed();
+
+        $this->get(route('maps.show', ['publicMall' => 'demo-mall', 'to' => 'point:k7m2x9q4ab']))->assertOk()->assertDontSee('That place is not on the map.');
+
+        Http::assertSent(fn (Request $request): bool => $request['to'] === ['point:k7m2x9q4ab']);
+    }
+
     public function test_the_map_speaks_bangla_when_the_visitor_does(): void
     {
         $this->fakeEmbed();

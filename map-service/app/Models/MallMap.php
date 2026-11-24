@@ -109,6 +109,14 @@ class MallMap extends Model
     }
 
     /**
+     * @return HasMany<MapEndPoint, $this>
+     */
+    public function endPoints(): HasMany
+    {
+        return $this->hasMany(MapEndPoint::class)->orderBy('name');
+    }
+
+    /**
      * The published map of a Smart Mall app mall, if any.
      */
     public static function publishedFor(string $mallRef): ?self

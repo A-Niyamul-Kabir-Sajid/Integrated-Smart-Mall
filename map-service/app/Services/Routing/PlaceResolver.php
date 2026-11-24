@@ -15,10 +15,11 @@ use Illuminate\Support\Facades\DB;
  * - unit:<shop unit code>      every entrance of the shop (the nearest is used)
  * - facility:<facility name>   one facility
  * - facility-type:<type>       every facility of that type (the nearest is used)
+ * - point:<key>                an end point an administrator added (ISM-114)
  */
 class PlaceResolver
 {
-    public const KINDS = ['checkpoint', 'node', 'unit', 'facility', 'facility-type'];
+    public const KINDS = ['checkpoint', 'node', 'unit', 'facility', 'facility-type', 'point'];
 
     /**
      * @return array{place: string, kind: string, value: string, label: string, node_ids: list<int>}
@@ -38,6 +39,7 @@ class PlaceResolver
             'unit' => ["Shop {$value}", $this->ids(DB::table('map_shop_entrances')->where('mall_map_id', $map->id)->where('unit_code', $value)->orderByDesc('is_primary')->pluck('map_node_id'))],
             'facility' => [$value, $this->ids(DB::table('map_facility_anchors')->where('mall_map_id', $map->id)->where('facility_name', $value)->pluck('map_node_id'))],
             'facility-type' => ['the nearest '.str_replace('_', ' ', $value), $this->ids(DB::table('map_facility_anchors')->where('mall_map_id', $map->id)->where('facility_type', $value)->pluck('map_node_id'))],
+            'point' => $this->endPoint($map, $value),
         };
 
         if ($nodeIds === []) {
@@ -60,6 +62,16 @@ class PlaceResolver
         $nodeId = DB::table('map_checkpoint_anchors')->where('mall_map_id', $map->id)->where('checkpoint_code', $checkpoint->checkpoint_code)->value('map_node_id');
 
         return [$checkpoint->label ?? "QR code {$checkpoint->checkpoint_code}", $nodeId === null ? [] : [(int) $nodeId]];
+    }
+
+    /**
+     * @return array{0: string, 1: list<int>}
+     */
+    private function endPoint(MallMap $map, string $key): array
+    {
+        $row = DB::table('map_end_points')->where('mall_map_id', $map->id)->where('key', $key)->whereNotNull('map_node_id')->first();
+
+        return $row === null ? ['', []] : [$row->name, [(int) $row->map_node_id]];
     }
 
     /**

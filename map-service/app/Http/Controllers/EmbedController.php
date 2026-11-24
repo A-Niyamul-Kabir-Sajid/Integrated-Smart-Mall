@@ -84,6 +84,9 @@ class EmbedController extends Controller
         foreach (DB::table('map_facility_anchors')->where('mall_map_id', $mallMap->id)->get() as $facility) {
             $labels[$nodeCodes[$facility->map_node_id]] = $facility->facility_name;
         }
+        foreach (DB::table('map_end_points')->where('mall_map_id', $mallMap->id)->whereNotNull('map_node_id')->get() as $point) {
+            $labels[$nodeCodes[$point->map_node_id]] = $point->name;
+        }
 
         return response()->json(['data' => [
             'map' => ['id' => $mallMap->id, 'name' => $mallMap->name, 'mall_ref' => $mallMap->mall_ref],

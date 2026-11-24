@@ -13,10 +13,17 @@ const $ = (id) => document.getElementById(id);
 
 const params = new URLSearchParams(location.search);
 const service = params.get('map')
-    ? { mapId: params.get('map'), packageUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/package`, annotationsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/annotations` }
+    ? {
+        mapId: params.get('map'),
+        packageUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/package`,
+        annotationsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/annotations`,
+        endPointsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/end-points`,
+    }
     : null;
 
 const state = {
+    points: [],
+    pointObjects: [],
     pkg: null,
     resolve: null,
     sourceLabel: '',
@@ -661,6 +668,13 @@ renderer.domElement.addEventListener('pointermove', (event) => {
 });
 
 function handleClick(event) {
+    if (state.tool === 'end_point') {
+        const surface = pickSurface();
+        if (surface) {
+            addEndPoint(surface, event.shiftKey);
+        }
+        return;
+    }
     if (state.tool === 'shop_sign' || state.tool === 'advertisement') {
         const surface = pickSurface();
         if (!surface) {
@@ -701,11 +715,13 @@ function setTool(tool) {
     $('add-sign').classList.toggle('active', tool === 'shop_sign');
     $('add-ad').classList.toggle('active', tool === 'advertisement');
     $('move').classList.toggle('active', tool === 'move');
+    $('add-point').classList.toggle('active', tool === 'end_point');
     renderer.domElement.style.cursor = tool ? 'crosshair' : '';
     const hints = {
         shop_sign: 'Click a wall or the floor to place the shop sign (Shift+click to keep adding, Esc to stop)',
         advertisement: 'Click a wall or the floor to place the advertisement (Shift+click to keep adding, Esc to stop)',
         move: 'Click where the selected item should go (Esc to cancel)',
+        end_point: 'Click the floor where the end point goes (Esc to stop)',
     };
     $('hint').textContent = hints[tool] ?? '';
     $('hint').style.display = tool ? 'block' : 'none';
@@ -1062,6 +1078,7 @@ $('annotations-input').addEventListener('change', async () => {
 
 $('add-sign').addEventListener('click', () => setTool(state.tool === 'shop_sign' ? null : 'shop_sign'));
 $('add-ad').addEventListener('click', () => setTool(state.tool === 'advertisement' ? null : 'advertisement'));
+$('add-point').addEventListener('click', () => setTool(state.tool === 'end_point' ? null : 'end_point'));
 $('floor-select').addEventListener('change', () => {
     applyVisibility();
     fitView('3d');
@@ -1093,6 +1110,163 @@ window.addEventListener('keydown', (event) => {
         deleteSelected();
     }
 });
+
+// ---------------------------------------------------------------------------
+// End points (ISM-114): destinations added by clicking the floor; the map
+// service joins each to the nearest walkway and gives it a key.
+// ---------------------------------------------------------------------------
+
+async function callEndPoints(url, method = 'GET', body = null) {
+    const response = await fetch(url, {
+        method,
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
+        credentials: 'same-origin',
+        body: body ? JSON.stringify(body) : null,
+    });
+    const data = response.status === 204 ? {} : await response.json().catch(() => ({}));
+    if (!response.ok) {
+        const detail = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+        throw new Error(detail || `The map service answered HTTP ${response.status}.`);
+    }
+    return data.data;
+}
+
+async function loadEndPoints() {
+    try {
+        state.points = await callEndPoints(service.endPointsUrl);
+    } catch (error) {
+        message(error.message);
+        state.points = [];
+    }
+    renderEndPoints();
+}
+
+async function addEndPoint(surface, keepTool) {
+    const position = A.threeToMall(surface.point);
+    const name = window.prompt(`Name of the end point on floor ${surface.floorCode} (x ${position.x.toFixed(2)}, y ${position.y.toFixed(2)})`, 'End point');
+    if (name === null || name.trim() === '') {
+        return;
+    }
+    try {
+        const point = await callEndPoints(service.endPointsUrl, 'POST', { name: name.trim(), floor_code: surface.floorCode, x: position.x, y: position.y });
+        state.points.push(point);
+        state.points.sort((a, b) => a.name.localeCompare(b.name));
+        showNewKey(point);
+        renderEndPoints();
+        message(`End point “${point.name}” added with key ${point.key}.`);
+    } catch (error) {
+        message(error.message);
+    }
+    if (!keepTool) {
+        setTool(null);
+    }
+}
+
+function showNewKey(point) {
+    const box = $('point-new');
+    box.replaceChildren(
+        Object.assign(document.createElement('span'), { className: 'muted', textContent: `New end point “${point.name}”, key:` }),
+        Object.assign(document.createElement('span'), { className: 'key', textContent: point.key }),
+        Object.assign(document.createElement('span'), { className: 'muted', textContent: `Route to it with ${point.place}` }),
+    );
+    box.hidden = false;
+}
+
+function pointLabel(text) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#a21caf';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, 512, 64, 14);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 30px ui-monospace, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text.length > 30 ? text.slice(0, 29) + '…' : text, 256, 34);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false }));
+    sprite.scale.set(1.6, 0.2, 1);
+    sprite.position.set(0, 1.55, 0);
+    sprite.renderOrder = 4;
+    return sprite;
+}
+
+function buildEndPointObjects() {
+    for (const object of state.pointObjects) {
+        object.parent?.remove(object);
+    }
+    state.pointObjects = [];
+    for (const point of state.points) {
+        const entry = state.floors.get(point.floor_code);
+        if (!entry) {
+            continue;
+        }
+        const group = new THREE.Group();
+        const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 12), new THREE.MeshBasicMaterial({ color: point.linked ? 0xd946ef : 0x9ca3af }));
+        pin.position.y = 0.65;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 14), new THREE.MeshBasicMaterial({ color: point.linked ? 0xd946ef : 0x9ca3af }));
+        head.position.y = 1.3;
+        group.add(pin, head, pointLabel(`${point.key} · ${point.name}`));
+        group.position.copy(v3(point.position));
+        entry.group.add(group);
+        state.pointObjects.push(group);
+        if (point.joined_at) {
+            const line = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([v3({ ...point.position, z: point.position.z + 0.05 }), v3({ ...point.joined_at, z: point.joined_at.z + 0.05 })]),
+                new THREE.LineDashedMaterial({ color: 0xd946ef, dashSize: 0.15, gapSize: 0.1 }),
+            );
+            line.computeLineDistances();
+            entry.group.add(line);
+            state.pointObjects.push(line);
+        }
+    }
+}
+
+function renderEndPoints() {
+    $('points-count').textContent = state.points.length ? `(${state.points.length})` : '';
+    const items = state.points.map((point) => {
+        const li = document.createElement('li');
+        const key = Object.assign(document.createElement('span'), { className: 'key', textContent: point.key });
+        const actions = Object.assign(document.createElement('span'), { className: 'actions' });
+        const copy = Object.assign(document.createElement('button'), { textContent: 'Copy', type: 'button' });
+        copy.addEventListener('click', (event) => {
+            event.stopPropagation();
+            navigator.clipboard?.writeText(point.key).then(() => { copy.textContent = 'Copied'; });
+        });
+        const remove = Object.assign(document.createElement('button'), { textContent: 'Delete', type: 'button' });
+        remove.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            if (!window.confirm(`Delete ${point.name} (${point.key})? Links that use its key stop working.`)) {
+                return;
+            }
+            try {
+                await callEndPoints(point.update_url, 'DELETE');
+                state.points = state.points.filter((item) => item.key !== point.key);
+                renderEndPoints();
+                message(`End point ${point.key} deleted.`);
+            } catch (error) {
+                message(error.message);
+            }
+        });
+        actions.append(copy, remove);
+        const meta = Object.assign(document.createElement('span'), {
+            className: 'muted',
+            textContent: `${point.name} · floor ${point.floor_code}${point.linked ? '' : ' · not on the map'}`,
+        });
+        li.append(key, actions, meta);
+        li.addEventListener('click', () => focusOn(point));
+        return li;
+    });
+    if (!items.length) {
+        items.push(Object.assign(document.createElement('li'), { className: 'muted', textContent: 'None yet. Use “＋ End point”.' }));
+    }
+    $('points').replaceChildren(...items);
+    buildEndPointObjects();
+}
 
 function setStatus(text) {
     $('status').textContent = text;
@@ -1127,7 +1301,10 @@ if (service) {
     $('save-note').textContent = 'Every change is saved to the map service automatically.';
     const back = Object.assign(document.createElement('a'), { href: '/admin/maps', textContent: '← Back to maps', className: 'muted' });
     $('package-name').before(back);
-    loadFromService().catch(fail);
+    $('add-point').hidden = false;
+    $('points-section').hidden = false;
+    $('points-page').href = service.endPointsUrl;
+    loadFromService().then(loadEndPoints).catch(fail);
 } else if (packageParam) {
     loadFromUrl(packageParam).catch(fail);
 } else {

@@ -65,4 +65,18 @@ return [
 
     'embed_session_minutes' => (int) env('MAP_EMBED_SESSION_MINUTES', 240),
 
+    /*
+    |--------------------------------------------------------------------------
+    | End points
+    |--------------------------------------------------------------------------
+    |
+    | How far (metres) an end point may be from the nearest walkway, and the
+    | Smart Mall app's map page that the admin page links each key to.
+    |
+    */
+
+    'end_point_link_max_m' => (float) env('MAP_END_POINT_LINK_MAX_M', 6.0),
+
+    'app_map_url' => env('MAP_APP_MAP_URL', 'http://127.0.0.1:8000/malls/{mall}/map'),
+
 ];
