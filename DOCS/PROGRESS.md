@@ -256,6 +256,22 @@ Evidence: map-service `php artisan test` 115 passed (end points 11) and `node --
 
 Limitations: end points belong to one map version and are copied to new versions of the same mall (unlinked when no walkway is within 6 m); they can be added, renamed and deleted but not moved (delete and add again); the 3D editor asks for the name with the browser's prompt box; the 6 m and 0.25 m values are defaults to confirm.
 
+## 2026-11-24: map editor for administrators (ISM-114, ISM-115)
+
+Same branch `feature/ISM-114-map-end-points`. Decision D-022 (rewritten).
+
+- The end points of the morning became a map editor. The first version asked for a point's name with the browser's prompt box; the user reported that adding was not possible, and the service log showed that no request ever arrived (the prompt box failed silently). The 3D editor now uses forms in its panel and shows errors in red.
+- Points: node, shop entrance, facility or QR code, each with a unique key and a height (1.5 m, QR 1.4 m, editable); edit, move (click), delete. QR codes are placed by clicking a wall (facing from the wall) and join the mall's QR codes.
+- Paths: drawn corner by corner, corners snap to nodes and path ends (yellow in the editor), step-free and one way, redraw, merge two paths that meet at an end.
+- The navigation graph itself: move or remove a node, connect two nodes, one way or not step-free, remove a walkway (with the halves added on it); every change listed with Undo. `MapEditService` now rebuilds the package's graph and replays all edits in order after every change, rebuild and new version, keeping closures by node codes; `GraphBuilder` writes only the package's graph.
+- Pages: **Points and paths** with edit forms, a merge form and a graph change form; the 3D editor draws the live graph from `/admin/maps/{id}/graph` and has a **✎ Graph** tool.
+
+Evidence: map-service `php artisan test` 138 passed (map editor 23, graph changes 11) and the viewer tests 8 passed. Live in headless Edge on the real scan: a shop entrance for G-05, a QR code on the east wall (182°, 1.40 m, then 1.60 m by Edit), a path into the north room and a seating node reached through it from the new QR code (18 m), Juice Corner's Show on map routed to the new G-05 door; the graph tool selected node G-N0005, moved it, made the walkway G-N0001 – G-N0002 one way (dashed with an arrow) and undid it. The run found two bugs, both fixed: editing a point that was not a QR code failed, and new map versions did not copy graph changes. The guide's numbers were checked on the Blender test mall in a rolled-back transaction. Manual check: guide 45 (rewritten).
+
+Mistake recorded: while testing, `php artisan migrate --env=testing` in `map-service` ran against the user's own map-service database (there is no `.env.testing`), adding the new tables and columns as batch 2. Only additive changes; the user's map, signs, key and administrator were checked unchanged. `php artisan migrate:rollback` in `map-service` undoes it if wanted.
+
+Limitations: graph changes name nodes by code, so they need the same codes in a re-drafted package; lifts, escalators and stairs come only from the package; points cannot be dragged (Move is click-to-place); the heights are used by the 3D views, not by routing.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.

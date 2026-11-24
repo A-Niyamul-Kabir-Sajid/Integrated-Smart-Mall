@@ -53,7 +53,7 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [42_map_graph_checkpoints_and_routes](42_map_graph_checkpoints_and_routes.md) | Map service: navigation graph and refusals, one published map per mall, QR codes and their lifecycle, routes across floors, step-free, nearest facility, several stops, closures | EPIC-05 |
 | [43_mall_map_embed_and_docs](43_mall_map_embed_and_docs.md) | The Map page and QR landing page in the Smart Mall app: embedded map, routes, Bangla, closures reaching an open map, signed links and allowed sites, `/docs` | EPIC-05 |
 | [44_real_scan_pilot_map](44_real_scan_pilot_map.md) | The first real iPhone scan as the demo mall's ground floor: prepare, demo markers by script, export without warnings, import, 2D routes and Show on map, the scan in 3D | EPIC-05 |
-| [45_map_end_points](45_map_end_points.md) | Map administrators add end points in the 3D editor or on a page, see their keys, route to `point:<key>` in the Smart Mall app, closures, new versions keep keys, delete | EPIC-11 |
+| [45_map_editor](45_map_editor.md) | Map editor: points (node, shop entrance, facility, QR code) with keys and heights, paths with snapping and merging, changes to the navigation graph with undo, routes in the Smart Mall app, new versions keep everything | EPIC-11 |
 
 ## Helpers
 

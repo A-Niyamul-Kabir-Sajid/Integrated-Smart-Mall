@@ -78,7 +78,7 @@
         <tr><td><code>unit:G-101</code></td><td>A shop by its unit code in the Smart Mall app; the nearest of its doors is used</td></tr>
         <tr><td><code>facility:Toilets G</code></td><td>One facility by name</td></tr>
         <tr><td><code>facility-type:toilet</code></td><td>The nearest facility of that type</td></tr>
-        <tr><td><code>point:k7m2x9q4ab</code></td><td>An end point an administrator added to the map; the key is shown on the map's End points page and in the 3D editor, and stays the same for new map versions of the mall</td></tr>
+        <tr><td><code>point:k7m2x9q4ab</code></td><td>A point an administrator added (a node, shop entrance, facility or QR code); the unique key is shown on the map's Points and paths page and in the 3D editor, and stays the same for new map versions of the mall. Places list them under <code>end_points</code> with their <code>kind</code>.</td></tr>
         <tr><td><code>node:G-N0001</code></td><td>One point of the navigation graph</td></tr>
     </tbody>
 </table>
