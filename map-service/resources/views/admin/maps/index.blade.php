@@ -53,6 +53,7 @@
                     </td>
                     <td class="actions">
                         <a class="button primary" href="{{ route('admin.maps.show', $map) }}">Open 3D editor</a>
+                        <a class="button" href="{{ route('admin.maps.closures', $map) }}">Closures</a>
                         <form method="post" action="{{ route('admin.maps.status', $map) }}" class="inline">
                             @csrf @method('patch')
                             <input type="hidden" name="status" value="{{ $map->isPublished() ? 'draft' : 'published' }}">

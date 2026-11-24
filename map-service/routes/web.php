@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ApiKeyController;
 use App\Http\Controllers\Admin\CheckpointController;
+use App\Http\Controllers\Admin\ClosureController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\MapController;
 use App\Http\Controllers\FileController;
@@ -25,6 +26,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::patch('/maps/{mallMap}/status', [MapController::class, 'status'])->name('maps.status');
     Route::patch('/maps/{mallMap}/mall', [MapController::class, 'mall'])->name('maps.mall');
     Route::delete('/maps/{mallMap}', [MapController::class, 'destroy'])->name('maps.destroy');
+    Route::get('/maps/{mallMap}/closures', [ClosureController::class, 'index'])->name('maps.closures');
+    Route::post('/maps/{mallMap}/closures', [ClosureController::class, 'update'])->name('maps.closures.update');
 
     Route::get('/checkpoints', [CheckpointController::class, 'index'])->name('checkpoints.index');
     Route::post('/checkpoints/{checkpoint}/retire', [CheckpointController::class, 'retire'])->name('checkpoints.retire');

@@ -26,6 +26,7 @@ class PackagePresenter
             'id' => $map->id,
             'name' => $map->name,
             'status' => $map->status,
+            'mall_ref' => $map->mall_ref,
             'format_version' => $map->format_version,
             'package_generated_at' => $map->package_generated_at?->toIso8601String(),
             'floor_codes' => $map->floor_codes,
@@ -106,6 +107,46 @@ class PackagePresenter
             'node' => $this->node($anchor->node),
             'qr' => $anchor->qr,
             'start' => 'checkpoint:'.$checkpoint->public_slug,
+        ];
+    }
+
+    /**
+     * Places a route can start or end at, each with its "kind:value" form.
+     *
+     * @return array<string, mixed>
+     */
+    public function places(MallMap $map): array
+    {
+        $map->loadMissing(['floors', 'shopEntrances.node', 'facilityAnchors.node']);
+        $checkpoints = $map->mall_ref === null ? collect() : Checkpoint::query()->where('mall_ref', $map->mall_ref)->where('status', 'active')->pluck('public_slug', 'checkpoint_code');
+
+        return [
+            'floors' => $map->floors->map(fn ($floor): array => ['floor_code' => $floor->floor_code, 'name' => $floor->name, 'elevation_m' => $floor->elevation_m])->values()->all(),
+            'units' => $map->shopEntrances->groupBy('unit_code')->map(fn ($entrances, $unit): array => [
+                'unit_code' => $unit,
+                'floor_code' => $entrances->first()->node->floor_code,
+                'entrances' => $entrances->count(),
+                'place' => 'unit:'.$unit,
+            ])->sortKeys()->values()->all(),
+            'facilities' => $map->facilityAnchors->sortBy('facility_name')->map(fn ($facility): array => [
+                'name' => $facility->facility_name,
+                'type' => $facility->facility_type,
+                'floor_code' => $facility->node->floor_code,
+                'place' => 'facility:'.$facility->facility_name,
+            ])->values()->all(),
+            'facility_types' => $map->facilityAnchors->groupBy('facility_type')->map(fn ($group, $type): array => [
+                'type' => $type,
+                'count' => $group->count(),
+                'place' => 'facility-type:'.$type,
+            ])->sortKeys()->values()->all(),
+            'checkpoints' => $map->checkpointAnchors()->with('node')->orderBy('checkpoint_code')->get()
+                ->filter(fn (MapCheckpointAnchor $anchor): bool => isset($checkpoints[$anchor->checkpoint_code]))
+                ->map(fn (MapCheckpointAnchor $anchor): array => [
+                    'checkpoint_code' => $anchor->checkpoint_code,
+                    'label' => $anchor->label,
+                    'floor_code' => $anchor->node->floor_code,
+                    'place' => 'checkpoint:'.$checkpoints[$anchor->checkpoint_code],
+                ])->values()->all(),
         ];
     }
 

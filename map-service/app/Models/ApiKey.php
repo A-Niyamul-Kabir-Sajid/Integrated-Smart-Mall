@@ -23,6 +23,7 @@ class ApiKey extends Model
     public const ABILITIES = [
         'maps:read' => 'Read published maps, their package and their signs and advertisements',
         'annotations:write' => 'Create, change and delete signs and advertisements',
+        'graph:write' => 'Close and reopen walkways of published maps',
     ];
 
     protected $fillable = ['name', 'prefix', 'key_hash', 'abilities', 'last_used_at', 'expires_at', 'revoked_at'];
