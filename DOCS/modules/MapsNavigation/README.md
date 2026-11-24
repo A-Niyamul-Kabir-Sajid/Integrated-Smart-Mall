@@ -4,9 +4,9 @@
 
 Versioned maps, checkpoints, graph routing and AR coordination. Source folder: [app/Modules/MapsNavigation](../../../app/Modules/MapsNavigation/).
 
-Status: no application code yet. The offline map preparation pipeline exists (ISM-57/ISM-58, decision D-019): [tools/blender/README.md](../../../tools/blender/README.md) turns iPhone LiDAR scans into a map package ([format and sample](../../../tools/blender/samples/pilot_map_package.json)) whose fields follow the ERD below. How to scan: [tools/blender/SCANNING.md](../../../tools/blender/SCANNING.md). Importing that package (migrations, models, import command) is ISM-59.
+Status: the map, its navigation graph, QR checkpoints, routes and the embedded map live in the separate map service (decisions D-020 and D-021); this module keeps no tables. Maps are prepared offline in Blender ([tools/blender/README.md](../../../tools/blender/README.md), decision D-019; how to scan: [tools/blender/SCANNING.md](../../../tools/blender/SCANNING.md)) and imported into [map-service/](../../../map-service/README.md), whose public API documentation is at `/docs` on the service.
 
-Map service (D-020): the separate app [map-service/](../../../map-service/README.md) holds imported maps and the shop signs and advertisements placed on them in 3D, and serves them through `/api/v1` with API keys. This module reads it through `Contracts/MapServiceGateway` (adapter `Adapters/HttpMapServiceGateway`, configuration `services.map_service`, check command `php artisan maps:service-check`).
+This module: `Contracts/MapServiceGateway` (maps, package, annotations, `mall()`, `checkpoint()`, `route()`, `embedLink()`; adapter `Adapters/HttpMapServiceGateway`, configuration `services.map_service`, check command `php artisan maps:service-check`) and `Http/Controllers/MallMapController` with the public pages `/malls/{mall}/map` (the embedded map in an iframe from a signed link) and `/malls/{mall}/map/qr/{slug}` (the address printed in QR codes). Manual checks: [guide 42](../../../guide/TestByYourself/42_map_graph_checkpoints_and_routes.md) and [guide 43](../../../guide/TestByYourself/43_mall_map_embed_and_docs.md).
 
 ## Read before implementation
 
@@ -29,6 +29,6 @@ Read [table ownership](../../references/erd/DOC/03-database/TABLE-OWNERSHIP.md) 
 
 Related modules: MallShopDirectory, ParkingFacilities, MallOwnerAdmin, ChatbotRag. Review their contracts and authorization boundaries before changing shared behavior.
 
-Relevant [open questions](../../CONFLICTS.md): C-07 (target devices decided by D-019; the alignment accuracy still has to be measured). [API guidance](../../07_API_CONTRACTS.md) applies before defining cross-module inputs, outputs and events.
+Relevant [open questions](../../CONFLICTS.md): C-07 (target devices decided by D-019; QR start points and routes built by D-021; the alignment accuracy still has to be measured). The ERD domain 04 tables listed below are owned by the map service, not this module (D-021). [API guidance](../../07_API_CONTRACTS.md) applies before defining cross-module inputs, outputs and events.
 
 Use the source guides' completion checks and [test guidance](../../09_TESTING.md); record actual results in [progress](../../PROGRESS.md). Keep business logic in Services and add patterns only when justified.

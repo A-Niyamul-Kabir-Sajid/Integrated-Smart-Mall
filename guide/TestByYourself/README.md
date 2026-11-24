@@ -50,6 +50,8 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [39_admin_assistant_safety_and_evaluation](39_admin_assistant_safety_and_evaluation.md) | Administrators' assistant: figures, report drafts, refusals, activity page, audit trail, evaluation run | EPIC-13 |
 | [40_blender_map_pipeline](40_blender_map_pipeline.md) | Blender map pipeline: prepare a LiDAR scan, draft the graph, place QR checkpoints and markers, refusals, export the map package | EPIC-05 |
 | [41_map_service_and_api_keys](41_map_service_and_api_keys.md) | Separate map service: import a map, shop signs and advertisements in 3D, publish, API keys, the Smart Mall app reading with its key, revoking | EPIC-05 |
+| [42_map_graph_checkpoints_and_routes](42_map_graph_checkpoints_and_routes.md) | Map service: navigation graph and refusals, one published map per mall, QR codes and their lifecycle, routes across floors, step-free, nearest facility, several stops, closures | EPIC-05 |
+| [43_mall_map_embed_and_docs](43_mall_map_embed_and_docs.md) | The Map page and QR landing page in the Smart Mall app: embedded map, routes, Bangla, closures reaching an open map, signed links and allowed sites, `/docs` | EPIC-05 |
 
 ## Helpers
 
