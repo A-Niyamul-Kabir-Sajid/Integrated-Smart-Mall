@@ -1,9 +1,9 @@
 # 45 Map editor: points, QR codes, paths and the navigation graph
 
 **Covers:** EPIC-11 / EPIC-05, Jira ISM-114 and ISM-115, the separate app `map-service/` and the Smart Mall app's Map page (decision D-022)
-**Automated tests:** `map-service/tests/Feature/MapEditTest.php` (23), `map-service/tests/Feature/GraphEditTest.php` (11), `tests/Feature/Modules/MapsNavigation/MallMapPageTest.php` (`point:` destination)
+**Automated tests:** `map-service/tests/Feature/MapEditTest.php` (23), `map-service/tests/Feature/GraphEditTest.php` (16), `tests/Feature/Modules/MapsNavigation/MallMapPageTest.php` (`point:` destination)
 **Needs:** nothing else; this file is self-contained
-**Time:** about 40 minutes
+**Time:** about 45 minutes
 
 ## What you are proving
 
@@ -11,7 +11,7 @@ A map administrator adds what the scan missed and corrects the navigation graph,
 
 - points of four kinds (node, shop entrance, facility, QR code), each with a unique key and a height above the floor (1.5 m, QR codes 1.4 m, changeable);
 - walkways drawn as paths, whose corners join nodes and path ends, and paths merged at their ends;
-- changes to the graph itself: move or remove a node, connect two nodes, make a walkway one way or not step-free, remove it, and undo any change.
+- changes to the graph itself: move or remove a node, connect two nodes, make a walkway one way or not step-free, remove it, and edit or undo any change.
 
 Visitors in the Smart Mall app are routed to the new places, and every edit survives a rebuild and a new map version.
 
@@ -99,7 +99,12 @@ The ground floor of the test mall has a long corridor along y ≈ 11 with nodes 
 3. Click **Undo** on that change, reload the Smart Mall link. **Expect:** a route east along the corridor to G-201.
 4. Change `Connect two nodes`, From `G-N0004`, To `G-N0013`, **Apply change**. **Expect:** "Connect G-N0004 and G-N0013 — done."
 5. Change `Change a walkway`, From `G-N0010`, To `G-N0011`, Direction `One way, from → to`, **Apply change**. **Expect:** "Change the walkway G-N0010 – G-N0011: one way G-N0010 → G-N0011".
-6. Change `Remove a node`, Node `E-G-201`. **Expect:** refused: "Node E-G-201 is a shop entrance; remove that first."
+6. In the list of changes, open **Edit** on that walkway change: the form shows From `G-N0010`, To `G-N0011` and Direction `One way, from → to`. Set Direction `One way, to → from`, **Save change**.
+
+**Expect:** "Change the walkway G-N0010 – G-N0011: one way G-N0011 → G-N0010 — saved." The change keeps its key and its place in the list.
+
+7. Open **Edit** on `Connect G-N0004 and G-N0013`, set To node `G-N0012`, **Save change**. **Expect:** "Connect G-N0004 and G-N0012 — saved."
+8. Change `Remove a node`, Node `E-G-201`. **Expect:** refused: "Node E-G-201 is a shop entrance; remove that first."
 
 ### 5. The same in the 3D editor
 
@@ -108,12 +113,18 @@ The ground floor of the test mall has a long corridor along y ≈ 11 with nodes 
 **Expect:** the graph drawn as it is now: red walkways, dashed amber for the path that is not step-free, a dashed line with an arrow for the one-way walkway, purple pins for nodes, green for doors, orange for facilities and blue squares for QR codes, each labelled with its key.
 
 2. Click **✎ Graph**, click a red dot in the corridor. **Expect:** a panel "Node G-N00… · junction · floor G · x … · y …" with **Move**, **Connect to…**, **Remove node**. For a door or QR node the panel says why it cannot be removed.
-3. Click **Move (click the new place)** and click half a metre away. **Expect:** "Node … moved." and the change in **Graph changes** with **Undo**.
-4. Click **✎ Graph** and click a red line. **Expect:** "Walkway A – B · … m" with Step-free, Direction and **Remove walkway**.
-5. Click **＋ Point**, click the floor; choose `Facility`, type `Prayer room`, Name `Prayer room G`; the Marker height shows **1.5**; **Save point**. **Expect:** the key shown in large purple letters and an orange pin at 1.5 m.
-6. Click **＋ QR code** and click a pillar face. **Expect:** the form says "facing …°" and Height **1.4**; enter code `G-C11` and a label, **Save QR code**: the key and the QR address are shown.
-7. Click **＋ Path**, click once on the end of the washroom path (the dot turns **yellow**: "last corner joins the end of path …"), click two more corners, **Finish path**.
-8. In **Points**, click **Edit** on `Kiosk`, then **Move (click the floor)**, click a new place, **Save changes**. **Expect:** the pin moves; the key stays.
+3. Click **Move (click the new place)** and click half a metre away. **Expect:** "Node … moved." and the change in **Graph changes** with **Edit** and **Undo**.
+4. In **Graph changes**, click **Edit** on that move.
+
+**Expect:** a form "Edit change <key> · Move node …" with Node (and a **Pick** button), New x, New y, **Save change**, **Pick the new place (click the floor)** and **Cancel**; the node is ringed in yellow.
+
+5. Click **Pick the new place (click the floor)**, click the floor a little further on. **Expect:** New x and New y change and "click Save change to keep it". Click **Save change**. **Expect:** "Change <same key> saved: Move node … to x …, y …." and the dot at the new place.
+6. Click **Edit** on the same change again, type `NOPE-1` in Node, **Save change**. **Expect:** red "Node NOPE-1 is not on this map."; **Cancel**: the change is as it was.
+7. Click **✎ Graph** and click a red line. **Expect:** "Walkway A – B · … m" with Step-free, Direction and **Remove walkway**.
+8. Click **＋ Point**, click the floor; choose `Facility`, type `Prayer room`, Name `Prayer room G`; the Marker height shows **1.5**; **Save point**. **Expect:** the key shown in large purple letters and an orange pin at 1.5 m.
+9. Click **＋ QR code** and click a pillar face. **Expect:** the form says "facing …°" and Height **1.4**; enter code `G-C11` and a label, **Save QR code**: the key and the QR address are shown.
+10. Click **＋ Path**, click once on the end of the washroom path (the dot turns **yellow**: "last corner joins the end of path …"), click two more corners, **Finish path**.
+11. In **Points**, click **Edit** on `Kiosk`, then **Move (click the floor)**, click a new place, **Save changes**. **Expect:** the pin moves; the key stays.
 
 ### 6. Visitors and new versions
 
@@ -139,13 +150,16 @@ cd ..
 | map admin | merge two paths whose ends are far apart | "These paths do not meet at an end: their ends are more than 0.5 m apart." |
 | map admin | Connect `G-C01` with `1-C01` | "A walkway joins two nodes of the same floor; …" |
 | map admin | Remove the node `G-X-Central-Lift` | "… is a stop of a lift, escalator or stairs; remove that first." |
+| map admin | **Edit** on `Connect G-N0004 and G-N0012`, To node `G-N0005`, **Save change** | "G-N0004 and G-N0005 are already joined by a walkway."; the change still reads "Connect G-N0004 and G-N0012" |
+| map admin | **Edit** on the walkway change, Direction and Step-free both `(unchanged)`, **Save change** | "Say what changes: step-free, or the direction (both, forward, backward)." |
 | visitor | <http://127.0.0.1:8000/malls/niagara-city-mall/map?to=point:zzzzzzzzzz> | "That place is not on the map. Choose it from the list." |
 
 ## If something looks wrong
 
 - No **＋ Point**, **＋ QR code**, **＋ Path** or **✎ Graph** buttons: the 3D editor was opened as a file viewer; open it from the Maps page while signed in.
 - A click does nothing but a red message says it missed the scan: click on the scanned floor or wall itself.
-- "not applied" next to a change after importing a new version: that version no longer has the node codes the change names; undo it and make it again.
+- "not applied" next to a change after importing a new version: that version no longer has the node codes the change names; open **Edit** on it and give the new codes (or undo it).
+- "not applied" next to a later change right after you edited an earlier one: the later change named the old nodes or walkway; edit it too, or undo it.
 
 ## Result
 

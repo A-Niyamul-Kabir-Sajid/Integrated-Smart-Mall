@@ -272,6 +272,17 @@ Mistake recorded: while testing, `php artisan migrate --env=testing` in `map-ser
 
 Limitations: graph changes name nodes by code, so they need the same codes in a re-drafted package; lifts, escalators and stairs come only from the package; points cannot be dragged (Move is click-to-place); the heights are used by the 3D views, not by routing.
 
+## 2026-11-24: graph changes can be edited (ISM-114)
+
+Same branch `feature/ISM-114-map-end-points`. Decision D-022 (extended).
+
+- The user reported that the list of graph changes had no Edit option (points and paths had one; changes to the navigation graph only had Undo). Each change now has **Edit**, on the Points and paths page (a form with the change's own fields: node, new x and y; from and to nodes; one way and step-free; direction) and in the 3D editor (the same form in the panel, with **Pick** to take a node by clicking it and **Pick the new place** for a move). What a change does (move, remove, connect …) stays; to make another kind of change, undo it and make the new one.
+- `PATCH /admin/maps/{map}/graph/{change}` (`MapEditService::updateGraphEdit`) keeps the change's key and its place in the order of edits, writes the package's graph again and replays every edit. An edit that does not fit is refused with the reason and nothing changes. Later changes that no longer fit are kept and shown as "not applied", as after a new import, and can be edited too.
+- The checks of a change now live in one place, where it is applied, so adding and editing refuse the same things with the same words; moving a node that belongs to a point is also refused when a change is replayed.
+- The 3D editor's number boxes (x, y, height, facing) are dark like its other boxes.
+
+Evidence: map-service `php artisan test` 143 passed (graph changes 16, five new: edit a move, edit a connection and replay a later change, refused edits leave the graph as it was, fix a change that no longer applies, JSON and page form with a change of another map refused), the viewer tests 8 passed. Live in headless Edge on the real scan: a new move of G-N0003 edited with Edit, Pick the new place and Save change (same key, node at x 2.70, y 4.23), a node code `NOPE-1` refused with "Node NOPE-1 is not on this map." and nothing changed, Pick filled the Node box with G-N0004, the page form saved x 2.20 ("— saved."), then Undo; the two graph changes already in the demo list were the same before and after. The guide's new steps were checked on the Blender test mall in a rolled-back transaction. Manual check: guide 45 (steps 4.6, 4.7, 5.4 to 5.6 and two refusals added).
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
