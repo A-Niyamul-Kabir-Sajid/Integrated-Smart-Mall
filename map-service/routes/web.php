@@ -22,6 +22,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/maps/{mallMap}/annotations', [MapController::class, 'annotations'])->name('maps.annotations');
     Route::put('/maps/{mallMap}/annotations', [MapController::class, 'saveAnnotations'])->name('maps.annotations.save');
     Route::patch('/maps/{mallMap}/status', [MapController::class, 'status'])->name('maps.status');
+    Route::patch('/maps/{mallMap}/mall', [MapController::class, 'mall'])->name('maps.mall');
     Route::delete('/maps/{mallMap}', [MapController::class, 'destroy'])->name('maps.destroy');
 
     Route::get('/api-keys', [ApiKeyController::class, 'index'])->name('api-keys.index');

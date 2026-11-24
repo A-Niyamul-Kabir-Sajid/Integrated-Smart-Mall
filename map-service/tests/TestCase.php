@@ -3,7 +3,9 @@
 namespace Tests;
 
 use App\Models\ApiKey;
+use App\Models\MallMap;
 use App\Services\ApiKeyIssuer;
+use App\Services\PackageImporter;
 use Database\Factories\MallMapFactory;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\File;
@@ -27,21 +29,36 @@ abstract class TestCase extends BaseTestCase
      *
      * @param  array<string, mixed>  $overrides  merged into map_package.json
      */
-    protected function packageFolder(array $overrides = [], ?array $annotations = null, ?string $root = null): string
+    protected function packageFolder(array $overrides = [], ?array $annotations = null, ?string $root = null, ?array $base = null): string
     {
         $root ??= sys_get_temp_dir().DIRECTORY_SEPARATOR.'ism-map-test-'.Str::random(8);
         $this->temporaryFolders[] = $root;
         $folder = $root.DIRECTORY_SEPARATOR.'sample'.DIRECTORY_SEPARATOR.'package';
         File::ensureDirectoryExists($folder.DIRECTORY_SEPARATOR.'floors');
-        File::put($folder.'/map_package.json', (string) json_encode(array_replace(MallMapFactory::package(), $overrides)));
-        File::put($folder.'/floors/G_plan.png', 'plan');
-        File::put($folder.'/floors/G_graph_preview.png', 'preview');
-        File::put($folder.'/floors/G_model.glb', 'glTF-model');
+        $package = array_replace($base ?? MallMapFactory::package(), $overrides);
+        File::put($folder.'/map_package.json', (string) json_encode($package));
+        foreach ($package['floors'] ?? [] as $floor) {
+            $code = $floor['floor_code'] ?? 'G';
+            File::put($folder."/floors/{$code}_plan.png", 'plan');
+            File::put($folder."/floors/{$code}_graph_preview.png", 'preview');
+            File::put($folder."/floors/{$code}_model.glb", 'glTF-model');
+        }
         if ($annotations !== null) {
             File::put($folder.'/annotations.json', (string) json_encode(['format' => 'ism-map-annotations', 'format_version' => 1, 'annotations' => $annotations]));
         }
 
         return $folder;
+    }
+
+    /**
+     * The two-floor test mall (MallMapFactory::pilotPackage()) imported
+     * through the real importer, graph included.
+     *
+     * @param  array<string, mixed>  $overrides  merged into map_package.json
+     */
+    protected function pilotMap(?string $mallRef = 'demo-mall', bool $publish = true, array $overrides = []): MallMap
+    {
+        return app(PackageImporter::class)->import($this->packageFolder($overrides, base: MallMapFactory::pilotPackage()), 'Pilot mall', $publish, $mallRef);
     }
 
     /**

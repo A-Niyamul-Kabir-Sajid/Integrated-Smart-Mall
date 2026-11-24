@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Annotation;
 use App\Models\MallMap;
 use App\Services\AnnotationStore;
+use App\Services\MapPublisher;
 use App\Services\PackageImporter;
 use App\Services\PackagePresenter;
 use Illuminate\Http\JsonResponse;
@@ -26,12 +27,13 @@ class MapController extends Controller
         private PackageImporter $importer,
         private PackagePresenter $presenter,
         private AnnotationStore $store,
+        private MapPublisher $publisher,
     ) {}
 
     public function index(): View
     {
         return view('admin.maps.index', [
-            'maps' => MallMap::query()->withCount('annotations')->latest()->get(),
+            'maps' => MallMap::query()->withCount(['annotations', 'nodes', 'edges'])->latest()->get(),
             'packages' => $this->importer->availablePackages(),
             'importRoot' => config('mapservice.import_root'),
         ]);
@@ -42,11 +44,12 @@ class MapController extends Controller
         $data = $request->validate([
             'folder' => ['required', 'string', 'max:300'],
             'name' => ['required', 'string', 'max:120'],
+            'mall_ref' => ['nullable', 'string', 'max:100', 'regex:'.MapPublisher::MALL_REF_PATTERN],
             'publish' => ['nullable', 'boolean'],
         ]);
 
         try {
-            $map = $this->importer->import($this->importer->resolveFromImportRoot($data['folder']), $data['name'], (bool) ($data['publish'] ?? false));
+            $map = $this->importer->import($this->importer->resolveFromImportRoot($data['folder']), $data['name'], (bool) ($data['publish'] ?? false), $data['mall_ref'] ?? null);
         } catch (InvalidArgumentException $error) {
             return back()->withErrors(['folder' => $error->getMessage()])->withInput();
         }
@@ -79,9 +82,24 @@ class MapController extends Controller
     public function status(Request $request, MallMap $mallMap): RedirectResponse
     {
         $data = $request->validate(['status' => ['required', Rule::in(['draft', 'published'])]]);
-        $mallMap->update($data);
+        if ($data['status'] === 'published') {
+            $this->publisher->publish($mallMap);
+        } else {
+            $this->publisher->unpublish($mallMap);
+        }
 
         return back()->with('status', $data['status'] === 'published' ? "“{$mallMap->name}” is now visible through the API." : "“{$mallMap->name}” is hidden from the API.");
+    }
+
+    /**
+     * Link the map to a Smart Mall app mall by its slug, or unlink it.
+     */
+    public function mall(Request $request, MallMap $mallMap): RedirectResponse
+    {
+        $data = $request->validate(['mall_ref' => ['nullable', 'string', 'max:100', 'regex:'.MapPublisher::MALL_REF_PATTERN]]);
+        $this->publisher->assignMall($mallMap, $data['mall_ref'] ?? null);
+
+        return back()->with('status', $mallMap->mall_ref === null ? "“{$mallMap->name}” belongs to no mall." : "“{$mallMap->name}” belongs to mall {$mallMap->mall_ref}.");
     }
 
     public function destroy(MallMap $mallMap): RedirectResponse

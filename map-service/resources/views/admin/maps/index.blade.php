@@ -1,6 +1,7 @@
 @extends('layouts.app', ['title' => 'Maps'])
 
 @section('content')
+<style>.inline-mall { display:flex; gap:6px; margin-top:6px; max-width:260px; } .inline-mall input { padding:4px 8px; }</style>
 <h1>Maps</h1>
 <p class="lead">Map packages exported by the Blender pipeline. Open one in the 3D editor to place shop signs and advertisements. Only <b>published</b> maps are visible through the API.</p>
 
@@ -19,6 +20,7 @@
                 </select>
             </label>
             <label>Name <input type="text" name="name" value="{{ old('name', 'Sample floor') }}" maxlength="120" required></label>
+            <label>Mall (the Smart Mall app's mall slug, optional) <input type="text" name="mall_ref" value="{{ old('mall_ref') }}" maxlength="100" placeholder="e.g. kuet-city-mall"></label>
             <label class="check"><input type="checkbox" name="publish" value="1" @checked(old('publish'))> Publish to the API now</label>
             <div><button class="primary" type="submit">Import</button></div>
         </form>
@@ -38,10 +40,15 @@
                     <td>
                         <div>{{ $map->name }}</div>
                         <div class="muted" style="font-size:12px"><code>{{ $map->id }}</code></div>
+                        <form method="post" action="{{ route('admin.maps.mall', $map) }}" class="inline-mall">
+                            @csrf @method('patch')
+                            <input type="text" name="mall_ref" value="{{ $map->mall_ref }}" maxlength="100" placeholder="mall slug" aria-label="Mall slug of {{ $map->name }}">
+                            <button type="submit">Set mall</button>
+                        </form>
                     </td>
                     <td><span class="badge {{ $map->isPublished() ? 'ok' : 'off' }}">{{ $map->isPublished() ? 'published' : 'draft' }}</span></td>
                     <td class="muted">
-                        floors {{ implode(', ', $map->floor_codes) }} · {{ $map->stats['nodes'] ?? 0 }} nodes · {{ $map->stats['checkpoints'] ?? 0 }} QR codes<br>
+                        floors {{ implode(', ', $map->floor_codes) }} · {{ $map->nodes_count }} nodes, {{ $map->edges_count }} edges · {{ $map->stats['checkpoints'] ?? 0 }} QR codes<br>
                         {{ $map->annotations_count }} signs and advertisements · exported {{ $map->package_generated_at?->format('Y-m-d H:i') ?? 'unknown' }}
                     </td>
                     <td class="actions">

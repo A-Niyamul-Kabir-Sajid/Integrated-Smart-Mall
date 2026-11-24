@@ -14,7 +14,11 @@ use InvalidArgumentException;
  */
 class PackageImporter
 {
-    public function __construct(private AnnotationStore $annotations) {}
+    public function __construct(
+        private AnnotationStore $annotations,
+        private GraphBuilder $graph,
+        private MapPublisher $publisher,
+    ) {}
 
     /**
      * Folders under the configured import root that contain a map_package.json,
@@ -57,10 +61,17 @@ class PackageImporter
     }
 
     /**
-     * Import the package in $folder. An annotations.json next to it is imported too.
+     * Import the package in $folder. An annotations.json next to it is imported
+     * too, and the navigation graph is written into the map_* tables.
+     *
+     * @param  string|null  $mallRef  the Smart Mall app's mall slug the map belongs to
      */
-    public function import(string $folder, string $name, bool $publish = false): MallMap
+    public function import(string $folder, string $name, bool $publish = false, ?string $mallRef = null): MallMap
     {
+        if ($mallRef !== null && ! preg_match(MapPublisher::MALL_REF_PATTERN, $mallRef)) {
+            throw new InvalidArgumentException(MapPublisher::MALL_REF_MESSAGE);
+        }
+
         $folder = rtrim($folder, '/\\');
         $manifestPath = $folder.DIRECTORY_SEPARATOR.'map_package.json';
         if (! is_file($manifestPath)) {
@@ -76,6 +87,11 @@ class PackageImporter
         }
         if (empty($package['floors']) || ! is_array($package['floors'])) {
             throw new InvalidArgumentException('The package has no floors.');
+        }
+
+        $problems = $this->graph->problems($package);
+        if ($problems !== []) {
+            throw new InvalidArgumentException('The map graph is invalid: '.implode(' ', array_slice($problems, 0, 5)).(count($problems) > 5 ? ' (and '.(count($problems) - 5).' more)' : ''));
         }
 
         $files = $this->referencedFiles($package);
@@ -95,10 +111,11 @@ class PackageImporter
                 $disk->put($storageDir.'/'.$file, (string) file_get_contents($folder.DIRECTORY_SEPARATOR.$file));
             }
 
-            return DB::transaction(function () use ($id, $name, $publish, $package, $storageDir, $folder): MallMap {
+            return DB::transaction(function () use ($id, $name, $publish, $mallRef, $package, $storageDir, $folder): MallMap {
                 $map = new MallMap([
                     'name' => $name,
-                    'status' => $publish ? 'published' : 'draft',
+                    'mall_ref' => $mallRef,
+                    'status' => 'draft',
                     'format_version' => $package['format_version'],
                     'package_generated_at' => $package['generated_at'] ?? null,
                     'storage_dir' => $storageDir,
@@ -107,11 +124,16 @@ class PackageImporter
                 ]);
                 $map->id = $id;
                 $map->save();
+                $this->graph->build($map, $package);
 
                 $annotationsFile = $folder.DIRECTORY_SEPARATOR.'annotations.json';
                 if (is_file($annotationsFile)) {
                     $document = json_decode((string) file_get_contents($annotationsFile), true);
                     $this->annotations->replaceAll($map, $document['annotations'] ?? []);
+                }
+
+                if ($publish) {
+                    $this->publisher->publish($map);
                 }
 
                 return $map;
