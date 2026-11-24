@@ -45,10 +45,19 @@ class RouteGraph
 
         $adjacency = [];
         $rows = DB::table('map_edges')->where('mall_map_id', $map->id)->orderBy('id')->get();
-        $statusById = $rows->pluck('status', 'id');
+        $byId = $rows->keyBy('id');
+        $open = [];
+        // An edge an edit added next to a walkway is closed whenever that walkway (or its own parent) is.
+        $isOpen = function (object $edge) use (&$isOpen, &$open, $byId): bool {
+            if (! isset($open[$edge->id])) {
+                $parent = $edge->parent_edge_id === null ? null : ($byId[$edge->parent_edge_id] ?? null);
+                $open[$edge->id] = $edge->status === 'open' && ($parent === null || $isOpen($parent));
+            }
+
+            return $open[$edge->id];
+        };
         foreach ($rows as $row) {
-            // An edge an end point added next to a walkway is closed whenever that walkway is.
-            $parentOpen = $row->parent_edge_id === null || ($statusById[$row->parent_edge_id] ?? 'open') === 'open';
+            $parentOpen = $isOpen($row);
             $adjacency[(int) $row->from_node_id][] = [
                 'to' => (int) $row->to_node_id,
                 'length' => (float) $row->length_m,

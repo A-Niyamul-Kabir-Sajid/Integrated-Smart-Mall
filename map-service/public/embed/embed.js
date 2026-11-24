@@ -121,9 +121,10 @@
             const nearest = group(to, t('nearest'));
             places.facility_types.forEach((item) => option(to, item.place, `${t('nearest')}: ${typeName(item.type)}`, nearest));
         }
-        if ((places.end_points || []).length) {
+        const nodes = (places.end_points || []).filter((item) => (item.kind || 'node') === 'node');
+        if (nodes.length) {
             const pointsTo = group(to, t('points'));
-            places.end_points.forEach((item) => option(to, item.place, `${item.name} (${item.floor_code})`, pointsTo));
+            nodes.forEach((item) => option(to, item.place, `${item.name} (${item.floor_code})`, pointsTo));
         }
         if (places.facilities.length) {
             const facilities = group(to, t('facilities'));

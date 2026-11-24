@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\DB;
  * - unit:<shop unit code>      every entrance of the shop (the nearest is used)
  * - facility:<facility name>   one facility
  * - facility-type:<type>       every facility of that type (the nearest is used)
- * - point:<key>                an end point an administrator added (ISM-114)
+ * - point:<key>                a point an administrator added (ISM-114): a node,
+ *                              shop entrance, facility or QR code
  */
 class PlaceResolver
 {
@@ -69,7 +70,7 @@ class PlaceResolver
      */
     private function endPoint(MallMap $map, string $key): array
     {
-        $row = DB::table('map_end_points')->where('mall_map_id', $map->id)->where('key', $key)->whereNotNull('map_node_id')->first();
+        $row = DB::table('map_end_points')->where('mall_map_id', $map->id)->where('key', $key)->whereNotNull('map_node_id')->whereNull('problem')->first();
 
         return $row === null ? ['', []] : [$row->name, [(int) $row->map_node_id]];
     }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * An unlinked end point row; link it with EndPointService to make it routable.
+ * A point row that is not applied yet; MapEditService::createPoint makes routable ones.
  *
  * @extends Factory<MapEndPoint>
  */

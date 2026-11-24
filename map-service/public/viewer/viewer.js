@@ -18,12 +18,17 @@ const service = params.get('map')
         packageUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/package`,
         annotationsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/annotations`,
         endPointsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/end-points`,
+        pathsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/paths`,
     }
     : null;
 
 const state = {
     points: [],
-    pointObjects: [],
+    paths: [],
+    overlay: { edges: [] },
+    editObjects: [],
+    previewObjects: [],
+    pending: null,
     pkg: null,
     resolve: null,
     sourceLabel: '',
@@ -668,10 +673,18 @@ renderer.domElement.addEventListener('pointermove', (event) => {
 });
 
 function handleClick(event) {
-    if (state.tool === 'end_point') {
+    if (state.tool === 'point' || state.tool === 'qr' || state.tool === 'path') {
         const surface = pickSurface();
-        if (surface) {
-            addEndPoint(surface, event.shiftKey);
+        if (!surface) {
+            showEditError('That click missed the scanned floor and walls. Click on the scan itself.');
+            return;
+        }
+        if (state.tool === 'point') {
+            startPoint(surface);
+        } else if (state.tool === 'qr') {
+            startQr(surface);
+        } else {
+            addPathCorner(surface);
         }
         return;
     }
@@ -715,13 +728,17 @@ function setTool(tool) {
     $('add-sign').classList.toggle('active', tool === 'shop_sign');
     $('add-ad').classList.toggle('active', tool === 'advertisement');
     $('move').classList.toggle('active', tool === 'move');
-    $('add-point').classList.toggle('active', tool === 'end_point');
+    $('add-point').classList.toggle('active', tool === 'point');
+    $('add-qr').classList.toggle('active', tool === 'qr');
+    $('add-path').classList.toggle('active', tool === 'path');
     renderer.domElement.style.cursor = tool ? 'crosshair' : '';
     const hints = {
         shop_sign: 'Click a wall or the floor to place the shop sign (Shift+click to keep adding, Esc to stop)',
         advertisement: 'Click a wall or the floor to place the advertisement (Shift+click to keep adding, Esc to stop)',
         move: 'Click where the selected item should go (Esc to cancel)',
-        end_point: 'Click the floor where the end point goes (Esc to stop)',
+        point: 'Click the floor where the point goes (Esc to stop)',
+        qr: 'Click the wall or pillar face where the QR code hangs (Esc to stop)',
+        path: 'Click the floor at each corner of the path, then press Finish path (Esc to cancel)',
     };
     $('hint').textContent = hints[tool] ?? '';
     $('hint').style.display = tool ? 'block' : 'none';
@@ -1078,7 +1095,22 @@ $('annotations-input').addEventListener('change', async () => {
 
 $('add-sign').addEventListener('click', () => setTool(state.tool === 'shop_sign' ? null : 'shop_sign'));
 $('add-ad').addEventListener('click', () => setTool(state.tool === 'advertisement' ? null : 'advertisement'));
-$('add-point').addEventListener('click', () => setTool(state.tool === 'end_point' ? null : 'end_point'));
+$('add-point').addEventListener('click', () => {
+    closeEditForm();
+    setTool(state.tool === 'point' ? null : 'point');
+});
+$('add-qr').addEventListener('click', () => {
+    closeEditForm();
+    setTool(state.tool === 'qr' ? null : 'qr');
+});
+$('add-path').addEventListener('click', () => {
+    const drawing = state.tool === 'path';
+    closeEditForm();
+    setTool(drawing ? null : 'path');
+    if (!drawing) {
+        startPath();
+    }
+});
 $('floor-select').addEventListener('change', () => {
     applyVisibility();
     fitView('3d');
@@ -1100,11 +1132,15 @@ window.addEventListener('keydown', (event) => {
         return;
     }
     if (event.key === 'Escape') {
-        if (state.tool) {
+        if (state.tool || state.pending) {
             setTool(null);
+            closeEditForm();
         } else {
             select(null);
         }
+    }
+    if (state.pending) {
+        return;
     }
     if ((event.key === 'Delete' || event.key === 'Backspace') && state.selectedId) {
         deleteSelected();
@@ -1112,11 +1148,15 @@ window.addEventListener('keydown', (event) => {
 });
 
 // ---------------------------------------------------------------------------
-// End points (ISM-114): destinations added by clicking the floor; the map
-// service joins each to the nearest walkway and gives it a key.
+// Points and paths (ISM-114): administrators add a node, shop entrance,
+// facility or QR code by clicking, and draw walkways corner by corner. The
+// map service joins them to the graph and gives each a unique key.
 // ---------------------------------------------------------------------------
 
-async function callEndPoints(url, method = 'GET', body = null) {
+const KIND_COLOURS = { node: 0xd946ef, shop_entrance: 0x16954a, facility: 0xe67e19, checkpoint: 0x1c63d9 };
+const FACILITY_TYPES = { toilet: 'Toilet', prayer_room: 'Prayer room', information: 'Information desk', exit: 'Exit', atm: 'ATM', lift: 'Lift', baby_care: 'Baby care', first_aid: 'First aid', other: 'Other' };
+
+async function callEdits(url, method = 'GET', body = null) {
     const response = await fetch(url, {
         method,
         headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
@@ -1124,60 +1164,303 @@ async function callEndPoints(url, method = 'GET', body = null) {
         body: body ? JSON.stringify(body) : null,
     });
     const data = response.status === 204 ? {} : await response.json().catch(() => ({}));
+    if (response.status === 401 || response.status === 419) {
+        throw new Error('Your sign-in has expired. Sign in again on /login, then reopen this map.');
+    }
     if (!response.ok) {
         const detail = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
         throw new Error(detail || `The map service answered HTTP ${response.status}.`);
     }
-    return data.data;
+    return data;
 }
 
-async function loadEndPoints() {
+async function loadEdits() {
     try {
-        state.points = await callEndPoints(service.endPointsUrl);
+        const data = await callEdits(service.endPointsUrl);
+        state.points = data.data ?? [];
+        state.paths = data.paths ?? [];
+        state.overlay = data.overlay ?? { edges: [] };
     } catch (error) {
-        message(error.message);
-        state.points = [];
+        showEditError(error.message);
     }
-    renderEndPoints();
+    renderEdits();
 }
 
-async function addEndPoint(surface, keepTool) {
-    const position = A.threeToMall(surface.point);
-    const name = window.prompt(`Name of the end point on floor ${surface.floorCode} (x ${position.x.toFixed(2)}, y ${position.y.toFixed(2)})`, 'End point');
-    if (name === null || name.trim() === '') {
-        return;
-    }
-    try {
-        const point = await callEndPoints(service.endPointsUrl, 'POST', { name: name.trim(), floor_code: surface.floorCode, x: position.x, y: position.y });
-        state.points.push(point);
-        state.points.sort((a, b) => a.name.localeCompare(b.name));
-        showNewKey(point);
-        renderEndPoints();
-        message(`End point “${point.name}” added with key ${point.key}.`);
-    } catch (error) {
-        message(error.message);
-    }
-    if (!keepTool) {
-        setTool(null);
+function showEditError(text) {
+    const box = $('edit-error');
+    box.textContent = text;
+    box.hidden = !text;
+    if (text) {
+        message(text);
     }
 }
 
-function showNewKey(point) {
-    const box = $('point-new');
-    box.replaceChildren(
-        Object.assign(document.createElement('span'), { className: 'muted', textContent: `New end point “${point.name}”, key:` }),
-        Object.assign(document.createElement('span'), { className: 'key', textContent: point.key }),
-        Object.assign(document.createElement('span'), { className: 'muted', textContent: `Route to it with ${point.place}` }),
-    );
+function field(labelText, control) {
+    const label = document.createElement('label');
+    label.append(labelText, control);
+    return label;
+}
+
+function textInput(attributes) {
+    return Object.assign(document.createElement('input'), { type: 'text', ...attributes });
+}
+
+function checkbox(text, checked = false) {
+    const box = Object.assign(document.createElement('input'), { type: 'checkbox', checked });
+    const label = document.createElement('label');
+    label.className = 'check';
+    label.append(box, ` ${text}`);
+    return [label, box];
+}
+
+function button(text, onClick, className = '') {
+    const element = Object.assign(document.createElement('button'), { type: 'button', textContent: text, className });
+    element.addEventListener('click', onClick);
+    return element;
+}
+
+function closeEditForm() {
+    $('edit-form').replaceChildren();
+    $('edit-form').hidden = true;
+    state.pending = null;
+    clearPreview();
+}
+
+function showForm(title, fields, actions) {
+    const box = $('edit-form');
+    const heading = Object.assign(document.createElement('div'), { className: 'muted', textContent: title });
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.append(...actions);
+    box.replaceChildren(heading, ...fields, row);
     box.hidden = false;
 }
 
-function pointLabel(text) {
+// --- A point: click the floor, then say what it is -----------------------
+
+function startPoint(surface) {
+    const position = A.threeToMall(surface.point);
+    state.pending = { floorCode: surface.floorCode, x: position.x, y: position.y };
+    showPreviewPin(surface.point, KIND_COLOURS.node);
+    setTool(null);
+    showEditError('');
+
+    const kind = document.createElement('select');
+    kind.innerHTML = '<option value="node">Node (a place to go)</option><option value="shop_entrance">Shop entrance</option><option value="facility">Facility</option>';
+    const name = textInput({ maxLength: 120 });
+    const unit = textInput({ maxLength: 40, placeholder: 'G-05' });
+    const [primaryLabel, primary] = checkbox('Main door');
+    const type = document.createElement('select');
+    type.innerHTML = Object.entries(FACILITY_TYPES).map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+    const unitField = field('Shop unit code', unit);
+    const typeField = field('Facility type', type);
+    const sync = () => {
+        unitField.hidden = kind.value !== 'shop_entrance';
+        primaryLabel.hidden = kind.value !== 'shop_entrance';
+        typeField.hidden = kind.value !== 'facility';
+        name.placeholder = { node: 'e.g. Kiosk by the entrance', shop_entrance: 'e.g. Gadget Hub side door', facility: 'e.g. Washroom near the lift' }[kind.value];
+    };
+    kind.addEventListener('change', sync);
+    sync();
+
+    const save = button('Save point', async () => {
+        save.disabled = true;
+        try {
+            const body = { kind: kind.value, name: name.value.trim(), floor_code: state.pending.floorCode, x: state.pending.x, y: state.pending.y };
+            if (kind.value === 'shop_entrance') {
+                Object.assign(body, { unit_code: unit.value.trim(), is_primary: primary.checked });
+            }
+            if (kind.value === 'facility') {
+                body.facility_type = type.value;
+            }
+            const created = (await callEdits(service.endPointsUrl, 'POST', body)).data;
+            closeEditForm();
+            await afterSave(created);
+        } catch (error) {
+            showEditError(error.message);
+            save.disabled = false;
+        }
+    }, 'primary');
+
+    showForm(`New point on floor ${state.pending.floorCode} · x ${state.pending.x.toFixed(2)} · y ${state.pending.y.toFixed(2)}`, [
+        field('What is it', kind), field('Name', name), unitField, primaryLabel, typeField,
+    ], [save, button('Cancel', closeEditForm)]);
+    name.focus();
+}
+
+// --- A QR code: click the wall it hangs on --------------------------------
+
+function startQr(surface) {
+    if (A.mountForNormal(surface.normal) !== 'wall') {
+        showEditError('Click a wall or pillar face: a QR code hangs on a wall. Visitors stand 0.8 m in front of it.');
+        return;
+    }
+    const position = A.threeToMall(surface.point);
+    const yaw = A.roundYaw(A.threeDirectionToYaw(surface.normal));
+    state.pending = { floorCode: surface.floorCode, x: position.x, y: position.y, z: position.z, yaw };
+    showPreviewPin(surface.point, KIND_COLOURS.checkpoint);
+    setTool(null);
+    showEditError('');
+
+    const code = textInput({ maxLength: 60, placeholder: 'G-C10' });
+    const label = textInput({ maxLength: 120, placeholder: 'e.g. Pillar by the lift, south face' });
+    const save = button('Save QR code', async () => {
+        save.disabled = true;
+        try {
+            const created = (await callEdits(service.endPointsUrl, 'POST', {
+                kind: 'checkpoint',
+                name: label.value.trim(),
+                checkpoint_code: code.value.trim(),
+                floor_code: state.pending.floorCode,
+                x: state.pending.x,
+                y: state.pending.y,
+                qr_z: state.pending.z,
+                qr_yaw: state.pending.yaw,
+            })).data;
+            closeEditForm();
+            await afterSave(created);
+        } catch (error) {
+            showEditError(error.message);
+            save.disabled = false;
+        }
+    }, 'primary');
+
+    const height = position.z - floorLevel(surface.floorCode);
+    showForm(`New QR code on floor ${state.pending.floorCode}, facing ${yaw}°, ${height.toFixed(2)} m above the floor`, [
+        field('QR code', code), field('Where (label)', label),
+    ], [save, button('Cancel', closeEditForm)]);
+    code.focus();
+}
+
+// --- A path: click corners, then Finish -----------------------------------
+
+function startPath() {
+    state.pending = { path: true, floorCode: null, corners: [] };
+    showEditError('');
+    const name = textInput({ maxLength: 120, placeholder: '(optional)' });
+    const [stepFreeLabel, stepFree] = checkbox('Step-free', true);
+    const [oneWayLabel, oneWay] = checkbox('One way (first corner to last)');
+    const counter = Object.assign(document.createElement('div'), { id: 'path-counter', className: 'muted', textContent: 'Click the floor at the first corner.' });
+    const finish = button('Finish path', async () => {
+        if (state.pending.corners.length < 2) {
+            showEditError('Click at least two corners on the floor.');
+            return;
+        }
+        finish.disabled = true;
+        try {
+            const created = (await callEdits(service.pathsUrl, 'POST', {
+                floor_code: state.pending.floorCode,
+                points: state.pending.corners.map((corner) => [corner.x, corner.y]),
+                step_free: stepFree.checked,
+                one_way: oneWay.checked,
+                name: name.value.trim() || null,
+            })).data;
+            setTool(null);
+            closeEditForm();
+            message(`Path ${created.key} added: ${created.length_m} m with ${created.corners} corners${created.joined ? '' : ' (not joined to the rest of the map yet)'}.`);
+            await loadEdits();
+        } catch (error) {
+            showEditError(error.message);
+            finish.disabled = false;
+        }
+    }, 'primary');
+    const undo = button('Undo last corner', () => {
+        state.pending.corners.pop();
+        if (!state.pending.corners.length) {
+            state.pending.floorCode = null;
+        }
+        drawPathPreview();
+    });
+    const cancel = button('Cancel', () => {
+        setTool(null);
+        closeEditForm();
+    });
+    showForm('New path: click the floor at each corner. A corner within 0.5 m of a node or walkway joins it.', [counter, field('Name', name), stepFreeLabel, oneWayLabel], [finish, undo, cancel]);
+}
+
+function addPathCorner(surface) {
+    if (state.pending.floorCode && surface.floorCode !== state.pending.floorCode) {
+        showEditError(`A path stays on one floor (floor ${state.pending.floorCode}). Finish it, then draw another.`);
+        return;
+    }
+    showEditError('');
+    state.pending.floorCode = surface.floorCode;
+    const corner = A.threeToMall(surface.point);
+    state.pending.corners.push({ x: corner.x, y: corner.y, z: floorLevel(surface.floorCode) });
+    drawPathPreview();
+}
+
+function drawPathPreview() {
+    clearPreview();
+    const corners = state.pending?.corners ?? [];
+    let length = 0;
+    corners.forEach((corner, index) => {
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8), new THREE.MeshBasicMaterial({ color: 0x22d3ee }));
+        dot.position.copy(v3({ ...corner, z: corner.z + 0.05 }));
+        scene.add(dot);
+        state.previewObjects.push(dot);
+        if (index > 0) {
+            length += Math.hypot(corner.x - corners[index - 1].x, corner.y - corners[index - 1].y);
+        }
+    });
+    if (corners.length > 1) {
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(corners.map((c) => v3({ ...c, z: c.z + 0.05 }))), new THREE.LineBasicMaterial({ color: 0x22d3ee }));
+        scene.add(line);
+        state.previewObjects.push(line);
+    }
+    const counter = $('path-counter');
+    if (counter) {
+        counter.textContent = corners.length
+            ? `${corners.length} corner${corners.length > 1 ? 's' : ''} · ${length.toFixed(1)} m on floor ${state.pending.floorCode}`
+            : 'Click the floor at the first corner.';
+    }
+}
+
+// --- Shared ---------------------------------------------------------------
+
+function showPreviewPin(threePoint, colour) {
+    clearPreview();
+    const pin = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), new THREE.MeshBasicMaterial({ color: colour, transparent: true, opacity: 0.7 }));
+    pin.position.copy(threePoint);
+    scene.add(pin);
+    state.previewObjects.push(pin);
+}
+
+function clearPreview() {
+    for (const object of state.previewObjects) {
+        scene.remove(object);
+    }
+    state.previewObjects = [];
+}
+
+async function afterSave(created) {
+    showNewKey(created);
+    message(`${created.kind_label} “${created.name}” added with key ${created.key}.${created.link_m === null ? ' It is not joined to a walkway yet: draw a path to it with ＋ Path.' : ''}`);
+    await loadEdits();
+}
+
+function showNewKey(point) {
+    const parts = [
+        Object.assign(document.createElement('span'), { className: 'muted', textContent: `${point.kind_label} “${point.name}” added. Key:` }),
+        Object.assign(document.createElement('span'), { className: 'key', textContent: point.key }),
+        Object.assign(document.createElement('span'), { className: 'muted', textContent: `Route to it with ${point.place}` }),
+    ];
+    if (point.link_m === null) {
+        parts.push(Object.assign(document.createElement('span'), { className: 'warn', textContent: 'Not joined to a walkway yet: draw a path to it.' }));
+    }
+    if (point.qr_url) {
+        parts.push(Object.assign(document.createElement('span'), { className: 'muted', textContent: `QR address: ${point.qr_url}` }));
+    }
+    $('point-new').replaceChildren(...parts);
+    $('point-new').hidden = false;
+}
+
+function editLabel(text, colour) {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#a21caf';
+    ctx.fillStyle = `#${colour.toString(16).padStart(6, '0')}`;
     ctx.beginPath();
     ctx.roundRect(0, 0, 512, 64, 14);
     ctx.fill();
@@ -1195,77 +1478,119 @@ function pointLabel(text) {
     return sprite;
 }
 
-function buildEndPointObjects() {
-    for (const object of state.pointObjects) {
+function buildEditObjects() {
+    for (const object of state.editObjects) {
         object.parent?.remove(object);
     }
-    state.pointObjects = [];
+    state.editObjects = [];
+    const add = (floorCode, object) => {
+        const entry = state.floors.get(floorCode);
+        if (entry) {
+            entry.group.add(object);
+            state.editObjects.push(object);
+        }
+    };
+
+    for (const edge of state.overlay?.edges ?? []) {
+        const colour = edge.closed ? 0xe5484d : edge.kind === 'path' ? 0x22d3ee : 0xd946ef;
+        const material = edge.kind === 'path'
+            ? new THREE.LineBasicMaterial({ color: colour })
+            : new THREE.LineDashedMaterial({ color: colour, dashSize: 0.15, gapSize: 0.1 });
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([v3({ ...edge.from, z: edge.from.z + 0.06 }), v3({ ...edge.to, z: edge.to.z + 0.06 })]), material);
+        line.computeLineDistances();
+        add(edge.floor_code, line);
+    }
+
     for (const point of state.points) {
-        const entry = state.floors.get(point.floor_code);
-        if (!entry) {
+        const colour = point.problem ? 0x9ca3af : KIND_COLOURS[point.kind] ?? KIND_COLOURS.node;
+        if (point.kind === 'checkpoint' && point.qr) {
+            const qr = new THREE.Group();
+            qr.add(
+                new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.18), new THREE.MeshBasicMaterial({ color: colour, side: THREE.DoubleSide })),
+                new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0.01), 0.6, 0x4f8cff, 0.15, 0.08),
+            );
+            const label = editLabel(`${point.key} · ${point.checkpoint_code}`, colour);
+            label.position.set(0, 0.35, 0);
+            qr.add(label);
+            qr.position.copy(v3({ x: point.qr.x_m, y: point.qr.y_m, z: point.qr.z_m }));
+            qr.rotation.y = A.yawToRotationY(point.qr.yaw_deg);
+            add(point.floor_code, qr);
             continue;
         }
         const group = new THREE.Group();
-        const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 12), new THREE.MeshBasicMaterial({ color: point.linked ? 0xd946ef : 0x9ca3af }));
+        const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 12), new THREE.MeshBasicMaterial({ color: colour }));
         pin.position.y = 0.65;
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 14), new THREE.MeshBasicMaterial({ color: point.linked ? 0xd946ef : 0x9ca3af }));
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 14), new THREE.MeshBasicMaterial({ color: colour }));
         head.position.y = 1.3;
-        group.add(pin, head, pointLabel(`${point.key} · ${point.name}`));
+        group.add(pin, head, editLabel(`${point.key} · ${point.name}`, colour));
         group.position.copy(v3(point.position));
-        entry.group.add(group);
-        state.pointObjects.push(group);
-        if (point.joined_at) {
-            const line = new THREE.Line(
-                new THREE.BufferGeometry().setFromPoints([v3({ ...point.position, z: point.position.z + 0.05 }), v3({ ...point.joined_at, z: point.joined_at.z + 0.05 })]),
-                new THREE.LineDashedMaterial({ color: 0xd946ef, dashSize: 0.15, gapSize: 0.1 }),
-            );
-            line.computeLineDistances();
-            entry.group.add(line);
-            state.pointObjects.push(line);
-        }
+        add(point.floor_code, group);
     }
 }
 
-function renderEndPoints() {
+function listItem(keyText, metaText, metaClass, actions, onClick) {
+    const li = document.createElement('li');
+    const key = Object.assign(document.createElement('span'), { className: 'key', textContent: keyText });
+    const box = Object.assign(document.createElement('span'), { className: 'actions' });
+    box.append(...actions);
+    const meta = Object.assign(document.createElement('span'), { className: metaClass, textContent: metaText });
+    li.append(key, box, meta);
+    li.addEventListener('click', onClick);
+    return li;
+}
+
+function removeButton(question, url, done) {
+    return button('Delete', async (event) => {
+        event.stopPropagation();
+        if (!window.confirm(question)) {
+            return;
+        }
+        try {
+            await callEdits(url, 'DELETE');
+            message(done);
+            await loadEdits();
+        } catch (error) {
+            showEditError(error.message);
+        }
+    });
+}
+
+function renderEdits() {
     $('points-count').textContent = state.points.length ? `(${state.points.length})` : '';
-    const items = state.points.map((point) => {
-        const li = document.createElement('li');
-        const key = Object.assign(document.createElement('span'), { className: 'key', textContent: point.key });
-        const actions = Object.assign(document.createElement('span'), { className: 'actions' });
-        const copy = Object.assign(document.createElement('button'), { textContent: 'Copy', type: 'button' });
-        copy.addEventListener('click', (event) => {
+    $('paths-count').textContent = state.paths.length ? `(${state.paths.length})` : '';
+
+    const pointItems = state.points.map((point) => {
+        const copy = button('Copy', (event) => {
             event.stopPropagation();
             navigator.clipboard?.writeText(point.key).then(() => { copy.textContent = 'Copied'; });
         });
-        const remove = Object.assign(document.createElement('button'), { textContent: 'Delete', type: 'button' });
-        remove.addEventListener('click', async (event) => {
-            event.stopPropagation();
-            if (!window.confirm(`Delete ${point.name} (${point.key})? Links that use its key stop working.`)) {
-                return;
-            }
-            try {
-                await callEndPoints(point.update_url, 'DELETE');
-                state.points = state.points.filter((item) => item.key !== point.key);
-                renderEndPoints();
-                message(`End point ${point.key} deleted.`);
-            } catch (error) {
-                message(error.message);
-            }
-        });
-        actions.append(copy, remove);
-        const meta = Object.assign(document.createElement('span'), {
-            className: 'muted',
-            textContent: `${point.name} · floor ${point.floor_code}${point.linked ? '' : ' · not on the map'}`,
-        });
-        li.append(key, actions, meta);
-        li.addEventListener('click', () => focusOn(point));
-        return li;
+        const detail = { shop_entrance: ` · unit ${point.unit_code}${point.is_primary ? ', main door' : ''}`, facility: ` · ${point.facility_type}`, checkpoint: ` · ${point.checkpoint_code}` }[point.kind] ?? '';
+        const status = point.problem ? ` · not applied: ${point.problem}` : point.connected ? '' : ' · not connected: draw a path to it';
+        return listItem(
+            point.key,
+            `${point.kind_label}${detail} · ${point.name} · floor ${point.floor_code}${status}`,
+            point.problem || !point.connected ? 'warn' : 'muted',
+            [copy, removeButton(`Delete ${point.name} (${point.key})? Links that use its key stop working.`, point.update_url, `${point.kind_label} ${point.key} deleted.`)],
+            () => focusOn(point),
+        );
     });
-    if (!items.length) {
-        items.push(Object.assign(document.createElement('li'), { className: 'muted', textContent: 'None yet. Use “＋ End point”.' }));
+    if (!pointItems.length) {
+        pointItems.push(Object.assign(document.createElement('li'), { className: 'muted', textContent: 'None yet. Use “＋ Point” or “＋ QR code”.' }));
     }
-    $('points').replaceChildren(...items);
-    buildEndPointObjects();
+    $('points').replaceChildren(...pointItems);
+
+    const pathItems = state.paths.map((path) => listItem(
+        path.key,
+        `${path.name ?? 'Path'} · floor ${path.floor_code} · ${path.corners} corners · ${path.length_m} m${path.step_free ? '' : ' · not step-free'}${path.one_way ? ' · one way' : ''}${path.problem ? ` · ${path.problem}` : path.joined ? '' : ' · not joined to the map'}`,
+        path.problem || !path.joined ? 'warn' : 'muted',
+        [removeButton(`Delete path ${path.key}?`, path.update_url, `Path ${path.key} deleted.`)],
+        () => focusOn({ position: { x: path.points[0][0], y: path.points[0][1], z: floorLevel(path.floor_code) } }),
+    ));
+    if (!pathItems.length) {
+        pathItems.push(Object.assign(document.createElement('li'), { className: 'muted', textContent: 'None yet. Use “＋ Path”.' }));
+    }
+    $('paths').replaceChildren(...pathItems);
+    buildEditObjects();
 }
 
 function setStatus(text) {
@@ -1301,10 +1626,11 @@ if (service) {
     $('save-note').textContent = 'Every change is saved to the map service automatically.';
     const back = Object.assign(document.createElement('a'), { href: '/admin/maps', textContent: '← Back to maps', className: 'muted' });
     $('package-name').before(back);
-    $('add-point').hidden = false;
-    $('points-section').hidden = false;
+    for (const id of ['add-point', 'add-qr', 'add-path', 'edits-section']) {
+        $(id).hidden = false;
+    }
     $('points-page').href = service.endPointsUrl;
-    loadFromService().then(loadEndPoints).catch(fail);
+    loadFromService().then(loadEdits).catch(fail);
 } else if (packageParam) {
     loadFromUrl(packageParam).catch(fail);
 } else {

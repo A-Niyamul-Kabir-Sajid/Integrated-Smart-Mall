@@ -140,9 +140,10 @@ class PackagePresenter
                 'count' => $group->count(),
                 'place' => 'facility-type:'.$type,
             ])->sortKeys()->values()->all(),
-            'end_points' => $map->endPoints()->whereNotNull('map_node_id')->get()
+            'end_points' => $map->endPoints()->whereNotNull('map_node_id')->whereNull('problem')->get()
                 ->map(fn (MapEndPoint $point): array => [
                     'key' => $point->key,
+                    'kind' => $point->kind,
                     'name' => $point->name,
                     'floor_code' => $point->floor_code,
                     'place' => $point->place(),
