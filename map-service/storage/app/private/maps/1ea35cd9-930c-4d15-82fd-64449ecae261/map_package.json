@@ -1,0 +1,148 @@
+{
+  "format": "ism-map-package",
+  "format_version": 1,
+  "generated_at": "2026-11-22T09:29:52+00:00",
+  "generator": {
+    "tool": "tools/blender/ism_map.py",
+    "version": "1.0.0",
+    "blender": "5.3.0"
+  },
+  "source_blend": "sample.blend",
+  "coordinate_frame": "ism-mall-local-v1: metres; right-handed; x and y horizontal, z up; yaw in degrees counterclockwise from +x about z, 0 to 360",
+  "glb_axes": "glTF Y-up: (gltf_x, gltf_y, gltf_z) = (x, z, -y)",
+  "plan_transform": "pixel (0,0) is the top-left corner of the image; x = world_origin_x_m + (px - pixel_origin_x) * metres_per_pixel; y = world_origin_y_m - (py - pixel_origin_y) * metres_per_pixel",
+  "settings": {
+    "ism_walk_mps": 1.2,
+    "ism_elevator_wait_s": 30.0,
+    "ism_elevator_mps": 1.0,
+    "ism_escalator_mps": 0.5,
+    "ism_stairs_vertical_mps": 0.4,
+    "ism_link_max_m": 6.0,
+    "ism_checkpoint_standoff_m": 0.8
+  },
+  "floors": [
+    {
+      "floor_code": "G",
+      "name": "Sample floor",
+      "elevation_m": 0.0,
+      "plan": {
+        "file": "floors/G_plan.png",
+        "width_px": 209,
+        "height_px": 371,
+        "pixel_origin_x": 0,
+        "pixel_origin_y": 0,
+        "metres_per_pixel": 0.05,
+        "rotation_deg": 0,
+        "world_origin_x_m": -1.0,
+        "world_origin_y_m": 17.5066
+      },
+      "graph_preview_file": "floors/G_graph_preview.png",
+      "model": {
+        "file": "floors/G_model.glb",
+        "triangles": 119999,
+        "draco": false
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "node_code": "G-N0001",
+      "floor_code": "G",
+      "node_type": "junction",
+      "x_m": 2.0,
+      "y_m": 0.3066,
+      "z_m": 0.0,
+      "is_accessible": true
+    },
+    {
+      "node_code": "G-N0002",
+      "floor_code": "G",
+      "node_type": "junction",
+      "x_m": 2.35,
+      "y_m": 13.5566,
+      "z_m": 0.0,
+      "is_accessible": true
+    },
+    {
+      "node_code": "G-N0003",
+      "floor_code": "G",
+      "node_type": "junction",
+      "x_m": 2.7687,
+      "y_m": 14.0816,
+      "z_m": 0.0,
+      "is_accessible": true
+    }
+  ],
+  "edges": [
+    {
+      "from_node_code": "G-N0001",
+      "to_node_code": "G-N0002",
+      "length_m": 13.255,
+      "expected_seconds": 11.05,
+      "is_accessible": true,
+      "status": "open",
+      "connector": null
+    },
+    {
+      "from_node_code": "G-N0002",
+      "to_node_code": "G-N0001",
+      "length_m": 13.255,
+      "expected_seconds": 11.05,
+      "is_accessible": true,
+      "status": "open",
+      "connector": null
+    },
+    {
+      "from_node_code": "G-N0002",
+      "to_node_code": "G-N0003",
+      "length_m": 0.672,
+      "expected_seconds": 0.56,
+      "is_accessible": true,
+      "status": "open",
+      "connector": null
+    },
+    {
+      "from_node_code": "G-N0003",
+      "to_node_code": "G-N0002",
+      "length_m": 0.672,
+      "expected_seconds": 0.56,
+      "is_accessible": true,
+      "status": "open",
+      "connector": null
+    }
+  ],
+  "connectors": [],
+  "checkpoints": [],
+  "shop_entrances": [],
+  "facility_anchors": [],
+  "scans": {
+    "G": {
+      "source_file": "Scaniverse 2026-11-22 151619.glb",
+      "source_triangles": 275235,
+      "scale": 1.0,
+      "rotation_deg": -0.4132,
+      "detected_wall_yaw_deg": 0.4132,
+      "wall_alignment_strength": 0.668,
+      "translation_m": [
+        3.4913,
+        8.7196,
+        -0.0561
+      ],
+      "detected_floor_z_m": 0.0561,
+      "fragments_removed": 279,
+      "faces_removed_above_ceiling_cut": 36167,
+      "ceiling_cut_m": 2.6,
+      "triangles": 231275,
+      "prepared_at": "2026-11-22T09:28:58+00:00"
+    }
+  },
+  "stats": {
+    "floors": 1,
+    "nodes": 3,
+    "edges": 4,
+    "checkpoints": 0,
+    "shop_entrances": 0,
+    "facility_anchors": 0,
+    "connectors": 0
+  }
+}
