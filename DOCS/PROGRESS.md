@@ -245,6 +245,17 @@ Evidence: export report `ok`, no warnings. Routes through the API and the Smart 
 
 Limitations: the marker places and the link of unit codes to doors are invented for the demonstration and must be replaced by the real QR positions, doors and unit codes; one floor only, so no lifts or escalators; the scan has holes in its walls, so some places cannot hold a QR code; the scan and package are not in git, so this data has no automated test.
 
+## 2026-11-24: map end points with keys (ISM-114)
+
+Branch `feature/ISM-114-map-end-points` (from `feature/ISM-57-pilot-scan`). Decision D-022.
+
+- Map service: `map_end_points` (key, name, floor, position, node, link distance) and the columns `map_nodes.map_end_point_id`, `map_edges.map_end_point_id` and `map_edges.parent_edge_id`; `EndPointService` (create, rename, delete, link to the nearest walkway through a junction or a walkway end within 0.25 m, unlink, relink after `map:rebuild-graph`, copy into a new map version of the same mall with the same keys); `RouteGraph` treats an added half edge as closed when its parent walkway is; places `point:<key>` and `end_points`; embed labels and **To** list; admin **End points** page per map (add by floor and x/y, rename, copy key, delete, link into the Smart Mall app) and JSON for the 3D editor, whose **＋ End point** tool adds one by clicking the floor and shows its key, a purple pin and the link to the graph. `/docs` and README updated.
+- Smart Mall app: the Map page accepts `point:<key>` as start or destination.
+
+Evidence: map-service `php artisan test` 115 passed (end points 11) and `node --test tests/js/annotations.test.mjs` 8 passed; main app `tests/Feature/Modules/MapsNavigation` 19 passed. Live: in headless Edge the 3D editor on the real scan, **Top**, **＋ End point**, a click at x 2.40 y 5.00 and the name "Kiosk (demo)" gave key `4xyv7cvadu`, a pin and the panel with the key; the End points page showed it "on the map, 0.3 m from the walkway"; the Smart Mall Map page routed from the north QR code to `point:4xyv7cvadu` (12 m, "Arrive at Kiosk (demo)"). On the two-floor test mall a point at x 20 y 16 linked 4.9 m from the walkway and was reached from the first floor by the lift; x 200 y 200 was refused. Manual check: guide 45.
+
+Limitations: end points belong to one map version and are copied to new versions of the same mall (unlinked when no walkway is within 6 m); they can be added, renamed and deleted but not moved (delete and add again); the 3D editor asks for the name with the browser's prompt box; the 6 m and 0.25 m values are defaults to confirm.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
