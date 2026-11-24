@@ -46,6 +46,8 @@ class EndPointController extends Controller
             'paths' => $paths->map(fn (MapPath $path): array => PathController::present($mallMap, $path)),
             'floors' => $mallMap->floors()->get(),
             'kinds' => MapEndPoint::KINDS,
+            'graphEdits' => $mallMap->graphEdits()->get(),
+            'nodeCodes' => DB::table('map_nodes')->where('mall_map_id', $mallMap->id)->orderBy('node_code')->pluck('node_code'),
         ]);
     }
 
@@ -64,6 +66,7 @@ class EndPointController extends Controller
             'qr_yaw' => ['nullable', 'required_if:kind,checkpoint', 'numeric', 'between:-360,720'],
             'qr_z' => ['nullable', 'numeric', 'between:-1000,1000'],
             'qr_height' => ['nullable', 'numeric', 'between:0.2,3'],
+            'height' => ['nullable', 'numeric', 'between:0,10'],
         ], [
             'unit_code.required_if' => 'Give the shop unit code of the entrance, for example G-05.',
             'facility_type.required_if' => 'Choose the facility type.',
@@ -85,6 +88,7 @@ class EndPointController extends Controller
                 'qr_yaw' => isset($data['qr_yaw']) ? (float) $data['qr_yaw'] : null,
                 'qr_z' => isset($data['qr_z']) ? (float) $data['qr_z'] : null,
                 'qr_height' => isset($data['qr_height']) ? (float) $data['qr_height'] : null,
+                'height' => isset($data['height']) ? (float) $data['height'] : null,
             ]);
         } catch (InvalidArgumentException $error) {
             throw ValidationException::withMessages(['point' => $error->getMessage()]);
@@ -99,19 +103,38 @@ class EndPointController extends Controller
         return back()->with('status', MapEndPoint::KINDS[$point->kind]." “{$point->name}” added. Its key is {$point->key}.".$note);
     }
 
+    /**
+     * Change a point; only the fields sent change (a rename sends only the name).
+     */
     public function update(Request $request, MallMap $mallMap, MapEndPoint $endPoint): RedirectResponse|JsonResponse
     {
         abort_unless($endPoint->mall_map_id === $mallMap->id, 404);
-        $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
+        $data = $request->validate([
+            'kind' => ['sometimes', Rule::in(array_keys(MapEndPoint::KINDS))],
+            'name' => ['sometimes', 'string', 'max:120'],
+            'floor_code' => ['sometimes', 'string', 'max:20'],
+            'x' => ['sometimes', 'numeric', 'between:-10000,10000'],
+            'y' => ['sometimes', 'numeric', 'between:-10000,10000'],
+            'height' => ['sometimes', 'nullable', 'numeric', 'between:0,10'],
+            'unit_code' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'is_primary' => ['sometimes', 'boolean'],
+            'facility_type' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'checkpoint_code' => ['sometimes', 'nullable', 'string', 'max:60'],
+            'qr_yaw' => ['sometimes', 'numeric', 'between:-360,720'],
+        ]);
+        if (array_key_exists('is_primary', $data)) {
+            $data['is_primary'] = $request->boolean('is_primary');
+        }
+
         try {
-            $this->edits->renamePoint($endPoint, $data['name']);
+            $point = $this->edits->updatePoint($endPoint, $data);
         } catch (InvalidArgumentException $error) {
-            throw ValidationException::withMessages(['name' => $error->getMessage()]);
+            throw ValidationException::withMessages(['point' => $error->getMessage()]);
         }
 
         return $request->wantsJson()
-            ? response()->json(['data' => $this->present($mallMap, $endPoint->refresh())])
-            : back()->with('status', "Point {$endPoint->key} renamed to “{$endPoint->name}”.");
+            ? response()->json(['data' => $this->present($mallMap, $point)])
+            : back()->with('status', MapEndPoint::KINDS[$point->kind]." “{$point->name}” ({$point->key}) saved.");
     }
 
     public function destroy(Request $request, MallMap $mallMap, MapEndPoint $endPoint): RedirectResponse|JsonResponse
@@ -144,6 +167,7 @@ class EndPointController extends Controller
             'name' => $point->name,
             'floor_code' => $point->floor_code,
             'position' => ['x' => $point->x_m, 'y' => $point->y_m, 'z' => $point->z_m],
+            'height_m' => $point->height_m ?? ($point->kind === 'checkpoint' ? MapEndPoint::DEFAULT_QR_HEIGHT_M : MapEndPoint::DEFAULT_HEIGHT_M),
             'unit_code' => $point->unit_code,
             'is_primary' => $point->is_primary,
             'facility_type' => $point->facility_type,

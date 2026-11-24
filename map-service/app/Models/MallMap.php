@@ -125,6 +125,14 @@ class MallMap extends Model
     }
 
     /**
+     * @return HasMany<MapGraphEdit, $this>
+     */
+    public function graphEdits(): HasMany
+    {
+        return $this->hasMany(MapGraphEdit::class)->orderBy('sequence');
+    }
+
+    /**
      * The published map of a Smart Mall app mall, if any.
      */
     public static function publishedFor(string $mallRef): ?self

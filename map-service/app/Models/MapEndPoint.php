@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $checkpoint_code
  * @property array{x_m: float, y_m: float, z_m: float, yaw_deg: float, marker_height_m: float, physical_width_m: float}|null $qr
  * @property string|null $problem
+ * @property float|null $height_m height of the marker (or the QR code) above the floor
  */
 class MapEndPoint extends Model
 {
@@ -45,10 +46,15 @@ class MapEndPoint extends Model
         'checkpoint' => 'QR code',
     ];
 
+    /** Height above the floor a new point's marker gets, and a new QR code. */
+    public const DEFAULT_HEIGHT_M = 1.5;
+
+    public const DEFAULT_QR_HEIGHT_M = 1.4;
+
     /** The node type each kind gets in the graph. */
     public const NODE_TYPES = ['node' => 'endpoint', 'shop_entrance' => 'entrance', 'facility' => 'facility', 'checkpoint' => 'checkpoint'];
 
-    protected $fillable = ['mall_map_id', 'key', 'kind', 'sequence', 'name', 'floor_code', 'x_m', 'y_m', 'z_m', 'map_node_id', 'link_m', 'unit_code', 'is_primary', 'facility_type', 'checkpoint_code', 'qr', 'problem'];
+    protected $fillable = ['mall_map_id', 'key', 'kind', 'sequence', 'name', 'floor_code', 'x_m', 'y_m', 'z_m', 'map_node_id', 'link_m', 'unit_code', 'is_primary', 'facility_type', 'checkpoint_code', 'qr', 'problem', 'height_m'];
 
     /**
      * @return array<string, string>
@@ -64,6 +70,7 @@ class MapEndPoint extends Model
             'sequence' => 'integer',
             'is_primary' => 'boolean',
             'qr' => 'array',
+            'height_m' => 'float',
         ];
     }
 

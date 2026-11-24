@@ -10,13 +10,12 @@ use InvalidArgumentException;
 
 /**
  * Checks the graph part of a map package and writes it into the map_* tables
- * of one map (ISM-59), then applies the administrators' edits again (ISM-114). The Blender export validates too; this repeats the
+ * of one map (ISM-59). It writes only the package's own graph; MapEditService
+ * rebuilds it and replays the administrators' edits on top (ISM-114). The Blender export validates too; this repeats the
  * structural rules on the server, because a package can be edited by hand.
  */
 class GraphBuilder
 {
-    public function __construct(private MapEditService $edits) {}
-
     private const CODE_PATTERN = '/^[A-Za-z0-9][A-Za-z0-9_.\-]*$/';
 
     /**
@@ -321,18 +320,7 @@ class GraphBuilder
                 ]);
             }
 
-            // Administrators' points and paths are applied to the new graph again.
-            $this->edits->applyAll($map);
         });
-    }
-
-    /**
-     * Rebuild a stored map's graph from its map_package.json (maps imported
-     * before the graph tables existed, or after a failed rebuild).
-     */
-    public function rebuild(MallMap $map): void
-    {
-        $this->build($map, $map->package());
     }
 
     private function clear(MallMap $map): void

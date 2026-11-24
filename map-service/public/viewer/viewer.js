@@ -19,12 +19,15 @@ const service = params.get('map')
         annotationsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/annotations`,
         endPointsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/end-points`,
         pathsUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/paths`,
+        graphUrl: `/admin/maps/${encodeURIComponent(params.get('map'))}/graph`,
     }
     : null;
 
 const state = {
     points: [],
     paths: [],
+    graph: null,
+    graphNodes: new Map(),
     overlay: { edges: [] },
     editObjects: [],
     previewObjects: [],
@@ -673,7 +676,7 @@ renderer.domElement.addEventListener('pointermove', (event) => {
 });
 
 function handleClick(event) {
-    if (state.tool === 'point' || state.tool === 'qr' || state.tool === 'path') {
+    if (['point', 'qr', 'path', 'move-edit', 'graph', 'graph-move', 'graph-connect'].includes(state.tool)) {
         const surface = pickSurface();
         if (!surface) {
             showEditError('That click missed the scanned floor and walls. Click on the scan itself.');
@@ -683,6 +686,14 @@ function handleClick(event) {
             startPoint(surface);
         } else if (state.tool === 'qr') {
             startQr(surface);
+        } else if (state.tool === 'move-edit') {
+            moveEdited(surface);
+        } else if (state.tool === 'graph') {
+            graphClick(surface);
+        } else if (state.tool === 'graph-move') {
+            graphMove(surface);
+        } else if (state.tool === 'graph-connect') {
+            graphConnect(surface);
         } else {
             addPathCorner(surface);
         }
@@ -731,6 +742,7 @@ function setTool(tool) {
     $('add-point').classList.toggle('active', tool === 'point');
     $('add-qr').classList.toggle('active', tool === 'qr');
     $('add-path').classList.toggle('active', tool === 'path');
+    $('edit-graph').classList.toggle('active', ['graph', 'graph-move', 'graph-connect'].includes(tool));
     renderer.domElement.style.cursor = tool ? 'crosshair' : '';
     const hints = {
         shop_sign: 'Click a wall or the floor to place the shop sign (Shift+click to keep adding, Esc to stop)',
@@ -738,7 +750,11 @@ function setTool(tool) {
         move: 'Click where the selected item should go (Esc to cancel)',
         point: 'Click the floor where the point goes (Esc to stop)',
         qr: 'Click the wall or pillar face where the QR code hangs (Esc to stop)',
-        path: 'Click the floor at each corner of the path, then press Finish path (Esc to cancel)',
+        path: 'Click the floor at each corner of the path; a yellow dot joins an existing node or path end (Esc to cancel)',
+        'move-edit': 'Click where it should go (Esc to cancel)',
+        graph: 'Click a node (dot) or a walkway (line) to edit it (Esc to stop)',
+        'graph-move': 'Click the new place of the node (Esc to cancel)',
+        'graph-connect': 'Click the node to connect to (Esc to cancel)',
     };
     $('hint').textContent = hints[tool] ?? '';
     $('hint').style.display = tool ? 'block' : 'none';
@@ -1103,6 +1119,11 @@ $('add-qr').addEventListener('click', () => {
     closeEditForm();
     setTool(state.tool === 'qr' ? null : 'qr');
 });
+$('edit-graph').addEventListener('click', () => {
+    const editing = ['graph', 'graph-move', 'graph-connect'].includes(state.tool);
+    closeEditForm();
+    setTool(editing ? null : 'graph');
+});
 $('add-path').addEventListener('click', () => {
     const drawing = state.tool === 'path';
     closeEditForm();
@@ -1149,12 +1170,16 @@ window.addEventListener('keydown', (event) => {
 
 // ---------------------------------------------------------------------------
 // Points and paths (ISM-114): administrators add a node, shop entrance,
-// facility or QR code by clicking, and draw walkways corner by corner. The
-// map service joins them to the graph and gives each a unique key.
+// facility or QR code by clicking, draw walkways corner by corner, and edit,
+// move, redraw or merge them. The map service joins them to the graph and
+// gives each a unique key.
 // ---------------------------------------------------------------------------
 
 const KIND_COLOURS = { node: 0xd946ef, shop_entrance: 0x16954a, facility: 0xe67e19, checkpoint: 0x1c63d9 };
 const FACILITY_TYPES = { toilet: 'Toilet', prayer_room: 'Prayer room', information: 'Information desk', exit: 'Exit', atm: 'ATM', lift: 'Lift', baby_care: 'Baby care', first_aid: 'First aid', other: 'Other' };
+const DEFAULT_HEIGHT = 1.5;
+const DEFAULT_QR_HEIGHT = 1.4;
+const SNAP_M = 0.5;
 
 async function callEdits(url, method = 'GET', body = null) {
     const response = await fetch(url, {
@@ -1195,6 +1220,8 @@ function showEditError(text) {
     }
 }
 
+// --- Small form helpers ----------------------------------------------------
+
 function field(labelText, control) {
     const label = document.createElement('label');
     label.append(labelText, control);
@@ -1203,6 +1230,10 @@ function field(labelText, control) {
 
 function textInput(attributes) {
     return Object.assign(document.createElement('input'), { type: 'text', ...attributes });
+}
+
+function numberInput(value, attributes = {}) {
+    return Object.assign(document.createElement('input'), { type: 'number', value: String(value), step: '0.05', ...attributes });
 }
 
 function checkbox(text, checked = false) {
@@ -1223,72 +1254,42 @@ function closeEditForm() {
     $('edit-form').replaceChildren();
     $('edit-form').hidden = true;
     state.pending = null;
+    if (['move-edit', 'path', 'graph-move', 'graph-connect'].includes(state.tool)) {
+        setTool(null);
+    }
     clearPreview();
 }
 
 function showForm(title, fields, actions) {
     const box = $('edit-form');
-    const heading = Object.assign(document.createElement('div'), { className: 'muted', textContent: title });
+    const heading = Object.assign(document.createElement('div'), { className: 'muted', id: 'edit-heading', textContent: title });
     const row = document.createElement('div');
     row.className = 'row';
     row.append(...actions);
     box.replaceChildren(heading, ...fields, row);
     box.hidden = false;
+    box.scrollIntoView({ block: 'nearest' });
 }
 
-// --- A point: click the floor, then say what it is -----------------------
+function setHeading(text) {
+    const heading = $('edit-heading');
+    if (heading) {
+        heading.textContent = text;
+    }
+}
+
+function where(pending) {
+    const facing = pending.kind === 'checkpoint' ? `, facing ${Math.round(pending.yaw)}°` : '';
+    return `floor ${pending.floorCode} · x ${pending.x.toFixed(2)} · y ${pending.y.toFixed(2)}${facing}`;
+}
+
+// --- Points: add or edit a node, shop entrance or facility ---------------
 
 function startPoint(surface) {
     const position = A.threeToMall(surface.point);
-    state.pending = { floorCode: surface.floorCode, x: position.x, y: position.y };
-    showPreviewPin(surface.point, KIND_COLOURS.node);
     setTool(null);
-    showEditError('');
-
-    const kind = document.createElement('select');
-    kind.innerHTML = '<option value="node">Node (a place to go)</option><option value="shop_entrance">Shop entrance</option><option value="facility">Facility</option>';
-    const name = textInput({ maxLength: 120 });
-    const unit = textInput({ maxLength: 40, placeholder: 'G-05' });
-    const [primaryLabel, primary] = checkbox('Main door');
-    const type = document.createElement('select');
-    type.innerHTML = Object.entries(FACILITY_TYPES).map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
-    const unitField = field('Shop unit code', unit);
-    const typeField = field('Facility type', type);
-    const sync = () => {
-        unitField.hidden = kind.value !== 'shop_entrance';
-        primaryLabel.hidden = kind.value !== 'shop_entrance';
-        typeField.hidden = kind.value !== 'facility';
-        name.placeholder = { node: 'e.g. Kiosk by the entrance', shop_entrance: 'e.g. Gadget Hub side door', facility: 'e.g. Washroom near the lift' }[kind.value];
-    };
-    kind.addEventListener('change', sync);
-    sync();
-
-    const save = button('Save point', async () => {
-        save.disabled = true;
-        try {
-            const body = { kind: kind.value, name: name.value.trim(), floor_code: state.pending.floorCode, x: state.pending.x, y: state.pending.y };
-            if (kind.value === 'shop_entrance') {
-                Object.assign(body, { unit_code: unit.value.trim(), is_primary: primary.checked });
-            }
-            if (kind.value === 'facility') {
-                body.facility_type = type.value;
-            }
-            const created = (await callEdits(service.endPointsUrl, 'POST', body)).data;
-            closeEditForm();
-            await afterSave(created);
-        } catch (error) {
-            showEditError(error.message);
-            save.disabled = false;
-        }
-    }, 'primary');
-
-    showForm(`New point on floor ${state.pending.floorCode} · x ${state.pending.x.toFixed(2)} · y ${state.pending.y.toFixed(2)}`, [
-        field('What is it', kind), field('Name', name), unitField, primaryLabel, typeField,
-    ], [save, button('Cancel', closeEditForm)]);
-    name.focus();
+    openPointForm(null, { kind: 'node', floorCode: surface.floorCode, x: position.x, y: position.y });
 }
-
-// --- A QR code: click the wall it hangs on --------------------------------
 
 function startQr(surface) {
     if (A.mountForNormal(surface.normal) !== 'wall') {
@@ -1296,68 +1297,165 @@ function startQr(surface) {
         return;
     }
     const position = A.threeToMall(surface.point);
-    const yaw = A.roundYaw(A.threeDirectionToYaw(surface.normal));
-    state.pending = { floorCode: surface.floorCode, x: position.x, y: position.y, z: position.z, yaw };
-    showPreviewPin(surface.point, KIND_COLOURS.checkpoint);
     setTool(null);
-    showEditError('');
+    openPointForm(null, { kind: 'checkpoint', floorCode: surface.floorCode, x: position.x, y: position.y, yaw: A.roundYaw(A.threeDirectionToYaw(surface.normal)) });
+}
 
-    const code = textInput({ maxLength: 60, placeholder: 'G-C10' });
-    const label = textInput({ maxLength: 120, placeholder: 'e.g. Pillar by the lift, south face' });
-    const save = button('Save QR code', async () => {
+/**
+ * The form for a new point (point = null) or for editing one. QR codes have
+ * their own fields; other points can switch between node, shop entrance and
+ * facility. "Move" lets the next click choose a new place.
+ */
+function openPointForm(point, place) {
+    showEditError('');
+    const isQr = (point?.kind ?? place.kind) === 'checkpoint';
+    state.pending = {
+        edit: point,
+        kind: point?.kind ?? place.kind,
+        floorCode: point?.floor_code ?? place.floorCode,
+        x: point?.position.x ?? place.x,
+        y: point?.position.y ?? place.y,
+        yaw: point?.qr?.yaw_deg ?? place?.yaw ?? 0,
+    };
+    showPendingPin();
+
+    const name = textInput({ maxLength: 120, value: point?.name ?? '' });
+    const height = numberInput(point?.height_m ?? (isQr ? DEFAULT_QR_HEIGHT : DEFAULT_HEIGHT), { min: isQr ? '0.2' : '0', max: isQr ? '3' : '10' });
+    const fields = [];
+    let collect;
+
+    if (isQr) {
+        const code = textInput({ maxLength: 60, placeholder: 'G-C10', value: point?.checkpoint_code ?? '' });
+        const facing = numberInput(Math.round(state.pending.yaw), { step: '1', min: '0', max: '359' });
+        facing.addEventListener('input', () => {
+            state.pending.yaw = Number(facing.value) || 0;
+            setHeading(heading());
+        });
+        name.placeholder = 'e.g. Pillar by the lift, south face';
+        fields.push(field('QR code', code), field('Where (label)', name), field('Height above the floor (m)', height), field('Facing (degrees: 0 east, 90 north, 180 west, 270 south)', facing));
+        collect = () => ({ kind: 'checkpoint', checkpoint_code: code.value.trim(), qr_yaw: Number(facing.value) || 0 });
+        state.pending.facingInput = facing;
+    } else {
+        const kind = document.createElement('select');
+        kind.innerHTML = '<option value="node">Node (a place to go)</option><option value="shop_entrance">Shop entrance</option><option value="facility">Facility</option>';
+        kind.value = state.pending.kind;
+        const unit = textInput({ maxLength: 40, placeholder: 'G-05', value: point?.unit_code ?? '' });
+        const [primaryLabel, primary] = checkbox('Main door', point?.is_primary ?? false);
+        const type = document.createElement('select');
+        type.innerHTML = Object.entries(FACILITY_TYPES).map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+        type.value = point?.facility_type ?? 'toilet';
+        const unitField = field('Shop unit code', unit);
+        const typeField = field('Facility type', type);
+        const sync = () => {
+            state.pending.kind = kind.value;
+            unitField.hidden = kind.value !== 'shop_entrance';
+            primaryLabel.hidden = kind.value !== 'shop_entrance';
+            typeField.hidden = kind.value !== 'facility';
+            name.placeholder = { node: 'e.g. Kiosk by the entrance', shop_entrance: 'e.g. Gadget Hub side door', facility: 'e.g. Washroom near the lift' }[kind.value];
+        };
+        kind.addEventListener('change', sync);
+        sync();
+        fields.push(field('What is it', kind), field('Name', name), unitField, primaryLabel, typeField, field('Marker height above the floor (m)', height));
+        collect = () => {
+            const body = { kind: kind.value };
+            if (kind.value === 'shop_entrance') {
+                Object.assign(body, { unit_code: unit.value.trim(), is_primary: primary.checked });
+            }
+            if (kind.value === 'facility') {
+                body.facility_type = type.value;
+            }
+            return body;
+        };
+    }
+
+    const heading = () => `${point ? `Edit ${point.kind_label.toLowerCase()} ${point.key}` : isQr ? 'New QR code' : 'New point'} · ${where(state.pending)}`;
+    const save = button(point ? 'Save changes' : isQr ? 'Save QR code' : 'Save point', async () => {
         save.disabled = true;
         try {
-            const created = (await callEdits(service.endPointsUrl, 'POST', {
-                kind: 'checkpoint',
-                name: label.value.trim(),
-                checkpoint_code: code.value.trim(),
-                floor_code: state.pending.floorCode,
-                x: state.pending.x,
-                y: state.pending.y,
-                qr_z: state.pending.z,
-                qr_yaw: state.pending.yaw,
-            })).data;
+            const body = { ...collect(), name: name.value.trim(), floor_code: state.pending.floorCode, x: state.pending.x, y: state.pending.y, height: Number(height.value) };
+            const saved = (await callEdits(point ? point.update_url : service.endPointsUrl, point ? 'PATCH' : 'POST', body)).data;
             closeEditForm();
-            await afterSave(created);
+            await afterSave(saved, Boolean(point));
         } catch (error) {
             showEditError(error.message);
             save.disabled = false;
         }
     }, 'primary');
-
-    const height = position.z - floorLevel(surface.floorCode);
-    showForm(`New QR code on floor ${state.pending.floorCode}, facing ${yaw}°, ${height.toFixed(2)} m above the floor`, [
-        field('QR code', code), field('Where (label)', label),
-    ], [save, button('Cancel', closeEditForm)]);
-    code.focus();
+    const move = button(isQr ? 'Move (click a wall)' : 'Move (click the floor)', () => {
+        setTool('move-edit');
+    });
+    showForm(heading(), fields, [save, move, button('Cancel', closeEditForm)]);
+    state.pending.heading = heading;
+    (point ? name : isQr ? fields[0].querySelector('input') : name).focus();
 }
 
-// --- A path: click corners, then Finish -----------------------------------
-
-function startPath() {
-    state.pending = { path: true, floorCode: null, corners: [] };
+/** "Move": the next click gives the point (or QR code) a new place. */
+function moveEdited(surface) {
+    const pending = state.pending;
+    if (!pending) {
+        return;
+    }
+    if (pending.kind === 'checkpoint') {
+        if (A.mountForNormal(surface.normal) !== 'wall') {
+            showEditError('Click a wall or pillar face for the QR code.');
+            return;
+        }
+        pending.yaw = A.roundYaw(A.threeDirectionToYaw(surface.normal));
+        if (pending.facingInput) {
+            pending.facingInput.value = String(Math.round(pending.yaw));
+        }
+    }
+    const position = A.threeToMall(surface.point);
+    Object.assign(pending, { floorCode: surface.floorCode, x: position.x, y: position.y });
     showEditError('');
-    const name = textInput({ maxLength: 120, placeholder: '(optional)' });
-    const [stepFreeLabel, stepFree] = checkbox('Step-free', true);
-    const [oneWayLabel, oneWay] = checkbox('One way (first corner to last)');
-    const counter = Object.assign(document.createElement('div'), { id: 'path-counter', className: 'muted', textContent: 'Click the floor at the first corner.' });
-    const finish = button('Finish path', async () => {
+    setTool(null);
+    showPendingPin();
+    setHeading(pending.heading());
+}
+
+function showPendingPin() {
+    const pending = state.pending;
+    clearPreview();
+    const pin = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), new THREE.MeshBasicMaterial({ color: KIND_COLOURS[pending.kind] ?? KIND_COLOURS.node, transparent: true, opacity: 0.75 }));
+    pin.position.copy(v3({ x: pending.x, y: pending.y, z: floorLevel(pending.floorCode) + 0.2 }));
+    scene.add(pin);
+    state.previewObjects.push(pin);
+}
+
+// --- Paths: draw, redraw, edit and merge ----------------------------------
+
+/** Start drawing a new path, or redraw an existing one from its corners. */
+function startPath(path = null) {
+    const floorCode = path?.floor_code ?? null;
+    state.pending = {
+        path: true,
+        edit: path,
+        floorCode,
+        corners: path ? path.points.map(([x, y]) => ({ x, y, z: floorLevel(floorCode), snapped: false })) : [],
+    };
+    showEditError('');
+    setTool('path');
+    const name = textInput({ maxLength: 120, placeholder: '(optional)', value: path?.name ?? '' });
+    const [stepFreeLabel, stepFree] = checkbox('Step-free', path ? path.step_free : true);
+    const [oneWayLabel, oneWay] = checkbox('One way (first corner to last)', path ? path.one_way : false);
+    const counter = Object.assign(document.createElement('div'), { id: 'path-counter', className: 'muted' });
+    const finish = button(path ? 'Save corners' : 'Finish path', async () => {
         if (state.pending.corners.length < 2) {
             showEditError('Click at least two corners on the floor.');
             return;
         }
         finish.disabled = true;
         try {
-            const created = (await callEdits(service.pathsUrl, 'POST', {
+            const body = {
                 floor_code: state.pending.floorCode,
                 points: state.pending.corners.map((corner) => [corner.x, corner.y]),
                 step_free: stepFree.checked,
                 one_way: oneWay.checked,
                 name: name.value.trim() || null,
-            })).data;
-            setTool(null);
+            };
+            const saved = (await callEdits(path ? path.update_url : service.pathsUrl, path ? 'PATCH' : 'POST', body)).data;
             closeEditForm();
-            message(`Path ${created.key} added: ${created.length_m} m with ${created.corners} corners${created.joined ? '' : ' (not joined to the rest of the map yet)'}.`);
+            message(`Path ${saved.key} ${path ? 'saved' : 'added'}: ${saved.length_m} m with ${saved.corners} corners${saved.joined ? '' : ' (not joined to the rest of the map yet)'}.`);
             await loadEdits();
         } catch (error) {
             showEditError(error.message);
@@ -1371,22 +1469,58 @@ function startPath() {
         }
         drawPathPreview();
     });
-    const cancel = button('Cancel', () => {
-        setTool(null);
-        closeEditForm();
-    });
-    showForm('New path: click the floor at each corner. A corner within 0.5 m of a node or walkway joins it.', [counter, field('Name', name), stepFreeLabel, oneWayLabel], [finish, undo, cancel]);
+    const title = path
+        ? `Redraw path ${path.key}: click more corners, Undo to remove the last one, then Save corners.`
+        : 'New path: click the floor at each corner. A corner within 0.5 m of a node, a path end or a walkway joins it.';
+    showForm(title, [counter, field('Name', name), stepFreeLabel, oneWayLabel], [finish, undo, button('Cancel', closeEditForm)]);
+    drawPathPreview();
+}
+
+/** The nearest node, path corner or added link end within 0.5 m on the floor, if any. */
+function snapTarget(floorCode, x, y) {
+    const candidates = [];
+    for (const node of state.pkg?.nodes ?? []) {
+        if (node.floor_code === floorCode) {
+            candidates.push({ x: node.x_m, y: node.y_m, what: node.node_code });
+        }
+    }
+    for (const path of state.paths) {
+        if (path.floor_code === floorCode && path.key !== state.pending?.edit?.key) {
+            path.points.forEach(([px, py], index) => candidates.push({ x: px, y: py, what: index === 0 || index === path.points.length - 1 ? `the end of path ${path.key}` : `a corner of path ${path.key}` }));
+        }
+    }
+    for (const point of state.points) {
+        if (point.floor_code === floorCode && point.kind !== 'checkpoint') {
+            candidates.push({ x: point.position.x, y: point.position.y, what: `${point.name} (${point.key})` });
+        }
+    }
+    let best = null;
+    for (const candidate of candidates) {
+        const distance = Math.hypot(candidate.x - x, candidate.y - y);
+        if (distance <= SNAP_M && (!best || distance < best.distance)) {
+            best = { ...candidate, distance };
+        }
+    }
+    return best;
 }
 
 function addPathCorner(surface) {
-    if (state.pending.floorCode && surface.floorCode !== state.pending.floorCode) {
-        showEditError(`A path stays on one floor (floor ${state.pending.floorCode}). Finish it, then draw another.`);
+    const pending = state.pending;
+    if (pending.floorCode && surface.floorCode !== pending.floorCode) {
+        showEditError(`A path stays on one floor (floor ${pending.floorCode}). Finish it, then draw another.`);
         return;
     }
     showEditError('');
-    state.pending.floorCode = surface.floorCode;
+    pending.floorCode = surface.floorCode;
     const corner = A.threeToMall(surface.point);
-    state.pending.corners.push({ x: corner.x, y: corner.y, z: floorLevel(surface.floorCode) });
+    const target = snapTarget(surface.floorCode, corner.x, corner.y);
+    pending.corners.push({
+        x: target ? target.x : corner.x,
+        y: target ? target.y : corner.y,
+        z: floorLevel(surface.floorCode),
+        snapped: Boolean(target),
+        joins: target?.what ?? null,
+    });
     drawPathPreview();
 }
 
@@ -1395,7 +1529,7 @@ function drawPathPreview() {
     const corners = state.pending?.corners ?? [];
     let length = 0;
     corners.forEach((corner, index) => {
-        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8), new THREE.MeshBasicMaterial({ color: 0x22d3ee }));
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(corner.snapped ? 0.18 : 0.12, 12, 8), new THREE.MeshBasicMaterial({ color: corner.snapped ? 0xfacc15 : 0x22d3ee }));
         dot.position.copy(v3({ ...corner, z: corner.z + 0.05 }));
         scene.add(dot);
         state.previewObjects.push(dot);
@@ -1410,21 +1544,65 @@ function drawPathPreview() {
     }
     const counter = $('path-counter');
     if (counter) {
+        const last = corners[corners.length - 1];
         counter.textContent = corners.length
-            ? `${corners.length} corner${corners.length > 1 ? 's' : ''} · ${length.toFixed(1)} m on floor ${state.pending.floorCode}`
+            ? `${corners.length} corner${corners.length > 1 ? 's' : ''} · ${length.toFixed(1)} m on floor ${state.pending.floorCode}${last?.joins ? ` · last corner joins ${last.joins}` : ''}`
             : 'Click the floor at the first corner.';
     }
 }
 
-// --- Shared ---------------------------------------------------------------
+/** Edit a path's name and flags, redraw its corners, or merge another path into it. */
+function openPathForm(path) {
+    closeEditForm();
+    showEditError('');
+    state.pending = { pathEdit: path };
+    const name = textInput({ maxLength: 120, placeholder: '(optional)', value: path.name ?? '' });
+    const [stepFreeLabel, stepFree] = checkbox('Step-free', path.step_free);
+    const [oneWayLabel, oneWay] = checkbox('One way (first corner to last)', path.one_way);
+    const meets = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) <= SNAP_M;
+    const partners = state.paths.filter((other) => other.key !== path.key && other.floor_code === path.floor_code
+        && path.ends.some((end) => other.ends.some((otherEnd) => meets(end, otherEnd))));
+    const mergeWith = document.createElement('select');
+    mergeWith.innerHTML = partners.length
+        ? partners.map((other) => `<option value="${other.key}">${other.key}${other.name ? ` · ${other.name}` : ''} (${other.length_m} m)</option>`).join('')
+        : '<option value="">No other path meets this one at an end</option>';
+    mergeWith.disabled = !partners.length;
 
-function showPreviewPin(threePoint, colour) {
-    clearPreview();
-    const pin = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), new THREE.MeshBasicMaterial({ color: colour, transparent: true, opacity: 0.7 }));
-    pin.position.copy(threePoint);
-    scene.add(pin);
-    state.previewObjects.push(pin);
+    const save = button('Save changes', async () => {
+        save.disabled = true;
+        try {
+            await callEdits(path.update_url, 'PATCH', { name: name.value.trim() || null, step_free: stepFree.checked, one_way: oneWay.checked });
+            closeEditForm();
+            message(`Path ${path.key} saved.`);
+            await loadEdits();
+        } catch (error) {
+            showEditError(error.message);
+            save.disabled = false;
+        }
+    }, 'primary');
+    const merge = button('Merge', async () => {
+        if (!mergeWith.value) {
+            return;
+        }
+        merge.disabled = true;
+        try {
+            const merged = (await callEdits(path.merge_url, 'POST', { with: mergeWith.value })).data;
+            closeEditForm();
+            message(`Path ${mergeWith.value} merged into ${merged.key}: ${merged.length_m} m with ${merged.corners} corners.`);
+            await loadEdits();
+        } catch (error) {
+            showEditError(error.message);
+            merge.disabled = false;
+        }
+    });
+    merge.disabled = !partners.length;
+    showForm(`Edit path ${path.key} · floor ${path.floor_code} · ${path.corners} corners · ${path.length_m} m`, [
+        field('Name', name), stepFreeLabel, oneWayLabel,
+        field('Merge with a path that meets this one at an end', mergeWith),
+    ], [save, button('Redraw corners', () => startPath(path)), merge, button('Cancel', closeEditForm)]);
 }
+
+// --- Shared ---------------------------------------------------------------
 
 function clearPreview() {
     for (const object of state.previewObjects) {
@@ -1433,9 +1611,11 @@ function clearPreview() {
     state.previewObjects = [];
 }
 
-async function afterSave(created) {
-    showNewKey(created);
-    message(`${created.kind_label} “${created.name}” added with key ${created.key}.${created.link_m === null ? ' It is not joined to a walkway yet: draw a path to it with ＋ Path.' : ''}`);
+async function afterSave(saved, edited) {
+    if (!edited) {
+        showNewKey(saved);
+    }
+    message(`${saved.kind_label} “${saved.name}” ${edited ? 'saved' : `added with key ${saved.key}`}.${saved.link_m === null && !saved.connected ? ' It is not joined to a walkway yet: draw a path to it with ＋ Path.' : ''}`);
     await loadEdits();
 }
 
@@ -1445,7 +1625,7 @@ function showNewKey(point) {
         Object.assign(document.createElement('span'), { className: 'key', textContent: point.key }),
         Object.assign(document.createElement('span'), { className: 'muted', textContent: `Route to it with ${point.place}` }),
     ];
-    if (point.link_m === null) {
+    if (point.link_m === null && !point.connected) {
         parts.push(Object.assign(document.createElement('span'), { className: 'warn', textContent: 'Not joined to a walkway yet: draw a path to it.' }));
     }
     if (point.qr_url) {
@@ -1473,7 +1653,6 @@ function editLabel(text, colour) {
     texture.colorSpace = THREE.SRGBColorSpace;
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false }));
     sprite.scale.set(1.6, 0.2, 1);
-    sprite.position.set(0, 1.55, 0);
     sprite.renderOrder = 4;
     return sprite;
 }
@@ -1517,12 +1696,15 @@ function buildEditObjects() {
             add(point.floor_code, qr);
             continue;
         }
+        const height = Math.max(0.05, point.height_m ?? DEFAULT_HEIGHT);
         const group = new THREE.Group();
-        const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 12), new THREE.MeshBasicMaterial({ color: colour }));
-        pin.position.y = 0.65;
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 14), new THREE.MeshBasicMaterial({ color: colour }));
-        head.position.y = 1.3;
-        group.add(pin, head, editLabel(`${point.key} · ${point.name}`, colour));
+        const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, height, 12), new THREE.MeshBasicMaterial({ color: colour }));
+        pin.position.y = height / 2;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 14), new THREE.MeshBasicMaterial({ color: colour }));
+        head.position.y = height;
+        const label = editLabel(`${point.key} · ${point.name}`, colour);
+        label.position.set(0, height + 0.3, 0);
+        group.add(pin, head, label);
         group.position.copy(v3(point.position));
         add(point.floor_code, group);
     }
@@ -1547,6 +1729,7 @@ function removeButton(question, url, done) {
         }
         try {
             await callEdits(url, 'DELETE');
+            closeEditForm();
             message(done);
             await loadEdits();
         } catch (error) {
@@ -1564,13 +1747,19 @@ function renderEdits() {
             event.stopPropagation();
             navigator.clipboard?.writeText(point.key).then(() => { copy.textContent = 'Copied'; });
         });
+        const edit = button('Edit', (event) => {
+            event.stopPropagation();
+            closeEditForm();
+            openPointForm(point, null);
+            focusOn(point);
+        });
         const detail = { shop_entrance: ` · unit ${point.unit_code}${point.is_primary ? ', main door' : ''}`, facility: ` · ${point.facility_type}`, checkpoint: ` · ${point.checkpoint_code}` }[point.kind] ?? '';
         const status = point.problem ? ` · not applied: ${point.problem}` : point.connected ? '' : ' · not connected: draw a path to it';
         return listItem(
             point.key,
-            `${point.kind_label}${detail} · ${point.name} · floor ${point.floor_code}${status}`,
+            `${point.kind_label}${detail} · ${point.name} · floor ${point.floor_code} · ${Number(point.height_m).toFixed(2)} m high${status}`,
             point.problem || !point.connected ? 'warn' : 'muted',
-            [copy, removeButton(`Delete ${point.name} (${point.key})? Links that use its key stop working.`, point.update_url, `${point.kind_label} ${point.key} deleted.`)],
+            [edit, copy, removeButton(`Delete ${point.name} (${point.key})? Links that use its key stop working.`, point.update_url, `${point.kind_label} ${point.key} deleted.`)],
             () => focusOn(point),
         );
     });
@@ -1583,7 +1772,13 @@ function renderEdits() {
         path.key,
         `${path.name ?? 'Path'} · floor ${path.floor_code} · ${path.corners} corners · ${path.length_m} m${path.step_free ? '' : ' · not step-free'}${path.one_way ? ' · one way' : ''}${path.problem ? ` · ${path.problem}` : path.joined ? '' : ' · not joined to the map'}`,
         path.problem || !path.joined ? 'warn' : 'muted',
-        [removeButton(`Delete path ${path.key}?`, path.update_url, `Path ${path.key} deleted.`)],
+        [
+            button('Edit', (event) => {
+                event.stopPropagation();
+                openPathForm(path);
+            }),
+            removeButton(`Delete path ${path.key}?`, path.update_url, `Path ${path.key} deleted.`),
+        ],
         () => focusOn({ position: { x: path.points[0][0], y: path.points[0][1], z: floorLevel(path.floor_code) } }),
     ));
     if (!pathItems.length) {
@@ -1591,6 +1786,266 @@ function renderEdits() {
     }
     $('paths').replaceChildren(...pathItems);
     buildEditObjects();
+}
+
+// ---------------------------------------------------------------------------
+// The navigation graph itself (ISM-114): drawn as it is now on the server;
+// with "✎ Graph" an administrator clicks a node or a walkway and moves,
+// connects, removes or changes it. Every change can be undone.
+// ---------------------------------------------------------------------------
+
+const GRAPH_COLOURS = { walk: 0xe5484d, stairs: 0xf59e0b, closed: 0x6b7280, connector: 0x7e3bc4, selected: 0xfacc15 };
+const GRAPH_NODE_COLOURS = { junction: 0xe5484d, checkpoint: 0x1c63d9, entrance: 0x16954a, connector: 0x7e3bc4, facility: 0xe67e19, endpoint: 0xd946ef };
+const PICK_M = 0.5;
+
+async function loadGraph() {
+    try {
+        state.graph = await callEdits(service.graphUrl);
+    } catch (error) {
+        showEditError(error.message);
+        return;
+    }
+    state.graphNodes = new Map(state.graph.nodes.map((node) => [node.code, node]));
+    renderGraph();
+    renderGraphEdits();
+}
+
+function renderGraph() {
+    for (const entry of state.floors.values()) {
+        entry.graph.clear();
+    }
+    const point = (node, lift = 0.04) => v3({ x: node.x, y: node.y, z: node.z + lift });
+    for (const edge of state.graph.edges) {
+        const a = state.graphNodes.get(edge.from);
+        const b = state.graphNodes.get(edge.to);
+        const entry = a && b ? state.floors.get(a.floor) : null;
+        if (!entry) {
+            continue;
+        }
+        const colour = edge.closed ? GRAPH_COLOURS.closed : edge.connector ? GRAPH_COLOURS.connector : edge.step_free ? GRAPH_COLOURS.walk : GRAPH_COLOURS.stairs;
+        const material = edge.direction === 'both' && !edge.closed
+            ? new THREE.LineBasicMaterial({ color: colour })
+            : new THREE.LineDashedMaterial({ color: colour, dashSize: 0.25, gapSize: 0.15 });
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([point(a), point(b)]), material);
+        line.computeLineDistances();
+        entry.graph.add(line);
+        if (edge.direction !== 'both' && !edge.connector) {
+            const [from, to] = edge.direction === 'forward' ? [a, b] : [b, a];
+            const middle = v3({ x: (from.x + to.x) / 2, y: (from.y + to.y) / 2, z: from.z + 0.06 });
+            const arrow = new THREE.ArrowHelper(v3({ x: to.x - from.x, y: to.y - from.y, z: 0 }).normalize(), middle, 0.5, colour, 0.3, 0.18);
+            entry.graph.add(arrow);
+        }
+    }
+    for (const node of state.graph.nodes) {
+        const entry = state.floors.get(node.floor);
+        if (!entry || node.type === 'endpoint') {
+            continue;
+        }
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(node.type === 'junction' ? 0.09 : 0.13, 10, 8), new THREE.MeshBasicMaterial({ color: GRAPH_NODE_COLOURS[node.type] ?? GRAPH_NODE_COLOURS.junction }));
+        dot.position.copy(point(node, 0.05));
+        entry.graph.add(dot);
+    }
+    applyVisibility();
+}
+
+function renderGraphEdits() {
+    const edits = state.graph?.edits ?? [];
+    $('graph-count').textContent = edits.length ? `(${edits.length})` : '';
+    const items = edits.map((edit) => listItem(
+        edit.key,
+        `${edit.description}${edit.problem ? ` · not applied: ${edit.problem}` : ''}`,
+        edit.problem ? 'warn' : 'muted',
+        [button('Undo', async (event) => {
+            event.stopPropagation();
+            try {
+                await callEdits(edit.undo_url, 'DELETE');
+                message(`Undone: ${edit.description}.`);
+                await reloadAll();
+            } catch (error) {
+                showEditError(error.message);
+            }
+        })],
+        () => {},
+    ));
+    if (!items.length) {
+        items.push(Object.assign(document.createElement('li'), { className: 'muted', textContent: 'No changes. Use “✎ Graph” and click a node or a walkway.' }));
+    }
+    $('graph-edits').replaceChildren(...items);
+}
+
+async function reloadAll() {
+    await loadEdits();
+    await loadGraph();
+}
+
+/** The node or walkway nearest to a click on a floor, within half a metre. */
+function pickGraph(surface) {
+    const at = A.threeToMall(surface.point);
+    let best = null;
+    for (const node of state.graph?.nodes ?? []) {
+        if (node.floor !== surface.floorCode) {
+            continue;
+        }
+        const distance = Math.hypot(node.x - at.x, node.y - at.y);
+        if (distance <= PICK_M && (!best || distance < best.distance)) {
+            best = { kind: 'node', node, distance };
+        }
+    }
+    if (best) {
+        return best;
+    }
+    for (const edge of state.graph?.edges ?? []) {
+        const a = state.graphNodes.get(edge.from);
+        const b = state.graphNodes.get(edge.to);
+        if (!a || !b || a.floor !== surface.floorCode || b.floor !== surface.floorCode) {
+            continue;
+        }
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const lengthSquared = dx * dx + dy * dy || 1e-9;
+        const t = Math.max(0, Math.min(1, ((at.x - a.x) * dx + (at.y - a.y) * dy) / lengthSquared));
+        const distance = Math.hypot(at.x - (a.x + t * dx), at.y - (a.y + t * dy));
+        if (distance <= PICK_M && (!best || distance < best.distance)) {
+            best = { kind: 'edge', edge, a, b, distance };
+        }
+    }
+    return best;
+}
+
+function highlight(objects) {
+    clearPreview();
+    for (const object of objects) {
+        scene.add(object);
+        state.previewObjects.push(object);
+    }
+}
+
+function highlightNode(node) {
+    const ring = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), new THREE.MeshBasicMaterial({ color: GRAPH_COLOURS.selected, transparent: true, opacity: 0.8 }));
+    ring.position.copy(v3({ x: node.x, y: node.y, z: node.z + 0.08 }));
+    return ring;
+}
+
+function highlightEdge(a, b) {
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([v3({ x: a.x, y: a.y, z: a.z + 0.1 }), v3({ x: b.x, y: b.y, z: b.z + 0.1 })]), new THREE.LineBasicMaterial({ color: GRAPH_COLOURS.selected }));
+    return line;
+}
+
+async function sendGraphChange(body, done) {
+    try {
+        await callEdits(service.graphUrl, 'POST', body);
+        closeEditForm();
+        message(done);
+        await reloadAll();
+    } catch (error) {
+        showEditError(error.message);
+    }
+}
+
+function graphClick(surface) {
+    const picked = pickGraph(surface);
+    if (!picked) {
+        showEditError('No node or walkway within half a metre of that click. Click on a red line or dot.');
+        return;
+    }
+    showEditError('');
+    if (picked.kind === 'node') {
+        openNodeForm(picked.node);
+    } else {
+        openEdgeForm(picked.edge, picked.a, picked.b);
+    }
+}
+
+function openNodeForm(node) {
+    state.pending = { graphNode: node, kind: node.type };
+    highlight([highlightNode(node)]);
+    const [stepFreeLabel, stepFree] = checkbox('New walkway is step-free', true);
+    const [oneWayLabel, oneWay] = checkbox('New walkway is one way (from this node)');
+    const remove = button('Remove node', () => {
+        if (window.confirm(`Remove node ${node.code} and its walkways?`)) {
+            sendGraphChange({ action: 'remove_node', node_code: node.code }, `Node ${node.code} removed.`);
+        }
+    }, 'danger');
+    remove.disabled = Boolean(node.holds);
+    const fields = [];
+    if (node.holds) {
+        fields.push(Object.assign(document.createElement('div'), { className: 'warn', textContent: `It ${node.holds}, so it cannot be removed here.` }));
+    }
+    fields.push(stepFreeLabel, oneWayLabel);
+    showForm(`Node ${node.code} · ${node.type} · floor ${node.floor} · x ${node.x.toFixed(2)} · y ${node.y.toFixed(2)}`, fields, [
+        button('Move (click the new place)', () => {
+            state.pending.graphAction = 'move';
+            setTool('graph-move');
+        }),
+        button('Connect to… (click another node)', () => {
+            state.pending.graphAction = 'connect';
+            state.pending.connectOptions = () => ({ step_free: stepFree.checked, one_way: oneWay.checked });
+            setTool('graph-connect');
+        }),
+        remove,
+        button('Close', closeEditForm),
+    ]);
+}
+
+function openEdgeForm(edge, a, b) {
+    state.pending = { graphEdge: edge };
+    highlight([highlightEdge(a, b)]);
+    if (edge.connector) {
+        showForm(`Lift, escalator or stairs ${edge.from} – ${edge.to} · ${edge.length_m} m`, [
+            Object.assign(document.createElement('div'), { className: 'muted', textContent: 'Lifts, escalators and stairs come from the map package (Blender). Close one for a while on the Closures page.' }),
+        ], [button('Close', closeEditForm)]);
+        return;
+    }
+    const [stepFreeLabel, stepFree] = checkbox('Step-free', edge.step_free);
+    const direction = document.createElement('select');
+    direction.innerHTML = `<option value="both">Both ways</option><option value="forward">One way ${edge.from} → ${edge.to}</option><option value="backward">One way ${edge.to} → ${edge.from}</option>`;
+    direction.value = edge.direction;
+    const save = button('Save walkway', () => {
+        const body = { action: 'edit_edge', from_code: edge.from, to_code: edge.to };
+        if (stepFree.checked !== edge.step_free) {
+            body.step_free = stepFree.checked;
+        }
+        if (direction.value !== edge.direction) {
+            body.direction = direction.value;
+        }
+        if (body.step_free === undefined && body.direction === undefined) {
+            showEditError('Nothing changed.');
+            return;
+        }
+        sendGraphChange(body, `Walkway ${edge.from} – ${edge.to} changed.`);
+    }, 'primary');
+    const remove = button('Remove walkway', () => {
+        if (window.confirm(`Remove the walkway ${edge.from} – ${edge.to}?`)) {
+            sendGraphChange({ action: 'remove_edge', from_code: edge.from, to_code: edge.to }, `Walkway ${edge.from} – ${edge.to} removed.`);
+        }
+    }, 'danger');
+    showForm(`Walkway ${edge.from} – ${edge.to} · ${edge.length_m} m${edge.closed ? ' · closed now' : ''}`, [stepFreeLabel, field('Direction', direction)], [save, remove, button('Close', closeEditForm)]);
+}
+
+function graphMove(surface) {
+    const node = state.pending?.graphNode;
+    setTool(null);
+    if (!node) {
+        return;
+    }
+    if (surface.floorCode !== node.floor) {
+        showEditError(`Keep node ${node.code} on floor ${node.floor}.`);
+        return;
+    }
+    const at = A.threeToMall(surface.point);
+    sendGraphChange({ action: 'move_node', node_code: node.code, x: at.x, y: at.y }, `Node ${node.code} moved.`);
+}
+
+function graphConnect(surface) {
+    const node = state.pending?.graphNode;
+    const options = state.pending?.connectOptions?.() ?? {};
+    setTool(null);
+    const picked = pickGraph(surface);
+    if (!node || !picked || picked.kind !== 'node') {
+        showEditError('Click on another node (a dot) to connect to.');
+        return;
+    }
+    sendGraphChange({ action: 'connect', from_code: node.code, to_code: picked.node.code, ...options }, `Walkway ${node.code} – ${picked.node.code} added.`);
 }
 
 function setStatus(text) {
@@ -1626,11 +2081,11 @@ if (service) {
     $('save-note').textContent = 'Every change is saved to the map service automatically.';
     const back = Object.assign(document.createElement('a'), { href: '/admin/maps', textContent: '← Back to maps', className: 'muted' });
     $('package-name').before(back);
-    for (const id of ['add-point', 'add-qr', 'add-path', 'edits-section']) {
+    for (const id of ['add-point', 'add-qr', 'add-path', 'edit-graph', 'edits-section']) {
         $(id).hidden = false;
     }
     $('points-page').href = service.endPointsUrl;
-    loadFromService().then(loadEdits).catch(fail);
+    loadFromService().then(reloadAll).catch(fail);
 } else if (packageParam) {
     loadFromUrl(packageParam).catch(fail);
 } else {

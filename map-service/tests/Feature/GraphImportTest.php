@@ -6,6 +6,7 @@ use App\Models\MallMap;
 use App\Models\MapEdge;
 use App\Models\MapNode;
 use App\Models\User;
+use App\Services\EdgeStatusService;
 use App\Services\GraphBuilder;
 use App\Services\MapPublisher;
 use App\Services\PackageImporter;
@@ -215,16 +216,17 @@ class GraphImportTest extends TestCase
         $this->pilotMap('Demo Mall!');
     }
 
-    public function test_the_rebuild_command_restores_a_graph_from_the_stored_package(): void
+    public function test_the_rebuild_command_restores_the_graph_from_the_stored_package_and_keeps_closures(): void
     {
         $map = $this->pilotMap();
-        $map->edges()->update(['status' => 'closed']);
+        app(EdgeStatusService::class)->set($map, 'G-N0001', 'G-N0002', 'closed', 'Cleaning');
         DB::table('map_nodes')->where('mall_map_id', $map->id)->where('node_code', 'G-C01')->update(['x_m' => 99]);
 
         $this->artisan('map:rebuild-graph', ['map' => $map->id])->assertSuccessful();
 
-        $this->assertSame(0, $map->edges()->where('status', 'closed')->count());
         $this->assertSame(0.0, $map->nodes()->where('node_code', 'G-C01')->sole()->x_m);
+        $this->assertSame(2, $map->edges()->where('status', 'closed')->count());
+        $this->assertSame('Cleaning', $map->edges()->where('status', 'closed')->value('closed_reason'));
         $this->artisan('map:rebuild-graph', ['map' => 'no-such-map'])->assertFailed();
     }
 

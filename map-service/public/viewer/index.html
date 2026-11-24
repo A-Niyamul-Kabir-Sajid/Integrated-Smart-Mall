@@ -53,11 +53,11 @@
         #list .swatch { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid #0006; }
         #list .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #status { position: absolute; left: 12px; bottom: 12px; background: #0f141ccc; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: var(--muted); pointer-events: none; max-width: calc(100% - 24px); }
-        #points, #paths { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
-        #points li, #paths li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 8px; border-radius: 6px; background: var(--bg); cursor: pointer; }
-        #points .key, #paths .key, .point-new .key { font: 600 14px ui-monospace, SFMono-Regular, Consolas, monospace; color: #f0abfc; letter-spacing: .04em; user-select: all; }
-        #points .actions, #paths .actions { grid-row: span 2; display: flex; gap: 4px; align-items: center; }
-        #points .actions button, #paths .actions button { padding: 3px 7px; font-size: 12px; }
+        #points, #paths, #graph-edits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+        #points li, #paths li, #graph-edits li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 8px; border-radius: 6px; background: var(--bg); cursor: pointer; }
+        #points .key, #paths .key, #graph-edits .key, .point-new .key { font: 600 14px ui-monospace, SFMono-Regular, Consolas, monospace; color: #f0abfc; letter-spacing: .04em; user-select: all; }
+        #points .actions, #paths .actions, #graph-edits .actions { grid-row: span 2; display: flex; gap: 4px; align-items: center; }
+        #points .actions button, #paths .actions button, #graph-edits .actions button { padding: 3px 7px; font-size: 12px; }
         .warn { color: #ffcf8a; }
         .edit-form { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--accent); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
         .edit-form [hidden] { display: none; }
@@ -135,8 +135,9 @@
                 <button id="add-point" hidden>＋ Point</button>
                 <button id="add-qr" hidden>＋ QR code</button>
                 <button id="add-path" hidden>＋ Path</button>
+                <button id="edit-graph" hidden>✎ Graph</button>
             </div>
-            <p class="muted" style="margin:8px 0 0">Signs and advertisements: click a wall (flat on it) or the floor (on a stand). Point: click the floor, then say what it is. QR code: click the wall it hangs on. Path: click each corner on the floor, then Finish path.</p>
+            <p class="muted" style="margin:8px 0 0">Signs and advertisements: click a wall (flat on it) or the floor (on a stand). Point: click the floor, then say what it is. QR code: click the wall it hangs on. Path: click each corner on the floor, then Finish path. Graph: click a node or a walkway of the navigation graph to move, connect, change or remove it.</p>
         </section>
 
         <section id="edits-section" hidden>
@@ -148,6 +149,8 @@
             <ul id="points"></ul>
             <h3 class="sub">Paths <span id="paths-count" class="muted"></span></h3>
             <ul id="paths"></ul>
+            <h3 class="sub">Graph changes <span id="graph-count" class="muted"></span></h3>
+            <ul id="graph-edits"></ul>
             <p class="muted" style="margin:8px 0 0">Every point and path has a unique key; apps route to a point with <code>point:&lt;key&gt;</code>. <a id="points-page" href="#">Points and paths page</a></p>
         </section>
 

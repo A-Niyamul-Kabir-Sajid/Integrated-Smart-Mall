@@ -49,15 +49,64 @@ class PathController extends Controller
         return back()->with('status', "Path {$path->key} added: {$path->length()} m with ".count($path->points).' corners.');
     }
 
+    /**
+     * Change a path; only the fields sent change (a rename sends only the name).
+     */
     public function update(Request $request, MallMap $mallMap, MapPath $path): RedirectResponse|JsonResponse
     {
         abort_unless($path->mall_map_id === $mallMap->id, 404);
-        $data = $request->validate(['name' => ['nullable', 'string', 'max:120']]);
-        $this->edits->renamePath($path, $data['name'] ?? null);
+        $data = $request->validate([
+            'floor_code' => ['sometimes', 'string', 'max:20'],
+            'points' => ['sometimes', 'array', 'min:2', 'max:100'],
+            'points.*' => ['array', 'size:2'],
+            'points.*.*' => ['numeric', 'between:-10000,10000'],
+            'corners' => ['sometimes', 'string', 'max:4000'],
+            'name' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'step_free' => ['sometimes', 'boolean'],
+            'one_way' => ['sometimes', 'boolean'],
+        ]);
+        $changes = array_intersect_key($data, array_flip(['floor_code', 'points', 'name']));
+        if (isset($data['corners'])) {
+            $changes['points'] = $this->parseCorners($data['corners']);
+        }
+        foreach (['step_free', 'one_way'] as $flag) {
+            if (array_key_exists($flag, $data)) {
+                $changes[$flag] = $request->boolean($flag);
+            }
+        }
+
+        try {
+            $path = $this->edits->updatePath($path, $changes);
+        } catch (InvalidArgumentException $error) {
+            throw ValidationException::withMessages(['path' => $error->getMessage()]);
+        }
 
         return $request->wantsJson()
-            ? response()->json(['data' => self::present($mallMap, $path->refresh())])
-            : back()->with('status', "Path {$path->key} renamed.");
+            ? response()->json(['data' => self::present($mallMap, $path)])
+            : back()->with('status', "Path {$path->key} saved.");
+    }
+
+    /**
+     * Join another path that meets this one at an end into this one.
+     */
+    public function merge(Request $request, MallMap $mallMap, MapPath $path): RedirectResponse|JsonResponse
+    {
+        abort_unless($path->mall_map_id === $mallMap->id, 404);
+        $data = $request->validate(['with' => ['required', 'string', 'max:16']]);
+        $other = MapPath::query()->where('mall_map_id', $mallMap->id)->where('key', $data['with'])->first();
+        if ($other === null) {
+            throw ValidationException::withMessages(['with' => 'There is no path with that key on this map.']);
+        }
+
+        try {
+            $path = $this->edits->mergePaths($path, $other);
+        } catch (InvalidArgumentException $error) {
+            throw ValidationException::withMessages(['with' => $error->getMessage()]);
+        }
+
+        return $request->wantsJson()
+            ? response()->json(['data' => self::present($mallMap, $path)])
+            : back()->with('status', "Path {$other->key} merged into {$path->key}: {$path->length()} m with ".count($path->points).' corners.');
     }
 
     public function destroy(Request $request, MallMap $mallMap, MapPath $path): RedirectResponse|JsonResponse
@@ -92,6 +141,8 @@ class PathController extends Controller
             'joined' => $joined,
             'problem' => $path->problem,
             'update_url' => route('admin.maps.paths.update', [$map, $path]),
+            'merge_url' => route('admin.maps.paths.merge', [$map, $path]),
+            'ends' => [array_values($path->points)[0], array_values($path->points)[count($path->points) - 1]],
         ];
     }
 

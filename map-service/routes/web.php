@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ApiKeyController;
 use App\Http\Controllers\Admin\CheckpointController;
 use App\Http\Controllers\Admin\ClosureController;
 use App\Http\Controllers\Admin\EndPointController;
+use App\Http\Controllers\Admin\GraphController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\MapController;
 use App\Http\Controllers\Admin\PathController;
@@ -39,6 +40,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/maps/{mallMap}/paths', [PathController::class, 'store'])->name('maps.paths.store');
     Route::patch('/maps/{mallMap}/paths/{path}', [PathController::class, 'update'])->name('maps.paths.update');
     Route::delete('/maps/{mallMap}/paths/{path}', [PathController::class, 'destroy'])->name('maps.paths.destroy');
+    Route::post('/maps/{mallMap}/paths/{path}/merge', [PathController::class, 'merge'])->name('maps.paths.merge');
+    Route::get('/maps/{mallMap}/graph', [GraphController::class, 'index'])->name('maps.graph');
+    Route::post('/maps/{mallMap}/graph', [GraphController::class, 'store'])->name('maps.graph.store');
+    Route::delete('/maps/{mallMap}/graph/{graphEdit}', [GraphController::class, 'destroy'])->name('maps.graph.destroy');
 
     Route::get('/checkpoints', [CheckpointController::class, 'index'])->name('checkpoints.index');
     Route::post('/checkpoints/{checkpoint}/retire', [CheckpointController::class, 'retire'])->name('checkpoints.retire');

@@ -322,7 +322,7 @@ class MapEditTest extends TestCase
 
         $this->patch(route('admin.maps.paths.update', [$this->map, $path]), ['name' => 'Back corridor'])->assertRedirect();
         $this->assertSame('Back corridor', $path->refresh()->name);
-        $this->patch(route('admin.maps.end-points.update', [$this->map, $point]), ['name' => 'Toilets G'])->assertSessionHasErrors('name');
+        $this->patch(route('admin.maps.end-points.update', [$this->map, $point]), ['name' => 'Toilets G'])->assertSessionHasErrors('point');
         $this->delete(route('admin.maps.paths.destroy', [$this->map, $path]))->assertRedirect();
         $this->assertSame(0, MapPath::query()->count());
 
@@ -361,5 +361,128 @@ class MapEditTest extends TestCase
         $this->delete(route('admin.maps.paths.destroy', [$this->map, $path]))->assertRedirect(route('login'));
         $this->assertSame(1, MapEndPoint::query()->count());
         $this->assertSame(1, MapPath::query()->count());
+    }
+
+    public function test_points_and_qr_codes_get_a_default_height_that_can_be_changed(): void
+    {
+        $node = $this->point(['x' => 15.0, 'y' => 1.5]);
+        $sign = $this->point(['name' => 'Hanging sign', 'x' => 16.0, 'y' => 1.5, 'height' => 2.6]);
+        $qr = $this->point(['kind' => 'checkpoint', 'name' => 'Wall QR', 'checkpoint_code' => 'G-C10', 'x' => 12.0, 'y' => -0.5, 'qr_yaw' => 90]);
+
+        $this->assertSame(1.5, $node->height_m);
+        $this->assertSame(2.6, $sign->height_m);
+        $this->assertSame(1.4, $qr->height_m);
+        $this->assertSame(1.4, $qr->qr['marker_height_m']);
+
+        $qr = $this->edits()->updatePoint($qr, ['height' => 1.75]);
+        $this->assertSame(1.75, $qr->qr['marker_height_m']);
+        $this->assertSame(1.75, $qr->qr['z_m']);
+
+        try {
+            $this->edits()->updatePoint($qr, ['height' => 3.5]);
+            $this->fail('A QR code at 3.5 m was accepted.');
+        } catch (InvalidArgumentException $error) {
+            $this->assertStringContainsString('between 0.2 and 3 m', $error->getMessage());
+        }
+        $this->assertSame(1.75, $qr->refresh()->height_m);
+    }
+
+    public function test_editing_a_point_moves_it_changes_its_kind_and_keeps_its_key(): void
+    {
+        $point = $this->point(['x' => 15.0, 'y' => 1.5]);
+        $key = $point->key;
+
+        $moved = $this->edits()->updatePoint($point, ['x' => 2.0, 'y' => 1.0]);
+        $this->assertSame($key, $moved->key);
+        $this->assertSame(3.0, $this->route('node:G-C01', $moved->place())['total']['length_m']);
+
+        $toilet = $this->edits()->updatePoint($moved, ['kind' => 'facility', 'facility_type' => 'toilet', 'name' => 'Kiosk toilets']);
+        $this->assertSame('facility', $toilet->kind);
+        $this->assertSame("P-{$key}", $this->route('node:G-C01', 'facility-type:toilet')['to'][0]['node_code']);
+        $this->assertSame(1, DB::table('map_facility_anchors')->where('map_end_point_id', $toilet->id)->count());
+
+        // Saving it again with its own name is not a clash with itself.
+        $this->edits()->updatePoint($toilet, ['name' => 'Kiosk toilets', 'height' => 1.2]);
+        $this->assertSame(1.2, $toilet->refresh()->height_m);
+
+        $this->expectExceptionMessage('A facility called “Toilets G” is already on this map');
+        $this->edits()->updatePoint($toilet, ['name' => 'Toilets G']);
+    }
+
+    public function test_editing_a_path_redraws_it_and_changes_its_flags(): void
+    {
+        $point = $this->point(['x' => 30.0, 'y' => 5.0]);
+        $path = $this->edits()->createPath($this->map, 'G', [[20.0, 3.0], [30.0, 3.0], [30.0, 5.0]], name: 'East shortcut');
+        $this->assertSame(35.0, $this->route('node:G-C01', $point->place())['total']['length_m']);
+
+        $path = $this->edits()->updatePath($path, ['points' => [[20.0, 0.0], [30.0, 0.0], [30.0, 5.0]]]);
+        $this->assertSame('East shortcut', $path->name);
+        $this->assertSame(35.0, $this->route('node:G-C01', $point->place())['total']['length_m']);
+        $this->assertSame(['G-C01', 'G-N0001', 'G-N0002', "W-{$path->key}-2", "P-{$point->key}"], $this->codes($this->route('node:G-C01', $point->place())));
+
+        $this->edits()->updatePath($path, ['step_free' => false]);
+        $this->assertUnreachable('node:G-C01', $point->place(), stepFree: true);
+
+        $this->expectExceptionMessage('A path needs 2 to 100 corners');
+        $this->edits()->updatePath($path, ['points' => [[20.0, 0.0]]]);
+    }
+
+    public function test_two_paths_that_meet_at_an_end_merge_into_one(): void
+    {
+        $point = $this->point(['x' => 30.0, 'y' => 8.0]);
+        $first = $this->edits()->createPath($this->map, 'G', [[20.0, 3.0], [30.0, 3.0]], name: 'First');
+        $second = $this->edits()->createPath($this->map, 'G', [[30.2, 3.1], [30.0, 8.0]]);
+        $separate = $this->route('node:G-C01', $point->place())['total']['length_m'];
+
+        $merged = $this->edits()->mergePaths($first, $second);
+
+        $this->assertSame($first->key, $merged->key);
+        $this->assertSame('First', $merged->name);
+        $this->assertEquals([[20, 3], [30, 3], [30, 8]], $merged->points);
+        $this->assertNull(MapPath::query()->find($second->id));
+        $this->assertEqualsWithDelta($separate, $this->route('node:G-C01', $point->place())['total']['length_m'], 0.3);
+    }
+
+    public function test_paths_that_do_not_meet_or_run_against_each_other_are_not_merged(): void
+    {
+        $a = $this->edits()->createPath($this->map, 'G', [[20.0, 3.0], [30.0, 3.0]]);
+        $b = $this->edits()->createPath($this->map, 'G', [[35.0, 3.0], [40.0, 3.0]]);
+        try {
+            $this->edits()->mergePaths($a, $b);
+            $this->fail('Paths that do not meet were merged.');
+        } catch (InvalidArgumentException $error) {
+            $this->assertStringContainsString('do not meet at an end', $error->getMessage());
+        }
+
+        $c = $this->edits()->createPath($this->map, 'G', [[20.0, 0.0], [26.0, -4.0]], oneWay: true);
+        $d = $this->edits()->createPath($this->map, 'G', [[30.0, -4.0], [26.0, -4.0]], oneWay: true);
+        $this->expectExceptionMessage('run against each other');
+        $this->edits()->mergePaths($c, $d);
+    }
+
+    public function test_administrators_edit_and_merge_through_json_and_forms(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $point = $this->point(['x' => 15.0, 'y' => 1.5]);
+        $first = $this->edits()->createPath($this->map, 'G', [[20.0, 3.0], [30.0, 3.0]]);
+        $second = $this->edits()->createPath($this->map, 'G', [[30.0, 3.0], [30.0, 8.0]]);
+
+        $this->patchJson(route('admin.maps.end-points.update', [$this->map, $point]), ['x' => 2, 'y' => 1, 'height' => 2.2, 'name' => 'Moved kiosk'])
+            ->assertOk()
+            ->assertJsonPath('data.key', $point->key)
+            ->assertJsonPath('data.name', 'Moved kiosk')
+            ->assertJsonPath('data.height_m', 2.2)
+            ->assertJsonPath('data.position.x', 2);
+
+        $this->patch(route('admin.maps.paths.update', [$this->map, $first]), ['name' => 'Corridor', 'corners' => "20, 3\n29, 3\n30, 3", 'step_free' => '1', 'one_way' => '0'])
+            ->assertRedirect()->assertSessionHas('status');
+        $this->assertSame(3, count($first->refresh()->points));
+
+        $this->postJson(route('admin.maps.paths.merge', [$this->map, $first]), ['with' => 'nosuchkey1'])->assertUnprocessable()->assertJsonValidationErrors('with');
+        $this->postJson(route('admin.maps.paths.merge', [$this->map, $first]), ['with' => $second->key])
+            ->assertOk()->assertJsonPath('data.key', $first->key)->assertJsonPath('data.corners', 4);
+        $this->assertSame(1, MapPath::query()->count());
+
+        $this->get(route('admin.maps.end-points', $this->map))->assertOk()->assertSee('Moved kiosk')->assertSee('2.20 m high')->assertSee('Save path');
     }
 }

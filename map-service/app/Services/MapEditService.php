@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\MallMap;
 use App\Models\MapEndPoint;
+use App\Models\MapGraphEdit;
 use App\Models\MapPath;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -35,87 +36,31 @@ class MapEditService
 
     private const CODE_PATTERN = '/^[A-Za-z0-9][A-Za-z0-9_.\-]*$/';
 
-    public function __construct(private CheckpointRegistry $checkpoints) {}
+    public function __construct(private CheckpointRegistry $checkpoints, private GraphBuilder $graph) {}
 
     // ------------------------------------------------------------------
     // Points
     // ------------------------------------------------------------------
 
     /**
-     * Add a point. For a QR code, (x, y) is where the code hangs on the wall
-     * and qr_yaw the direction its face points; give qr_z (the code's height
-     * in the map frame) or qr_height (above the floor, default 1.4 m).
+     * Add a point: a node, a shop entrance, a facility or a QR code. For a QR
+     * code, (x, y) is where it hangs and qr_yaw the direction its face points.
+     * The height (of the point's marker, or of the QR code) is above the floor:
+     * 1.5 m for a point and 1.4 m for a QR code unless another is given.
      *
-     * @param  array{kind: string, name: string, floor_code: string, x: float, y: float, unit_code?: string|null, is_primary?: bool, facility_type?: string|null, checkpoint_code?: string|null, qr_z?: float|null, qr_height?: float|null, qr_yaw?: float|null}  $data
+     * @param  array<string, mixed>  $data  kind, name, floor_code, x, y and, by kind, height, unit_code, is_primary, facility_type, checkpoint_code, qr_yaw (qr_height and qr_z also set a QR code's height)
      *
      * @throws InvalidArgumentException when the point cannot be added
      */
     public function createPoint(MallMap $map, array $data): MapEndPoint
     {
-        $kind = $data['kind'];
-        if (! array_key_exists($kind, MapEndPoint::KINDS)) {
-            throw new InvalidArgumentException('Choose what the point is: '.implode(', ', array_keys(MapEndPoint::KINDS)).'.');
-        }
-        $elevation = $this->elevation($map, $data['floor_code']);
-        if ($elevation === null) {
-            throw new InvalidArgumentException("This map has no floor {$data['floor_code']}.");
-        }
-        $name = trim($data['name']);
+        $fields = $this->pointFields($map, $data);
 
-        $fields = ['unit_code' => null, 'is_primary' => false, 'facility_type' => null, 'checkpoint_code' => null, 'qr' => null];
-        if ($kind === 'shop_entrance') {
-            $unit = trim((string) ($data['unit_code'] ?? ''));
-            if ($unit === '' || strlen($unit) > 40) {
-                throw new InvalidArgumentException('Give the shop unit code, for example G-05.');
-            }
-            if (! empty($data['is_primary']) && $this->unitHasPrimary($map, $unit)) {
-                throw new InvalidArgumentException("Unit {$unit} already has a main door on this map. Untick “Main door”, or delete the other one first.");
-            }
-            $fields['unit_code'] = $unit;
-            $fields['is_primary'] = ! empty($data['is_primary']);
-        } elseif ($kind === 'facility') {
-            $type = trim((string) ($data['facility_type'] ?? ''));
-            if (! preg_match('/^[a-z][a-z_]{0,39}$/', $type)) {
-                throw new InvalidArgumentException('Give the facility type, for example toilet or prayer_room.');
-            }
-            if ($this->facilityExists($map, $name)) {
-                throw new InvalidArgumentException("A facility called “{$name}” is already on this map. Give this one another name.");
-            }
-            $fields['facility_type'] = $type;
-        } elseif ($kind === 'checkpoint') {
-            $code = trim((string) ($data['checkpoint_code'] ?? ''));
-            if (strlen($code) > 60 || ! preg_match(self::CODE_PATTERN, $code)) {
-                throw new InvalidArgumentException('Give the QR code a code such as G-C10 (letters, digits, dashes).');
-            }
-            if ($this->checkpointExists($map, $code)) {
-                throw new InvalidArgumentException("QR code {$code} is already on this map.");
-            }
-            $height = isset($data['qr_z']) ? (float) $data['qr_z'] - $elevation : (float) ($data['qr_height'] ?? 1.4);
-            if ($height < 0.2 || $height > 3.0) {
-                throw new InvalidArgumentException('A QR code hangs between 0.2 and 3 m above the floor.');
-            }
-            $fields['checkpoint_code'] = $code;
-            $fields['qr'] = [
-                'x_m' => round((float) $data['x'], 3),
-                'y_m' => round((float) $data['y'], 3),
-                'z_m' => round($elevation + $height, 3),
-                'yaw_deg' => round(fmod(fmod((float) ($data['qr_yaw'] ?? 0), 360.0) + 360.0, 360.0), 1),
-                'marker_height_m' => round($height, 2),
-                'physical_width_m' => 0.18,
-            ];
-        }
-
-        return DB::transaction(function () use ($map, $kind, $name, $data, $elevation, $fields): MapEndPoint {
+        return DB::transaction(function () use ($map, $fields): MapEndPoint {
             $point = MapEndPoint::query()->create($fields + [
                 'mall_map_id' => $map->id,
                 'key' => $this->newKey(),
-                'kind' => $kind,
                 'sequence' => $this->nextSequence($map),
-                'name' => $name,
-                'floor_code' => $data['floor_code'],
-                'x_m' => round((float) $data['x'], 3),
-                'y_m' => round((float) $data['y'], 3),
-                'z_m' => $elevation,
             ]);
             $this->applyPoint($point, $map, $this->settings($map));
             $this->syncCheckpoints($map);
@@ -125,22 +70,45 @@ class MapEditService
     }
 
     /**
-     * Rename a point; for a facility the name is the facility's name, for a QR
-     * code its label.
+     * Change a point: any of the fields createPoint takes; the others stay.
+     * The key stays the same.
      *
-     * @throws InvalidArgumentException when a facility of that name exists
+     * @param  array<string, mixed>  $changes
+     *
+     * @throws InvalidArgumentException when the change is not possible
      */
-    public function renamePoint(MapEndPoint $point, string $name): void
+    public function updatePoint(MapEndPoint $point, array $changes): MapEndPoint
     {
-        $name = trim($name);
         $map = $point->mallMap;
-        if ($point->kind === 'facility' && $name !== $point->name && $this->facilityExists($map, $name)) {
-            throw new InvalidArgumentException("A facility called “{$name}” is already on this map.");
+        $current = [
+            'kind' => $point->kind,
+            'name' => $point->name,
+            'floor_code' => $point->floor_code,
+            'x' => $point->x_m,
+            'y' => $point->y_m,
+            'height' => $point->height_m,
+            'unit_code' => $point->unit_code,
+            'is_primary' => $point->is_primary,
+            'facility_type' => $point->facility_type,
+            'checkpoint_code' => $point->checkpoint_code,
+            'qr_yaw' => $point->qr['yaw_deg'] ?? null,
+        ];
+        // A point that becomes a QR code, or stops being one, starts from that kind's default height.
+        if (isset($changes['kind']) && ($changes['kind'] === 'checkpoint') !== ($point->kind === 'checkpoint') && ! isset($changes['height'])) {
+            $current['height'] = null;
         }
-        $point->forceFill(['name' => $name])->save();
-        if ($point->kind !== 'node') {
+        $fields = $this->pointFields($map, array_merge($current, $changes), $point);
+
+        return DB::transaction(function () use ($point, $map, $fields): MapEndPoint {
+            $point->forceFill($fields)->save();
             $this->applyAll($map);
-        }
+            $point->refresh();
+            if ($point->problem !== null) {
+                throw new InvalidArgumentException($point->problem);
+            }
+
+            return $point;
+        });
     }
 
     public function deletePoint(MapEndPoint $point): void
@@ -150,6 +118,105 @@ class MapEditService
             $point->delete();
             $this->applyAll($map);
         });
+    }
+
+    /**
+     * Check a point's data and turn it into column values.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     *
+     * @throws InvalidArgumentException
+     */
+    private function pointFields(MallMap $map, array $data, ?MapEndPoint $existing = null): array
+    {
+        $kind = (string) ($data['kind'] ?? '');
+        if (! array_key_exists($kind, MapEndPoint::KINDS)) {
+            throw new InvalidArgumentException('Choose what the point is: '.implode(', ', array_keys(MapEndPoint::KINDS)).'.');
+        }
+        $floorCode = (string) ($data['floor_code'] ?? '');
+        $elevation = $this->elevation($map, $floorCode);
+        if ($elevation === null) {
+            throw new InvalidArgumentException("This map has no floor {$floorCode}.");
+        }
+        $name = trim((string) ($data['name'] ?? ''));
+        if ($name === '' || mb_strlen($name) > 120) {
+            throw new InvalidArgumentException('Give the point a name of up to 120 characters.');
+        }
+        if (! is_numeric($data['x'] ?? null) || ! is_numeric($data['y'] ?? null)) {
+            throw new InvalidArgumentException('Give the position as x and y in metres.');
+        }
+        $x = round((float) $data['x'], 3);
+        $y = round((float) $data['y'], 3);
+        $except = $existing?->id;
+
+        $height = match (true) {
+            $kind === 'checkpoint' && isset($data['qr_z']) => (float) $data['qr_z'] - $elevation,
+            $kind === 'checkpoint' && isset($data['qr_height']) => (float) $data['qr_height'],
+            isset($data['height']) => (float) $data['height'],
+            default => $kind === 'checkpoint' ? MapEndPoint::DEFAULT_QR_HEIGHT_M : MapEndPoint::DEFAULT_HEIGHT_M,
+        };
+        if ($kind === 'checkpoint' && ($height < 0.2 || $height > 3.0)) {
+            throw new InvalidArgumentException('A QR code hangs between 0.2 and 3 m above the floor.');
+        }
+        if ($height < 0 || $height > 10) {
+            throw new InvalidArgumentException('A point\'s height is between 0 and 10 m above the floor.');
+        }
+
+        $fields = [
+            'kind' => $kind,
+            'name' => $name,
+            'floor_code' => $floorCode,
+            'x_m' => $x,
+            'y_m' => $y,
+            'z_m' => $elevation,
+            'height_m' => round($height, 2),
+            'unit_code' => null,
+            'is_primary' => false,
+            'facility_type' => null,
+            'checkpoint_code' => null,
+            'qr' => null,
+        ];
+
+        if ($kind === 'shop_entrance') {
+            $unit = trim((string) ($data['unit_code'] ?? ''));
+            if ($unit === '' || strlen($unit) > 40) {
+                throw new InvalidArgumentException('Give the shop unit code, for example G-05.');
+            }
+            if (! empty($data['is_primary']) && $this->unitHasPrimary($map, $unit, $except)) {
+                throw new InvalidArgumentException("Unit {$unit} already has a main door on this map. Untick “Main door”, or change the other one first.");
+            }
+            $fields['unit_code'] = $unit;
+            $fields['is_primary'] = ! empty($data['is_primary']);
+        } elseif ($kind === 'facility') {
+            $type = trim((string) ($data['facility_type'] ?? ''));
+            if (! preg_match('/^[a-z][a-z_]{0,39}$/', $type)) {
+                throw new InvalidArgumentException('Give the facility type, for example toilet or prayer_room.');
+            }
+            if ($this->facilityExists($map, $name, $except)) {
+                throw new InvalidArgumentException("A facility called “{$name}” is already on this map. Give this one another name.");
+            }
+            $fields['facility_type'] = $type;
+        } elseif ($kind === 'checkpoint') {
+            $code = trim((string) ($data['checkpoint_code'] ?? ''));
+            if (strlen($code) > 60 || ! preg_match(self::CODE_PATTERN, $code)) {
+                throw new InvalidArgumentException('Give the QR code a code such as G-C10 (letters, digits, dashes).');
+            }
+            if ($this->checkpointExists($map, $code, $except)) {
+                throw new InvalidArgumentException("QR code {$code} is already on this map.");
+            }
+            $fields['checkpoint_code'] = $code;
+            $fields['qr'] = [
+                'x_m' => $x,
+                'y_m' => $y,
+                'z_m' => round($elevation + $height, 3),
+                'yaw_deg' => round(fmod(fmod((float) ($data['qr_yaw'] ?? 0), 360.0) + 360.0, 360.0), 1),
+                'marker_height_m' => round($height, 2),
+                'physical_width_m' => 0.18,
+            ];
+        }
+
+        return $fields;
     }
 
     // ------------------------------------------------------------------
@@ -165,10 +232,140 @@ class MapEditService
      */
     public function createPath(MallMap $map, string $floorCode, array $corners, bool $stepFree = true, bool $oneWay = false, ?string $name = null): MapPath
     {
+        $fields = $this->pathFields($map, ['floor_code' => $floorCode, 'points' => $corners, 'step_free' => $stepFree, 'one_way' => $oneWay, 'name' => $name]);
+
+        return DB::transaction(function () use ($map, $fields): MapPath {
+            $path = MapPath::query()->create($fields + [
+                'mall_map_id' => $map->id,
+                'key' => $this->newKey(),
+                'sequence' => $this->nextSequence($map),
+            ]);
+            $this->applyPath($path, $map, $this->settings($map));
+            if ($path->refresh()->problem !== null) {
+                throw new InvalidArgumentException($path->problem);
+            }
+
+            return $path;
+        });
+    }
+
+    /**
+     * Change a path: its corners, floor, name, step-free or one-way. The key
+     * stays the same.
+     *
+     * @param  array<string, mixed>  $changes  floor_code, points, step_free, one_way, name
+     *
+     * @throws InvalidArgumentException when the change is not possible
+     */
+    public function updatePath(MapPath $path, array $changes): MapPath
+    {
+        $map = $path->mallMap;
+        $current = ['floor_code' => $path->floor_code, 'points' => $path->points, 'step_free' => $path->is_accessible, 'one_way' => $path->one_way, 'name' => $path->name];
+        $fields = $this->pathFields($map, array_merge($current, $changes));
+
+        return DB::transaction(function () use ($path, $map, $fields): MapPath {
+            $path->forceFill($fields)->save();
+            $this->applyAll($map);
+            $path->refresh();
+            if ($path->problem !== null) {
+                throw new InvalidArgumentException($path->problem);
+            }
+
+            return $path;
+        });
+    }
+
+    /**
+     * Join two paths that meet at an end (ends at most 0.5 m apart) into the
+     * first one, which keeps its key; the second is removed. The result is
+     * step-free only if both were; one-way paths must run the same way.
+     *
+     * @throws InvalidArgumentException when they cannot be merged
+     */
+    public function mergePaths(MapPath $first, MapPath $second): MapPath
+    {
+        if ($first->mall_map_id !== $second->mall_map_id || $first->is($second)) {
+            throw new InvalidArgumentException('Choose two different paths of the same map.');
+        }
+        if ($first->floor_code !== $second->floor_code) {
+            throw new InvalidArgumentException('Paths on different floors cannot be merged.');
+        }
+        if ($first->one_way !== $second->one_way) {
+            throw new InvalidArgumentException('Merge two one-way paths or two two-way paths, not one of each.');
+        }
+
+        $a = array_values($first->points);
+        $b = array_values($second->points);
+        $meet = fn (array $p, array $q): bool => hypot($p[0] - $q[0], $p[1] - $q[1]) <= self::PATH_SNAP_M;
+        $reversed = false;
+        if ($meet(end($a), $b[0])) {
+            $corners = array_merge($a, array_slice($b, 1));
+        } elseif ($meet($a[0], end($b))) {
+            $corners = array_merge($b, array_slice($a, 1));
+        } elseif ($meet(end($a), end($b))) {
+            $corners = array_merge($a, array_slice(array_reverse($b), 1));
+            $reversed = true;
+        } elseif ($meet($a[0], $b[0])) {
+            $corners = array_merge(array_reverse($b), array_slice($a, 1));
+            $reversed = true;
+        } else {
+            throw new InvalidArgumentException('These paths do not meet at an end: their ends are more than 0.5 m apart.');
+        }
+        if ($reversed && $first->one_way) {
+            throw new InvalidArgumentException('These one-way paths run against each other where they meet.');
+        }
+        if (count($corners) > 100) {
+            throw new InvalidArgumentException('The merged path would have more than 100 corners.');
+        }
+
+        return DB::transaction(function () use ($first, $second, $corners): MapPath {
+            $map = $first->mallMap;
+            $first->forceFill([
+                'points' => $corners,
+                'is_accessible' => $first->is_accessible && $second->is_accessible,
+                'name' => $first->name ?? $second->name,
+            ])->save();
+            $second->delete();
+            $this->applyAll($map);
+            $first->refresh();
+            if ($first->problem !== null) {
+                throw new InvalidArgumentException($first->problem);
+            }
+
+            return $first;
+        });
+    }
+
+    public function deletePath(MapPath $path): void
+    {
+        $map = $path->mallMap;
+        DB::transaction(function () use ($path, $map): void {
+            $path->delete();
+            $this->applyAll($map);
+        });
+    }
+
+    /**
+     * Check a path's data and turn it into column values.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     *
+     * @throws InvalidArgumentException
+     */
+    private function pathFields(MallMap $map, array $data): array
+    {
+        $floorCode = (string) ($data['floor_code'] ?? '');
         if ($this->elevation($map, $floorCode) === null) {
             throw new InvalidArgumentException("This map has no floor {$floorCode}.");
         }
-        $corners = array_values(array_map(fn ($corner): array => [round((float) $corner[0], 3), round((float) $corner[1], 3)], $corners));
+        $corners = [];
+        foreach (array_values((array) ($data['points'] ?? [])) as $corner) {
+            if (! is_array($corner) || ! is_numeric($corner[0] ?? null) || ! is_numeric($corner[1] ?? null)) {
+                throw new InvalidArgumentException('Each corner is x and y in metres.');
+            }
+            $corners[] = [round((float) $corner[0], 3), round((float) $corner[1], 3)];
+        }
         if (count($corners) < 2 || count($corners) > 100) {
             throw new InvalidArgumentException('A path needs 2 to 100 corners.');
         }
@@ -181,39 +378,338 @@ class MapEditService
                 throw new InvalidArgumentException('A stretch of the path is longer than 200 m; add corners in between.');
             }
         }
+        $name = isset($data['name']) ? trim((string) $data['name']) : '';
 
-        return DB::transaction(function () use ($map, $floorCode, $corners, $stepFree, $oneWay, $name): MapPath {
-            $path = MapPath::query()->create([
+        return [
+            'floor_code' => $floorCode,
+            'points' => $corners,
+            'is_accessible' => (bool) ($data['step_free'] ?? true),
+            'one_way' => (bool) ($data['one_way'] ?? false),
+            'name' => $name === '' ? null : mb_substr($name, 0, 120),
+        ];
+    }
+
+    // ------------------------------------------------------------------
+    // Changes to the navigation graph itself
+    // ------------------------------------------------------------------
+
+    /**
+     * Change the navigation graph: move or remove a node, connect two nodes,
+     * change or remove a walkway. Nodes are named by code.
+     *
+     * @param  array<string, mixed>  $data  action and node_code (x, y) or from_code, to_code (step_free, one_way, direction)
+     *
+     * @throws InvalidArgumentException when the change is not possible
+     */
+    public function createGraphEdit(MallMap $map, array $data): MapGraphEdit
+    {
+        $action = (string) ($data['action'] ?? '');
+        if (! in_array($action, MapGraphEdit::ACTIONS, true)) {
+            throw new InvalidArgumentException('Choose a change: '.implode(', ', MapGraphEdit::ACTIONS).'.');
+        }
+        $nodes = DB::table('map_nodes')->where('mall_map_id', $map->id)->get()->keyBy('node_code');
+        $node = fn (?string $code) => $code === null ? null : ($nodes[$code] ?? null);
+        $fields = ['action' => $action, 'node_code' => null, 'from_code' => null, 'to_code' => null, 'data' => null];
+
+        if (in_array($action, ['move_node', 'remove_node'], true)) {
+            $code = (string) ($data['node_code'] ?? '');
+            if ($node($code) === null) {
+                throw new InvalidArgumentException("Node {$code} is not on this map.");
+            }
+            if ($node($code)->map_end_point_id !== null) {
+                throw new InvalidArgumentException("Node {$code} belongs to a point; edit or delete the point instead.");
+            }
+            $fields['node_code'] = $code;
+            if ($action === 'move_node') {
+                if (! is_numeric($data['x'] ?? null) || ! is_numeric($data['y'] ?? null)) {
+                    throw new InvalidArgumentException('Give the new position as x and y in metres.');
+                }
+                $fields['data'] = ['x' => round((float) $data['x'], 3), 'y' => round((float) $data['y'], 3)];
+            } elseif (($why = $this->nodeHolds($map, (int) $node($code)->id)) !== null) {
+                throw new InvalidArgumentException("Node {$code} {$why}; remove that first.");
+            }
+        } else {
+            $from = (string) ($data['from_code'] ?? '');
+            $to = (string) ($data['to_code'] ?? '');
+            if ($node($from) === null || $node($to) === null) {
+                throw new InvalidArgumentException("Give two nodes of this map ({$from}, {$to}).");
+            }
+            if ($from === $to) {
+                throw new InvalidArgumentException('Choose two different nodes.');
+            }
+            $fields['from_code'] = $from;
+            $fields['to_code'] = $to;
+            $edges = $this->edgesBetween($map, (int) $node($from)->id, (int) $node($to)->id);
+            if ($action === 'connect') {
+                if ($node($from)->floor_code !== $node($to)->floor_code) {
+                    throw new InvalidArgumentException('A walkway joins two nodes of the same floor; floors are joined by lifts, escalators and stairs in the map package.');
+                }
+                if (count($edges) === 2) {
+                    throw new InvalidArgumentException("{$from} and {$to} are already joined by a walkway.");
+                }
+                $fields['data'] = ['step_free' => (bool) ($data['step_free'] ?? true), 'one_way' => (bool) ($data['one_way'] ?? false)];
+            } else {
+                if ($edges === []) {
+                    throw new InvalidArgumentException("No walkway joins {$from} and {$to}.");
+                }
+                if ($action === 'edit_edge') {
+                    $changes = array_filter([
+                        'step_free' => isset($data['step_free']) ? (bool) $data['step_free'] : null,
+                        'direction' => isset($data['direction']) && in_array($data['direction'], ['both', 'forward', 'backward'], true) ? $data['direction'] : null,
+                    ], fn ($value): bool => $value !== null);
+                    if ($changes === []) {
+                        throw new InvalidArgumentException('Say what changes: step-free, or the direction (both, forward, backward).');
+                    }
+                    $fields['data'] = $changes;
+                }
+            }
+        }
+
+        return DB::transaction(function () use ($map, $fields): MapGraphEdit {
+            $edit = MapGraphEdit::query()->create($fields + [
                 'mall_map_id' => $map->id,
                 'key' => $this->newKey(),
                 'sequence' => $this->nextSequence($map),
-                'name' => $name === null || trim($name) === '' ? null : trim($name),
-                'floor_code' => $floorCode,
-                'points' => $corners,
-                'is_accessible' => $stepFree,
-                'one_way' => $oneWay,
             ]);
-            $this->applyPath($path, $map, $this->settings($map));
-            if ($path->refresh()->problem !== null) {
-                throw new InvalidArgumentException($path->problem);
+            $this->applyGraphEdit($edit, $map, $this->settings($map));
+            $this->syncCheckpoints($map);
+            if ($edit->refresh()->problem !== null) {
+                throw new InvalidArgumentException($edit->problem);
             }
 
-            return $path;
+            return $edit;
         });
     }
 
-    public function renamePath(MapPath $path, ?string $name): void
+    /**
+     * Undo a change to the graph.
+     */
+    public function deleteGraphEdit(MapGraphEdit $edit): void
     {
-        $path->forceFill(['name' => $name === null || trim($name) === '' ? null : trim($name)])->save();
-    }
-
-    public function deletePath(MapPath $path): void
-    {
-        $map = $path->mallMap;
-        DB::transaction(function () use ($path, $map): void {
-            $path->delete();
+        $map = $edit->mallMap;
+        DB::transaction(function () use ($edit, $map): void {
+            $edit->delete();
             $this->applyAll($map);
         });
+    }
+
+    /**
+     * @param  array{walk: float, standoff: float, link_max: float}  $settings
+     */
+    private function applyGraphEdit(MapGraphEdit $edit, MallMap $map, array $settings): void
+    {
+        $nodes = DB::table('map_nodes')->where('mall_map_id', $map->id)->get()->keyBy('node_code');
+        $problem = null;
+
+        if (in_array($edit->action, ['move_node', 'remove_node'], true)) {
+            $node = $nodes[$edit->node_code] ?? null;
+            if ($node === null) {
+                $problem = "Node {$edit->node_code} is not on this map.";
+            } elseif ($edit->action === 'move_node') {
+                $this->moveNode($map, $node, (float) $edit->data['x'], (float) $edit->data['y'], $settings);
+            } elseif (($why = $this->nodeHolds($map, (int) $node->id)) !== null) {
+                $problem = "Node {$edit->node_code} {$why}.";
+            } else {
+                DB::table('map_nodes')->where('id', $node->id)->delete();
+                $this->removeOrphanHalves($map);
+            }
+        } else {
+            $from = $nodes[$edit->from_code] ?? null;
+            $to = $nodes[$edit->to_code] ?? null;
+            if ($from === null || $to === null) {
+                $problem = "Node {$edit->from_code} or {$edit->to_code} is not on this map.";
+            } else {
+                $problem = match ($edit->action) {
+                    'connect' => $this->connectNodes($map, $from, $to, $edit->data ?? [], $settings),
+                    'edit_edge' => $this->changeWalkway($map, $from, $to, $edit->data ?? []),
+                    'remove_edge' => $this->removeWalkway($map, (int) $from->id, (int) $to->id),
+                    default => "Unknown change {$edit->action}.",
+                };
+            }
+        }
+
+        $edit->forceFill(['problem' => $problem])->save();
+    }
+
+    /**
+     * @param  array{walk: float, standoff: float, link_max: float}  $settings
+     */
+    private function moveNode(MallMap $map, object $node, float $x, float $y, array $settings): void
+    {
+        DB::table('map_nodes')->where('id', $node->id)->update(['x_m' => $x, 'y_m' => $y]);
+        $positions = DB::table('map_nodes')->where('mall_map_id', $map->id)->get(['id', 'x_m', 'y_m'])->keyBy('id');
+        $edges = DB::table('map_edges')->where('mall_map_id', $map->id)->whereNull('map_connector_id')
+            ->where(fn ($q) => $q->where('from_node_id', $node->id)->orWhere('to_node_id', $node->id))->get();
+        foreach ($edges as $edge) {
+            $a = $positions[$edge->from_node_id];
+            $b = $positions[$edge->to_node_id];
+            $length = max(0.01, hypot($b->x_m - $a->x_m, $b->y_m - $a->y_m));
+            $pace = $edge->length_m > 0 ? $edge->expected_seconds / $edge->length_m : 1 / $settings['walk'];
+            DB::table('map_edges')->where('id', $edge->id)->update([
+                'length_m' => round($length, 3),
+                'expected_seconds' => round(max(0.01, $length * $pace), 2),
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array{walk: float, standoff: float, link_max: float}  $settings
+     */
+    private function connectNodes(MallMap $map, object $from, object $to, array $data, array $settings): ?string
+    {
+        if ($from->floor_code !== $to->floor_code) {
+            return "{$from->node_code} and {$to->node_code} are on different floors.";
+        }
+        $length = round(max(0.01, hypot($to->x_m - $from->x_m, $to->y_m - $from->y_m)), 3);
+        $added = 0;
+        foreach (! empty($data['one_way']) ? [[$from->id, $to->id]] : [[$from->id, $to->id], [$to->id, $from->id]] as [$a, $b]) {
+            if (DB::table('map_edges')->where('mall_map_id', $map->id)->where('from_node_id', $a)->where('to_node_id', $b)->exists()) {
+                continue;
+            }
+            DB::table('map_edges')->insert([
+                'mall_map_id' => $map->id,
+                'from_node_id' => $a,
+                'to_node_id' => $b,
+                'length_m' => $length,
+                'expected_seconds' => round(max(0.01, $length / $settings['walk']), 2),
+                'is_accessible' => (bool) ($data['step_free'] ?? true),
+                'status' => 'open',
+            ]);
+            $added++;
+        }
+
+        return $added === 0 ? "{$from->node_code} and {$to->node_code} are already joined." : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data  step_free and/or direction
+     */
+    private function changeWalkway(MallMap $map, object $from, object $to, array $data): ?string
+    {
+        $edges = $this->edgesBetween($map, (int) $from->id, (int) $to->id);
+        if ($edges === []) {
+            return "No walkway joins {$from->node_code} and {$to->node_code}.";
+        }
+        if (isset($data['step_free'])) {
+            $ids = $this->withHalves($map, array_map(fn (object $edge): int => (int) $edge->id, $edges));
+            DB::table('map_edges')->whereIn('id', $ids)->update(['is_accessible' => (bool) $data['step_free']]);
+        }
+        $direction = $data['direction'] ?? null;
+        if ($direction !== null) {
+            $forward = $this->edgeFromTo($map, (int) $from->id, (int) $to->id);
+            $backward = $this->edgeFromTo($map, (int) $to->id, (int) $from->id);
+            $copy = fn (object $source, int $a, int $b) => DB::table('map_edges')->insert([
+                'mall_map_id' => $map->id,
+                'from_node_id' => $a,
+                'to_node_id' => $b,
+                'length_m' => $source->length_m,
+                'expected_seconds' => $source->expected_seconds,
+                'is_accessible' => $source->is_accessible,
+                'status' => 'open',
+                'map_connector_id' => $source->map_connector_id,
+            ]);
+            if ($direction !== 'backward' && $forward === null) {
+                $copy($backward, (int) $from->id, (int) $to->id);
+            }
+            if ($direction !== 'forward' && $backward === null) {
+                $copy($forward, (int) $to->id, (int) $from->id);
+            }
+            if ($direction === 'forward' && $backward !== null) {
+                $this->deleteEdges($map, [(int) $backward->id]);
+            }
+            if ($direction === 'backward' && $forward !== null) {
+                $this->deleteEdges($map, [(int) $forward->id]);
+            }
+        }
+
+        return null;
+    }
+
+    private function removeWalkway(MallMap $map, int $fromId, int $toId): ?string
+    {
+        $edges = $this->edgesBetween($map, $fromId, $toId);
+        if ($edges === []) {
+            return 'No walkway joins these nodes any more.';
+        }
+        $this->deleteEdges($map, array_map(fn (object $edge): int => (int) $edge->id, $edges));
+
+        return null;
+    }
+
+    /**
+     * Why a node cannot be removed (a door, facility, QR code, lift stop or
+     * point stands on it), or null.
+     */
+    private function nodeHolds(MallMap $map, int $nodeId): ?string
+    {
+        return match (true) {
+            DB::table('map_shop_entrances')->where('map_node_id', $nodeId)->exists() => 'is a shop entrance',
+            DB::table('map_facility_anchors')->where('map_node_id', $nodeId)->exists() => 'is a facility',
+            DB::table('map_checkpoint_anchors')->where('map_node_id', $nodeId)->exists() => 'is where visitors stand at a QR code',
+            DB::table('map_connector_stops')->where('map_node_id', $nodeId)->exists() => 'is a stop of a lift, escalator or stairs',
+            MapEndPoint::query()->where('mall_map_id', $map->id)->where('map_node_id', $nodeId)->exists() => 'belongs to a point',
+            default => null,
+        };
+    }
+
+    /**
+     * @return list<object> the edges joining two nodes, either way
+     */
+    private function edgesBetween(MallMap $map, int $a, int $b): array
+    {
+        return DB::table('map_edges')->where('mall_map_id', $map->id)
+            ->where(fn ($q) => $q->where(fn ($w) => $w->where('from_node_id', $a)->where('to_node_id', $b))->orWhere(fn ($w) => $w->where('from_node_id', $b)->where('to_node_id', $a)))
+            ->get()->all();
+    }
+
+    private function edgeFromTo(MallMap $map, int $a, int $b): ?object
+    {
+        return DB::table('map_edges')->where('mall_map_id', $map->id)->where('from_node_id', $a)->where('to_node_id', $b)->first();
+    }
+
+    /**
+     * The edges and every half added on them, at any depth.
+     *
+     * @param  list<int>  $ids
+     * @return list<int>
+     */
+    private function withHalves(MallMap $map, array $ids): array
+    {
+        $all = $ids;
+        $frontier = $ids;
+        while ($frontier !== []) {
+            $frontier = DB::table('map_edges')->where('mall_map_id', $map->id)->whereIn('parent_edge_id', $frontier)->pluck('id')->map(fn ($id): int => (int) $id)->all();
+            $all = array_merge($all, $frontier);
+        }
+
+        return array_values(array_unique($all));
+    }
+
+    /**
+     * Delete edges and the halves added on them, so a removed walkway cannot
+     * still be used through a junction.
+     *
+     * @param  list<int>  $ids
+     */
+    private function deleteEdges(MallMap $map, array $ids): void
+    {
+        DB::table('map_edges')->whereIn('id', $this->withHalves($map, $ids))->delete();
+    }
+
+    /**
+     * Delete halves whose parent walkway is gone (after a node was removed).
+     */
+    private function removeOrphanHalves(MallMap $map): void
+    {
+        do {
+            $orphans = DB::table('map_edges as h')->where('h.mall_map_id', $map->id)->whereNotNull('h.parent_edge_id')
+                ->whereNotExists(fn ($q) => $q->select(DB::raw(1))->from('map_edges as p')->whereColumn('p.id', 'h.parent_edge_id'))
+                ->pluck('h.id')->all();
+            if ($orphans !== []) {
+                DB::table('map_edges')->whereIn('id', $orphans)->delete();
+            }
+        } while ($orphans !== []);
     }
 
     // ------------------------------------------------------------------
@@ -221,27 +717,49 @@ class MapEditService
     // ------------------------------------------------------------------
 
     /**
-     * Remove everything the edits added and apply them again in the order
-     * they were made, keeping the closures of the edges they add.
+     * Write the map's graph from its package again and replay every edit
+     * (points, paths and changes to the graph) in the order it was made,
+     * keeping the closures of edges that still exist.
+     *
+     * @param  array<string, mixed>|null  $package  the package to build from; the stored one when null
      */
-    public function applyAll(MallMap $map): void
+    public function applyAll(MallMap $map, ?array $package = null): void
     {
-        DB::transaction(function () use ($map): void {
-            $closed = $this->closedEditEdges($map);
-            $this->clear($map);
+        DB::transaction(function () use ($map, $package): void {
+            $closed = $this->closedEdges($map);
+            $this->graph->build($map, $package ?? $map->package());
+            MapEndPoint::query()->where('mall_map_id', $map->id)->update(['map_node_id' => null, 'link_m' => null]);
             $settings = $this->settings($map);
 
             $edits = collect()
                 ->concat(MapEndPoint::query()->where('mall_map_id', $map->id)->get())
                 ->concat(MapPath::query()->where('mall_map_id', $map->id)->get())
-                ->sortBy(fn (MapEndPoint|MapPath $edit): string => sprintf('%012d-%d-%012d', $edit->sequence, $edit instanceof MapPath ? 1 : 0, $edit->id));
+                ->concat(MapGraphEdit::query()->where('mall_map_id', $map->id)->get())
+                ->sortBy(fn (MapEndPoint|MapPath|MapGraphEdit $edit): string => sprintf('%012d-%d-%012d', $edit->sequence, match (true) {
+                    $edit instanceof MapEndPoint => 0,
+                    $edit instanceof MapPath => 1,
+                    default => 2,
+                }, $edit->id));
             foreach ($edits as $edit) {
-                $edit instanceof MapPath ? $this->applyPath($edit, $map, $settings) : $this->applyPoint($edit, $map, $settings);
+                match (true) {
+                    $edit instanceof MapEndPoint => $this->applyPoint($edit, $map, $settings),
+                    $edit instanceof MapPath => $this->applyPath($edit, $map, $settings),
+                    default => $this->applyGraphEdit($edit, $map, $settings),
+                };
             }
 
             $this->restoreClosures($map, $closed);
             $this->syncCheckpoints($map);
         });
+    }
+
+    /**
+     * Rebuild a stored map's graph (map:rebuild-graph): the package's graph
+     * plus every edit.
+     */
+    public function rebuild(MallMap $map): void
+    {
+        $this->applyAll($map);
     }
 
     /**
@@ -267,6 +785,20 @@ class MapEditService
                 'facility_type' => $point->facility_type,
                 'checkpoint_code' => $point->checkpoint_code,
                 'qr' => $point->qr,
+                'height_m' => $point->height_m,
+            ]);
+            $copied++;
+        }
+        foreach (MapGraphEdit::query()->where('mall_map_id', $from->id)->get() as $graphEdit) {
+            MapGraphEdit::query()->create([
+                'mall_map_id' => $to->id,
+                'key' => $graphEdit->key,
+                'sequence' => $graphEdit->sequence,
+                'action' => $graphEdit->action,
+                'node_code' => $graphEdit->node_code,
+                'from_code' => $graphEdit->from_code,
+                'to_code' => $graphEdit->to_code,
+                'data' => $graphEdit->data,
             ]);
             $copied++;
         }
@@ -291,20 +823,6 @@ class MapEditService
     }
 
     /**
-     * Remove what the edits added (the package's graph stays).
-     */
-    public function clear(MallMap $map): void
-    {
-        foreach (['map_shop_entrances', 'map_facility_anchors', 'map_checkpoint_anchors'] as $table) {
-            DB::table($table)->where('mall_map_id', $map->id)->whereNotNull('map_end_point_id')->delete();
-        }
-        $owned = fn ($query) => $query->whereNotNull('map_end_point_id')->orWhereNotNull('map_path_id');
-        DB::table('map_edges')->where('mall_map_id', $map->id)->where($owned)->delete();
-        DB::table('map_nodes')->where('mall_map_id', $map->id)->where($owned)->delete();
-        MapEndPoint::query()->where('mall_map_id', $map->id)->update(['map_node_id' => null, 'link_m' => null]);
-    }
-
-    /**
      * @param  array{walk: float, standoff: float, link_max: float}  $settings
      */
     private function applyPoint(MapEndPoint $point, MallMap $map, array $settings): void
@@ -312,7 +830,7 @@ class MapEditService
         $elevation = $this->elevation($map, $point->floor_code);
         $problem = match (true) {
             $elevation === null => "This map has no floor {$point->floor_code}.",
-            $point->kind === 'facility' && $this->facilityExists($map, $point->name) => "A facility called “{$point->name}” is already on this map.",
+            $point->kind === 'facility' && $this->facilityExists($map, $point->name, $point->id) => "A facility called “{$point->name}” is already on this map.",
             $point->kind === 'checkpoint' && $this->checkpointExists($map, (string) $point->checkpoint_code, $point->id) => "QR code {$point->checkpoint_code} is already on this map.",
             default => null,
         };
@@ -340,7 +858,7 @@ class MapEditService
             DB::table('map_shop_entrances')->insert($owner + [
                 'unit_code' => $point->unit_code,
                 'map_node_id' => $nodeId,
-                'is_primary' => $point->is_primary && ! $this->unitHasPrimary($map, (string) $point->unit_code),
+                'is_primary' => $point->is_primary && ! $this->unitHasPrimary($map, (string) $point->unit_code, $point->id),
             ]);
         } elseif ($point->kind === 'facility') {
             DB::table('map_facility_anchors')->insert($owner + [
@@ -576,13 +1094,12 @@ class MapEditService
     /**
      * @return array<string, array{status: string, reason: string|null, changed_at: string|null}>
      */
-    private function closedEditEdges(MallMap $map): array
+    private function closedEdges(MallMap $map): array
     {
         return DB::table('map_edges as e')
             ->join('map_nodes as a', 'a.id', '=', 'e.from_node_id')
             ->join('map_nodes as b', 'b.id', '=', 'e.to_node_id')
             ->where('e.mall_map_id', $map->id)->where('e.status', 'closed')
-            ->where(fn ($q) => $q->whereNotNull('e.map_end_point_id')->orWhereNotNull('e.map_path_id'))
             ->get(['a.node_code as from_code', 'b.node_code as to_code', 'e.closed_reason', 'e.status_changed_at'])
             ->mapWithKeys(fn (object $edge): array => [$edge->from_code.'|'.$edge->to_code => ['status' => 'closed', 'reason' => $edge->closed_reason, 'changed_at' => $edge->status_changed_at]])
             ->all();
@@ -635,19 +1152,25 @@ class MapEditService
         return $elevation === null ? null : (float) $elevation;
     }
 
-    private function unitHasPrimary(MallMap $map, string $unitCode): bool
+    private function unitHasPrimary(MallMap $map, string $unitCode, ?int $exceptPoint = null): bool
     {
-        return DB::table('map_shop_entrances')->where('mall_map_id', $map->id)->where('unit_code', $unitCode)->where('is_primary', true)->exists();
+        return DB::table('map_shop_entrances')->where('mall_map_id', $map->id)->where('unit_code', $unitCode)->where('is_primary', true)
+            ->when($exceptPoint !== null, fn ($query) => $query->where(fn ($q) => $q->whereNull('map_end_point_id')->orWhere('map_end_point_id', '!=', $exceptPoint)))
+            ->exists();
     }
 
-    private function facilityExists(MallMap $map, string $name): bool
+    private function facilityExists(MallMap $map, string $name, ?int $exceptPoint = null): bool
     {
-        return DB::table('map_facility_anchors')->where('mall_map_id', $map->id)->where('facility_name', $name)->exists();
+        return DB::table('map_facility_anchors')->where('mall_map_id', $map->id)->where('facility_name', $name)
+            ->when($exceptPoint !== null, fn ($query) => $query->where(fn ($q) => $q->whereNull('map_end_point_id')->orWhere('map_end_point_id', '!=', $exceptPoint)))
+            ->exists();
     }
 
     private function checkpointExists(MallMap $map, string $code, ?int $exceptPoint = null): bool
     {
-        return DB::table('map_checkpoint_anchors')->where('mall_map_id', $map->id)->where('checkpoint_code', $code)->exists()
+        return DB::table('map_checkpoint_anchors')->where('mall_map_id', $map->id)->where('checkpoint_code', $code)
+            ->when($exceptPoint !== null, fn ($query) => $query->where(fn ($q) => $q->whereNull('map_end_point_id')->orWhere('map_end_point_id', '!=', $exceptPoint)))
+            ->exists()
             || MapEndPoint::query()->where('mall_map_id', $map->id)->where('checkpoint_code', $code)
                 ->when($exceptPoint !== null, fn ($query) => $query->whereKeyNot($exceptPoint))
                 ->whereNotNull('map_node_id')->exists();
@@ -658,6 +1181,7 @@ class MapEditService
         return 1 + max(
             (int) MapEndPoint::query()->where('mall_map_id', $map->id)->max('sequence'),
             (int) MapPath::query()->where('mall_map_id', $map->id)->max('sequence'),
+            (int) MapGraphEdit::query()->where('mall_map_id', $map->id)->max('sequence'),
         );
     }
 
@@ -668,7 +1192,7 @@ class MapEditService
     {
         do {
             $key = Str::lower(Str::random(10));
-        } while (MapEndPoint::query()->where('key', $key)->exists() || MapPath::query()->where('key', $key)->exists());
+        } while (MapEndPoint::query()->where('key', $key)->exists() || MapPath::query()->where('key', $key)->exists() || MapGraphEdit::query()->where('key', $key)->exists());
 
         return $key;
     }

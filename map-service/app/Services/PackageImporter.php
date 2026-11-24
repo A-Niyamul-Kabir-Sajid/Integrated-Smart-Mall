@@ -148,9 +148,9 @@ class PackageImporter
     }
 
     /**
-     * A new version of a mall's map keeps the administrators' points and paths
-     * (and their keys) of the mall's published map, or else of its newest map
-     * that has any.
+     * A new version of a mall's map keeps the administrators' points, paths
+     * and changes to the graph (and their keys) of the mall's published map,
+     * or else of its newest map that has any.
      */
     private function copyEndPoints(MallMap $map): void
     {
@@ -158,7 +158,7 @@ class PackageImporter
             return;
         }
         $source = MallMap::query()->where('mall_ref', $map->mall_ref)->whereKeyNot($map->id)
-            ->where(fn ($query) => $query->whereHas('endPoints')->orWhereHas('paths'))
+            ->where(fn ($query) => $query->whereHas('endPoints')->orWhereHas('paths')->orWhereHas('graphEdits'))
             ->orderByRaw("case when status = 'published' then 0 else 1 end")
             ->latest('created_at')
             ->first();
