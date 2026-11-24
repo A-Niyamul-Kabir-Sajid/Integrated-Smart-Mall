@@ -48,7 +48,7 @@
 
 <div class="card">
     <h2>Navigation graph</h2>
-    <p class="muted">Change the graph from the map package itself: move or remove a node, connect two nodes, make a walkway one way or not step-free, or remove it. In the 3D editor use <b>✎ Graph</b> and click a node or a walkway. Each change is kept, replayed after rebuilds and in new map versions, and can be undone.</p>
+    <p class="muted">Change the graph from the map package itself: move or remove a node, connect two nodes, make a walkway one way or not step-free, or remove it. In the 3D editor use <b>✎ Graph</b> and click a node or a walkway. Each change is kept, replayed after rebuilds and in new map versions, and can be edited (other nodes, another place, other settings) or undone.</p>
     <form method="post" action="{{ route('admin.maps.graph.store', $map) }}" class="grid" id="graph-form">
         @csrf
         <label>Change
@@ -97,7 +97,48 @@
             @foreach ($graphEdits as $edit)
                 <tr>
                     <td><span class="hashkey">{{ $edit->key }}</span></td>
-                    <td>{{ $edit->describe() }}@if ($edit->problem)<br><span class="badge bad">not applied</span> <span class="muted">{{ $edit->problem }}</span>@endif</td>
+                    <td>
+                        {{ $edit->describe() }}@if ($edit->problem)<br><span class="badge bad">not applied</span> <span class="muted">{{ $edit->problem }}</span>@endif
+                        @php($data = $edit->data ?? [])
+                        <details class="edit">
+                            <summary>Edit</summary>
+                            <form method="post" action="{{ route('admin.maps.graph.update', [$map, $edit]) }}" class="grid">
+                                @csrf @method('patch')
+                                @if (in_array($edit->action, ['move_node', 'remove_node'], true))
+                                    <label>Node <input type="text" name="node_code" value="{{ $edit->node_code }}" list="node-codes" maxlength="80" required></label>
+                                @else
+                                    <label>From node <input type="text" name="from_code" value="{{ $edit->from_code }}" list="node-codes" maxlength="80" required></label>
+                                    <label>To node <input type="text" name="to_code" value="{{ $edit->to_code }}" list="node-codes" maxlength="80" required></label>
+                                @endif
+                                @if ($edit->action === 'move_node')
+                                    <label>New x (metres) <input type="number" name="x" step="0.01" value="{{ $data['x'] ?? '' }}" required></label>
+                                    <label>New y (metres) <input type="number" name="y" step="0.01" value="{{ $data['y'] ?? '' }}" required></label>
+                                @elseif ($edit->action === 'connect')
+                                    <div>
+                                        <label class="check"><input type="hidden" name="step_free" value="0"><input type="checkbox" name="step_free" value="1" @checked($data['step_free'] ?? true)> Step-free</label>
+                                        <label class="check"><input type="hidden" name="one_way" value="0"><input type="checkbox" name="one_way" value="1" @checked($data['one_way'] ?? false)> One way (from → to)</label>
+                                    </div>
+                                @elseif ($edit->action === 'edit_edge')
+                                    <label>Direction
+                                        <select name="direction">
+                                            <option value="" @selected(! isset($data['direction']))>(unchanged)</option>
+                                            <option value="both" @selected(($data['direction'] ?? null) === 'both')>Both ways</option>
+                                            <option value="forward" @selected(($data['direction'] ?? null) === 'forward')>One way, from → to</option>
+                                            <option value="backward" @selected(($data['direction'] ?? null) === 'backward')>One way, to → from</option>
+                                        </select>
+                                    </label>
+                                    <label>Step-free
+                                        <select name="step_free">
+                                            <option value="" @selected(! isset($data['step_free']))>(unchanged)</option>
+                                            <option value="1" @selected(($data['step_free'] ?? null) === true)>Step-free</option>
+                                            <option value="0" @selected(($data['step_free'] ?? null) === false)>Not step-free (stairs)</option>
+                                        </select>
+                                    </label>
+                                @endif
+                                <div><button class="primary" type="submit">Save change</button></div>
+                            </form>
+                        </details>
+                    </td>
                     <td class="actions">
                         <form method="post" action="{{ route('admin.maps.graph.destroy', [$map, $edit]) }}" class="inline">
                             @csrf @method('delete')

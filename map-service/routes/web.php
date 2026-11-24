@@ -43,6 +43,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/maps/{mallMap}/paths/{path}/merge', [PathController::class, 'merge'])->name('maps.paths.merge');
     Route::get('/maps/{mallMap}/graph', [GraphController::class, 'index'])->name('maps.graph');
     Route::post('/maps/{mallMap}/graph', [GraphController::class, 'store'])->name('maps.graph.store');
+    Route::patch('/maps/{mallMap}/graph/{graphEdit}', [GraphController::class, 'update'])->name('maps.graph.update');
     Route::delete('/maps/{mallMap}/graph/{graphEdit}', [GraphController::class, 'destroy'])->name('maps.graph.destroy');
 
     Route::get('/checkpoints', [CheckpointController::class, 'index'])->name('checkpoints.index');

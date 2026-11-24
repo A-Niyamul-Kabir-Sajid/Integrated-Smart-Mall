@@ -676,7 +676,7 @@ renderer.domElement.addEventListener('pointermove', (event) => {
 });
 
 function handleClick(event) {
-    if (['point', 'qr', 'path', 'move-edit', 'graph', 'graph-move', 'graph-connect'].includes(state.tool)) {
+    if (['point', 'qr', 'path', 'move-edit', 'graph', 'graph-move', 'graph-connect', 'graph-pick'].includes(state.tool)) {
         const surface = pickSurface();
         if (!surface) {
             showEditError('That click missed the scanned floor and walls. Click on the scan itself.');
@@ -694,6 +694,8 @@ function handleClick(event) {
             graphMove(surface);
         } else if (state.tool === 'graph-connect') {
             graphConnect(surface);
+        } else if (state.tool === 'graph-pick') {
+            graphPick(surface);
         } else {
             addPathCorner(surface);
         }
@@ -742,7 +744,7 @@ function setTool(tool) {
     $('add-point').classList.toggle('active', tool === 'point');
     $('add-qr').classList.toggle('active', tool === 'qr');
     $('add-path').classList.toggle('active', tool === 'path');
-    $('edit-graph').classList.toggle('active', ['graph', 'graph-move', 'graph-connect'].includes(tool));
+    $('edit-graph').classList.toggle('active', ['graph', 'graph-move', 'graph-connect', 'graph-pick'].includes(tool));
     renderer.domElement.style.cursor = tool ? 'crosshair' : '';
     const hints = {
         shop_sign: 'Click a wall or the floor to place the shop sign (Shift+click to keep adding, Esc to stop)',
@@ -755,6 +757,7 @@ function setTool(tool) {
         graph: 'Click a node (dot) or a walkway (line) to edit it (Esc to stop)',
         'graph-move': 'Click the new place of the node (Esc to cancel)',
         'graph-connect': 'Click the node to connect to (Esc to cancel)',
+        'graph-pick': 'Click the node to pick (Esc to cancel)',
     };
     $('hint').textContent = hints[tool] ?? '';
     $('hint').style.display = tool ? 'block' : 'none';
@@ -1254,7 +1257,7 @@ function closeEditForm() {
     $('edit-form').replaceChildren();
     $('edit-form').hidden = true;
     state.pending = null;
-    if (['move-edit', 'path', 'graph-move', 'graph-connect'].includes(state.tool)) {
+    if (['move-edit', 'path', 'graph-move', 'graph-connect', 'graph-pick'].includes(state.tool)) {
         setTool(null);
     }
     clearPreview();
@@ -1855,17 +1858,24 @@ function renderGraphEdits() {
         edit.key,
         `${edit.description}${edit.problem ? ` · not applied: ${edit.problem}` : ''}`,
         edit.problem ? 'warn' : 'muted',
-        [button('Undo', async (event) => {
-            event.stopPropagation();
-            try {
-                await callEdits(edit.undo_url, 'DELETE');
-                message(`Undone: ${edit.description}.`);
-                await reloadAll();
-            } catch (error) {
-                showEditError(error.message);
-            }
-        })],
-        () => {},
+        [
+            button('Edit', (event) => {
+                event.stopPropagation();
+                openGraphEditForm(edit);
+            }),
+            button('Undo', async (event) => {
+                event.stopPropagation();
+                try {
+                    await callEdits(edit.undo_url, 'DELETE');
+                    closeEditForm();
+                    message(`Undone: ${edit.description}.`);
+                    await reloadAll();
+                } catch (error) {
+                    showEditError(error.message);
+                }
+            }),
+        ],
+        () => showGraphEdit(edit, true),
     ));
     if (!items.length) {
         items.push(Object.assign(document.createElement('li'), { className: 'muted', textContent: 'No changes. Use “✎ Graph” and click a node or a walkway.' }));
@@ -2022,7 +2032,148 @@ function openEdgeForm(edge, a, b) {
     showForm(`Walkway ${edge.from} – ${edge.to} · ${edge.length_m} m${edge.closed ? ' · closed now' : ''}`, [stepFreeLabel, field('Direction', direction)], [save, remove, button('Close', closeEditForm)]);
 }
 
+/**
+ * Show where a change to the graph acts: its node, or the walkway between its
+ * two nodes (where it was, for a removed one). Returns whether it was found.
+ */
+function showGraphEdit(edit, focus = false) {
+    const nodes = (edit.node_code ? [edit.node_code] : [edit.from_code, edit.to_code]).map((code) => state.graphNodes.get(code));
+    if (nodes.some((node) => !node)) {
+        clearPreview();
+        if (focus) {
+            message(edit.action === 'remove_node' ? `Node ${edit.node_code} is removed by this change, so it is not drawn.` : `This change names a node that is not on the map now${edit.problem ? `: ${edit.problem}` : '.'}`);
+        }
+        return false;
+    }
+    highlight(nodes.length === 1 ? [highlightNode(nodes[0])] : [highlightEdge(nodes[0], nodes[1]), highlightNode(nodes[0]), highlightNode(nodes[1])]);
+    if (focus) {
+        const [a, b = a] = nodes;
+        focusOn({ position: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2 } });
+    }
+    return true;
+}
+
+/** A node code box with a "Pick" button: the next click on a node fills it. */
+function nodeCodeField(labelText, value) {
+    const input = textInput({ maxLength: 80, value: value ?? '' });
+    input.setAttribute('list', 'graph-node-codes');
+    input.style.flex = '1';
+    const pick = button('Pick', () => {
+        state.pending.pickTarget = input;
+        setTool('graph-pick');
+    });
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.append(input, pick);
+    return [field(labelText, row), input];
+}
+
+function fillNodeCodes() {
+    let list = $('graph-node-codes');
+    if (!list) {
+        list = Object.assign(document.createElement('datalist'), { id: 'graph-node-codes' });
+        document.body.append(list);
+    }
+    list.replaceChildren(...(state.graph?.nodes ?? []).map((node) => Object.assign(document.createElement('option'), { value: node.code, label: `${node.type} · floor ${node.floor}` })));
+}
+
+/** Edit a change to the graph: its nodes, its new place, its settings. */
+function openGraphEditForm(edit) {
+    closeEditForm();
+    showEditError('');
+    state.pending = { graphEdit: edit };
+    fillNodeCodes();
+    showGraphEdit(edit);
+    const data = edit.data ?? {};
+    const fields = [];
+    const actions = [];
+    let collect;
+
+    if (edit.action === 'move_node' || edit.action === 'remove_node') {
+        const [nodeField, node] = nodeCodeField('Node', edit.node_code);
+        fields.push(nodeField);
+        collect = () => ({ node_code: node.value.trim() });
+        if (edit.action === 'move_node') {
+            const x = numberInput(data.x ?? 0, { step: '0.01' });
+            const y = numberInput(data.y ?? 0, { step: '0.01' });
+            fields.push(field('New x (m)', x), field('New y (m)', y));
+            state.pending.moveInputs = { node, x, y };
+            collect = () => ({ node_code: node.value.trim(), x: Number(x.value), y: Number(y.value) });
+            actions.push(button('Pick the new place (click the floor)', () => setTool('graph-move')));
+        }
+    } else {
+        const [fromField, from] = nodeCodeField('From node', edit.from_code);
+        const [toField, to] = nodeCodeField('To node', edit.to_code);
+        fields.push(fromField, toField);
+        const codes = () => ({ from_code: from.value.trim(), to_code: to.value.trim() });
+        collect = codes;
+        if (edit.action === 'connect') {
+            const [stepFreeLabel, stepFree] = checkbox('Step-free', data.step_free ?? true);
+            const [oneWayLabel, oneWay] = checkbox('One way (from → to)', data.one_way ?? false);
+            fields.push(stepFreeLabel, oneWayLabel);
+            collect = () => ({ ...codes(), step_free: stepFree.checked, one_way: oneWay.checked });
+        } else if (edit.action === 'edit_edge') {
+            const direction = document.createElement('select');
+            direction.innerHTML = '<option value="">(unchanged)</option><option value="both">Both ways</option><option value="forward">One way, from → to</option><option value="backward">One way, to → from</option>';
+            direction.value = data.direction ?? '';
+            const stepFree = document.createElement('select');
+            stepFree.innerHTML = '<option value="">(unchanged)</option><option value="1">Step-free</option><option value="0">Not step-free (stairs)</option>';
+            stepFree.value = data.step_free === undefined ? '' : data.step_free ? '1' : '0';
+            fields.push(field('Direction', direction), field('Step-free', stepFree));
+            collect = () => ({ ...codes(), direction: direction.value || null, step_free: stepFree.value === '' ? null : stepFree.value === '1' });
+        }
+    }
+    if (edit.problem) {
+        fields.unshift(Object.assign(document.createElement('div'), { className: 'warn', textContent: `Not applied now: ${edit.problem}` }));
+    }
+
+    const save = button('Save change', async () => {
+        save.disabled = true;
+        try {
+            const saved = (await callEdits(edit.update_url, 'PATCH', collect())).data;
+            closeEditForm();
+            message(`Change ${saved.key} saved: ${saved.description}.`);
+            await reloadAll();
+        } catch (error) {
+            showEditError(error.message);
+            save.disabled = false;
+        }
+    }, 'primary');
+    showForm(`Edit change ${edit.key} · ${edit.description}`, fields, [save, ...actions, button('Cancel', closeEditForm)]);
+}
+
+/** "Pick": the next click on a node puts its code in the box. */
+function graphPick(surface) {
+    const input = state.pending?.pickTarget;
+    setTool(null);
+    const picked = pickGraph(surface);
+    if (!input || !picked || picked.kind !== 'node') {
+        showEditError('Click on a node (a dot) to pick it.');
+        return;
+    }
+    showEditError('');
+    input.value = picked.node.code;
+    highlight([highlightNode(picked.node)]);
+}
+
 function graphMove(surface) {
+    const editing = state.pending?.moveInputs;
+    if (editing) {
+        setTool(null);
+        const node = state.graphNodes.get(editing.node.value.trim());
+        if (node && surface.floorCode !== node.floor) {
+            showEditError(`Keep node ${node.code} on floor ${node.floor}.`);
+            return;
+        }
+        const at = A.threeToMall(surface.point);
+        editing.x.value = at.x.toFixed(2);
+        editing.y.value = at.y.toFixed(2);
+        showEditError('');
+        const marker = highlightNode({ x: at.x, y: at.y, z: node?.z ?? floorLevel(surface.floorCode) });
+        highlight(node ? [highlightNode(node), marker, highlightEdge(node, { x: at.x, y: at.y, z: node.z })] : [marker]);
+        message(`New place x ${at.x.toFixed(2)}, y ${at.y.toFixed(2)}: click Save change to keep it.`);
+        return;
+    }
     const node = state.pending?.graphNode;
     setTool(null);
     if (!node) {

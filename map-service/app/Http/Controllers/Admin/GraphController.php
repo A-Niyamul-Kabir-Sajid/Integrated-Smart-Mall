@@ -18,7 +18,7 @@ use InvalidArgumentException;
 /**
  * Editing the navigation graph itself (ISM-114): the current graph for the 3D
  * editor, changes to it (move or remove a node, connect two nodes, change or
- * remove a walkway) and undoing a change.
+ * remove a walkway), editing a change and undoing it.
  */
 class GraphController extends Controller
 {
@@ -104,6 +104,40 @@ class GraphController extends Controller
             : back()->with('status', $edit->describe().' — done.');
     }
 
+    /**
+     * Edit a change: other nodes, another position or other walkway settings.
+     * Fields left out stay as they are; what the change does stays too.
+     */
+    public function update(Request $request, MallMap $mallMap, MapGraphEdit $graphEdit): RedirectResponse|JsonResponse
+    {
+        abort_unless($graphEdit->mall_map_id === $mallMap->id, 404);
+        $data = $request->validate([
+            'node_code' => ['sometimes', 'required', 'string', 'max:80'],
+            'from_code' => ['sometimes', 'required', 'string', 'max:80'],
+            'to_code' => ['sometimes', 'required', 'string', 'max:80'],
+            'x' => ['sometimes', 'required', 'numeric', 'between:-10000,10000'],
+            'y' => ['sometimes', 'required', 'numeric', 'between:-10000,10000'],
+            'step_free' => ['sometimes', 'nullable', 'boolean'],
+            'one_way' => ['sometimes', 'nullable', 'boolean'],
+            'direction' => ['sometimes', 'nullable', Rule::in(['both', 'forward', 'backward'])],
+        ]);
+        foreach (['step_free', 'one_way'] as $flag) {
+            if (($data[$flag] ?? null) !== null) {
+                $data[$flag] = $request->boolean($flag);
+            }
+        }
+
+        try {
+            $edit = $this->edits->updateGraphEdit($graphEdit, $data);
+        } catch (InvalidArgumentException $error) {
+            throw ValidationException::withMessages(['graph' => $error->getMessage()]);
+        }
+
+        return $request->wantsJson()
+            ? response()->json(['data' => $this->present($mallMap, $edit)])
+            : back()->with('status', $edit->describe().' — saved.');
+    }
+
     public function destroy(Request $request, MallMap $mallMap, MapGraphEdit $graphEdit): RedirectResponse|JsonResponse
     {
         abort_unless($graphEdit->mall_map_id === $mallMap->id, 404);
@@ -123,7 +157,12 @@ class GraphController extends Controller
             'key' => $edit->key,
             'action' => $edit->action,
             'description' => $edit->describe(),
+            'node_code' => $edit->node_code,
+            'from_code' => $edit->from_code,
+            'to_code' => $edit->to_code,
+            'data' => (object) ($edit->data ?? []),
             'problem' => $edit->problem,
+            'update_url' => route('admin.maps.graph.update', [$map, $edit]),
             'undo_url' => route('admin.maps.graph.destroy', [$map, $edit]),
         ];
     }

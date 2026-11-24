@@ -178,6 +178,130 @@ class GraphEditTest extends TestCase
         $this->assertContains('G-X-Main-Stairs', $this->codes($this->route('node:G-C01', 'node:E-G-101', map: $version)));
     }
 
+    /**
+     * @param  array<string, mixed>  $changes
+     */
+    private function edit(MapGraphEdit $edit, array $changes): MapGraphEdit
+    {
+        return app(MapEditService::class)->updateGraphEdit($edit, $changes);
+    }
+
+    /**
+     * The message of an edit that must be refused.
+     *
+     * @param  array<string, mixed>  $changes
+     */
+    private function refusal(MapGraphEdit $edit, array $changes): string
+    {
+        try {
+            $this->edit($edit, $changes);
+        } catch (InvalidArgumentException $error) {
+            return $error->getMessage();
+        }
+        $this->fail('The edit was accepted.');
+    }
+
+    public function test_editing_a_move_gives_the_node_its_new_place_and_keeps_the_key_and_order(): void
+    {
+        $move = $this->change(['action' => 'move_node', 'node_code' => 'G-N0001', 'x' => 10.0, 'y' => 2.0]);
+        $later = $this->change(['action' => 'connect', 'from_code' => 'G-C01', 'to_code' => 'G-N0003']);
+
+        $edited = $this->edit($move, ['y' => 4.0]);
+
+        $this->assertSame([$move->key, $move->sequence], [$edited->key, $edited->sequence]);
+        $this->assertSame('Move node G-N0001 to x 10.00, y 4.00', $edited->describe());
+        $this->assertSame(21.5, $this->route('node:G-C01', 'node:G-N0002')['total']['length_m']);
+        $this->assertNull($later->refresh()->problem);
+        $this->assertSame(15.5, $this->route('node:G-C01', 'facility:Toilets G')['total']['length_m']);
+        $this->assertSame(2, MapGraphEdit::query()->count());
+    }
+
+    public function test_editing_a_connection_changes_its_settings_or_its_nodes_and_replays_later_changes(): void
+    {
+        $connect = $this->change(['action' => 'connect', 'from_code' => 'G-C01', 'to_code' => 'G-N0003']);
+        $oneWay = $this->change(['action' => 'edit_edge', 'from_code' => 'G-C01', 'to_code' => 'G-N0003', 'direction' => 'forward']);
+
+        $this->edit($connect, ['step_free' => false]);
+
+        $this->assertNull($oneWay->refresh()->problem);
+        $edges = DB::table('map_edges as e')->join('map_nodes as a', 'a.id', '=', 'e.from_node_id')->join('map_nodes as b', 'b.id', '=', 'e.to_node_id')
+            ->where('e.mall_map_id', $this->map->id)->where(fn ($q) => $q->where(fn ($w) => $w->where('a.node_code', 'G-C01')->where('b.node_code', 'G-N0003'))->orWhere(fn ($w) => $w->where('a.node_code', 'G-N0003')->where('b.node_code', 'G-C01')))
+            ->get(['a.node_code as from', 'e.is_accessible']);
+        $this->assertCount(1, $edges, 'The later one-way change still applies.');
+        $this->assertSame(['G-C01', false], [$edges[0]->from, (bool) $edges[0]->is_accessible]);
+        $this->assertSame(21.0, $this->route('node:G-C01', 'facility:Toilets G', stepFree: true)['total']['length_m']);
+
+        $this->edit($connect, ['to_code' => 'E-G-101', 'from_code' => 'G-N0003', 'step_free' => true]);
+
+        $this->assertSame('Connect G-N0003 and E-G-101', $connect->refresh()->describe());
+        $this->assertSame(['G-F-Toilets-G', 'G-N0003', 'E-G-101'], $this->codes($this->route('facility:Toilets G', 'node:E-G-101')));
+        $this->assertSame('No walkway joins G-C01 and G-N0003.', $oneWay->refresh()->problem, 'The later change no longer fits and is shown as not applied.');
+    }
+
+    public function test_an_edit_that_does_not_fit_is_refused_and_the_graph_stays_as_it_was(): void
+    {
+        $removal = $this->change(['action' => 'remove_edge', 'from_code' => 'G-N0001', 'to_code' => 'G-N0002']);
+        $connect = $this->change(['action' => 'connect', 'from_code' => 'G-C01', 'to_code' => 'G-N0003']);
+        $point = app(MapEditService::class)->createPoint($this->map, ['kind' => 'node', 'name' => 'Kiosk', 'floor_code' => 'G', 'x' => 15.0, 'y' => 6.0]);
+        $pointNode = DB::table('map_nodes')->where('id', $point->refresh()->map_node_id)->value('node_code');
+        $move = $this->change(['action' => 'move_node', 'node_code' => 'G-N0001', 'x' => 10.0, 'y' => 2.0]);
+
+        $this->assertStringContainsString('Node G-N9999 is not on this map', $this->refusal($removal, ['to_code' => 'G-N9999']));
+        $this->assertStringContainsString('No walkway joins G-C01 and G-N0002', $this->refusal($removal, ['from_code' => 'G-C01']));
+        $this->assertStringContainsString('same floor', $this->refusal($connect, ['to_code' => '1-C01']));
+        $this->assertStringContainsString('already joined', $this->refusal($connect, ['to_code' => 'G-N0001']));
+        $this->assertStringContainsString('two different nodes', $this->refusal($connect, ['to_code' => 'G-C01']));
+        $this->assertStringContainsString('belongs to a point', $this->refusal($move, ['node_code' => $pointNode]));
+        $this->assertStringContainsString('x and y', $this->refusal($move, ['x' => 'east']));
+
+        $this->assertSame(['G-N0001', 'G-N0002', null], [$removal->refresh()->from_code, $removal->to_code, $removal->problem]);
+        $this->assertSame('Move node G-N0001 to x 10.00, y 2.00', $move->refresh()->describe());
+        $this->assertContains('G-X-Main-Stairs', $this->codes($this->route('node:G-C01', 'node:E-G-101')));
+        $this->assertSame(15.5, $this->route('node:G-C01', 'facility:Toilets G')['total']['length_m']);
+    }
+
+    public function test_a_change_that_no_longer_applies_can_be_fixed_by_editing_its_nodes(): void
+    {
+        $removal = $this->change(['action' => 'remove_edge', 'from_code' => 'G-N0001', 'to_code' => 'G-N0002']);
+        // As after importing a version whose Blender export named the node differently.
+        $removal->forceFill(['to_code' => 'G-N0002-old'])->save();
+        app(MapEditService::class)->rebuild($this->map);
+        $this->assertSame('Node G-N0002-old is not on this map.', $removal->refresh()->problem);
+        $this->assertSame(20.0, $this->route('node:G-C01', 'node:G-N0002')['total']['length_m']);
+
+        $this->edit($removal, ['to_code' => 'G-N0002']);
+
+        $this->assertNull($removal->refresh()->problem);
+        $this->assertContains('G-X-Main-Stairs', $this->codes($this->route('node:G-C01', 'node:E-G-101')));
+    }
+
+    public function test_the_json_and_the_page_form_edit_a_change(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $move = $this->change(['action' => 'move_node', 'node_code' => 'G-N0001', 'x' => 10.0, 'y' => 2.0]);
+        $walkway = $this->change(['action' => 'edit_edge', 'from_code' => 'G-C01', 'to_code' => 'G-N0001', 'step_free' => false]);
+
+        $listed = $this->getJson(route('admin.maps.graph', $this->map))->json('edits.0');
+        $this->assertSame(['move_node', 'G-N0001', ['x' => 10, 'y' => 2]], [$listed['action'], $listed['node_code'], $listed['data']]);
+        $this->patchJson($listed['update_url'], ['x' => 10, 'y' => 4])
+            ->assertOk()->assertJsonPath('data.key', $move->key)->assertJsonPath('data.description', 'Move node G-N0001 to x 10.00, y 4.00');
+        $this->patchJson($listed['update_url'], ['node_code' => 'G-N9999'])->assertUnprocessable()->assertJsonValidationErrors('graph');
+        $this->patchJson($listed['update_url'], ['x' => 'east'])->assertUnprocessable()->assertJsonValidationErrors('x');
+
+        // The page form sends every field; "(unchanged)" leaves that setting alone.
+        $this->patch(route('admin.maps.graph.update', [$this->map, $walkway]), ['from_code' => 'G-C01', 'to_code' => 'G-N0001', 'direction' => 'forward', 'step_free' => ''])
+            ->assertRedirect()->assertSessionHas('status', 'Change the walkway G-C01 – G-N0001: one way G-C01 → G-N0001 — saved.');
+        $this->assertSame(['direction' => 'forward'], $walkway->refresh()->data);
+        $this->patch(route('admin.maps.graph.update', [$this->map, $walkway]), ['from_code' => 'G-C01', 'to_code' => 'G-N0001', 'direction' => '', 'step_free' => ''])
+            ->assertSessionHasErrors('graph');
+
+        $this->get(route('admin.maps.end-points', $this->map))->assertOk()
+            ->assertSee('Save change')->assertSee('value="4"', false)->assertSee(route('admin.maps.graph.update', [$this->map, $walkway]), false);
+
+        $other = $this->pilotMap('other-mall');
+        $this->patchJson(route('admin.maps.graph.update', [$other, $walkway]), ['direction' => 'both'])->assertNotFound();
+    }
+
     public function test_the_graph_json_shows_nodes_walkways_and_changes_and_takes_new_ones(): void
     {
         $this->actingAs(User::factory()->create());
@@ -212,8 +336,10 @@ class GraphEditTest extends TestCase
 
         $this->get(route('admin.maps.graph', $this->map))->assertRedirect(route('login'));
         $this->post(route('admin.maps.graph.store', $this->map), ['action' => 'remove_edge', 'from_code' => 'G-C01', 'to_code' => 'G-N0001'])->assertRedirect(route('login'));
+        $this->patch(route('admin.maps.graph.update', [$this->map, $edit]), ['to_code' => 'G-N0002'])->assertRedirect(route('login'));
         $this->delete(route('admin.maps.graph.destroy', [$this->map, $edit]))->assertRedirect(route('login'));
         $this->assertSame(1, MapGraphEdit::query()->count());
+        $this->assertSame('G-N0003', $edit->refresh()->to_code);
     }
 
     public function test_the_page_form_changes_the_graph_and_lists_the_change_with_undo(): void

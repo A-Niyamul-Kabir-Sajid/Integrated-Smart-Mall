@@ -403,67 +403,7 @@ class MapEditService
      */
     public function createGraphEdit(MallMap $map, array $data): MapGraphEdit
     {
-        $action = (string) ($data['action'] ?? '');
-        if (! in_array($action, MapGraphEdit::ACTIONS, true)) {
-            throw new InvalidArgumentException('Choose a change: '.implode(', ', MapGraphEdit::ACTIONS).'.');
-        }
-        $nodes = DB::table('map_nodes')->where('mall_map_id', $map->id)->get()->keyBy('node_code');
-        $node = fn (?string $code) => $code === null ? null : ($nodes[$code] ?? null);
-        $fields = ['action' => $action, 'node_code' => null, 'from_code' => null, 'to_code' => null, 'data' => null];
-
-        if (in_array($action, ['move_node', 'remove_node'], true)) {
-            $code = (string) ($data['node_code'] ?? '');
-            if ($node($code) === null) {
-                throw new InvalidArgumentException("Node {$code} is not on this map.");
-            }
-            if ($node($code)->map_end_point_id !== null) {
-                throw new InvalidArgumentException("Node {$code} belongs to a point; edit or delete the point instead.");
-            }
-            $fields['node_code'] = $code;
-            if ($action === 'move_node') {
-                if (! is_numeric($data['x'] ?? null) || ! is_numeric($data['y'] ?? null)) {
-                    throw new InvalidArgumentException('Give the new position as x and y in metres.');
-                }
-                $fields['data'] = ['x' => round((float) $data['x'], 3), 'y' => round((float) $data['y'], 3)];
-            } elseif (($why = $this->nodeHolds($map, (int) $node($code)->id)) !== null) {
-                throw new InvalidArgumentException("Node {$code} {$why}; remove that first.");
-            }
-        } else {
-            $from = (string) ($data['from_code'] ?? '');
-            $to = (string) ($data['to_code'] ?? '');
-            if ($node($from) === null || $node($to) === null) {
-                throw new InvalidArgumentException("Give two nodes of this map ({$from}, {$to}).");
-            }
-            if ($from === $to) {
-                throw new InvalidArgumentException('Choose two different nodes.');
-            }
-            $fields['from_code'] = $from;
-            $fields['to_code'] = $to;
-            $edges = $this->edgesBetween($map, (int) $node($from)->id, (int) $node($to)->id);
-            if ($action === 'connect') {
-                if ($node($from)->floor_code !== $node($to)->floor_code) {
-                    throw new InvalidArgumentException('A walkway joins two nodes of the same floor; floors are joined by lifts, escalators and stairs in the map package.');
-                }
-                if (count($edges) === 2) {
-                    throw new InvalidArgumentException("{$from} and {$to} are already joined by a walkway.");
-                }
-                $fields['data'] = ['step_free' => (bool) ($data['step_free'] ?? true), 'one_way' => (bool) ($data['one_way'] ?? false)];
-            } else {
-                if ($edges === []) {
-                    throw new InvalidArgumentException("No walkway joins {$from} and {$to}.");
-                }
-                if ($action === 'edit_edge') {
-                    $changes = array_filter([
-                        'step_free' => isset($data['step_free']) ? (bool) $data['step_free'] : null,
-                        'direction' => isset($data['direction']) && in_array($data['direction'], ['both', 'forward', 'backward'], true) ? $data['direction'] : null,
-                    ], fn ($value): bool => $value !== null);
-                    if ($changes === []) {
-                        throw new InvalidArgumentException('Say what changes: step-free, or the direction (both, forward, backward).');
-                    }
-                    $fields['data'] = $changes;
-                }
-            }
-        }
+        $fields = $this->graphEditFields($data);
 
         return DB::transaction(function () use ($map, $fields): MapGraphEdit {
             $edit = MapGraphEdit::query()->create($fields + [
@@ -482,6 +422,39 @@ class MapEditService
     }
 
     /**
+     * Edit a change to the graph: other nodes, another position, other
+     * walkway settings. What it does (move, remove, connect …), its key and
+     * its place in the order of edits stay; the graph is replayed.
+     *
+     * @param  array<string, mixed>  $changes  node_code, x, y, from_code, to_code, step_free, one_way, direction; for a walkway change, a null step_free or direction leaves that alone
+     *
+     * @throws InvalidArgumentException when the change is not possible
+     */
+    public function updateGraphEdit(MapGraphEdit $edit, array $changes): MapGraphEdit
+    {
+        $map = $edit->mallMap;
+        $current = ['node_code' => $edit->node_code, 'from_code' => $edit->from_code, 'to_code' => $edit->to_code] + ($edit->data ?? []);
+        $fields = $this->graphEditFields(['action' => $edit->action] + array_merge($current, $changes));
+
+        try {
+            return DB::transaction(function () use ($edit, $map, $fields): MapGraphEdit {
+                $edit->forceFill($fields)->save();
+                $this->applyAll($map);
+                $edit->refresh();
+                if ($edit->problem !== null) {
+                    throw new InvalidArgumentException($edit->problem);
+                }
+
+                return $edit;
+            });
+        } catch (InvalidArgumentException $error) {
+            // The transaction was rolled back; the model must not keep the refused values.
+            $edit->refresh();
+            throw $error;
+        }
+    }
+
+    /**
      * Undo a change to the graph.
      */
     public function deleteGraphEdit(MapGraphEdit $edit): void
@@ -494,6 +467,66 @@ class MapEditService
     }
 
     /**
+     * Check the form of a change to the graph and turn it into column values.
+     * Whether it fits the graph is checked when it is applied.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{action: string, node_code: string|null, from_code: string|null, to_code: string|null, data: array<string, mixed>|null}
+     *
+     * @throws InvalidArgumentException
+     */
+    private function graphEditFields(array $data): array
+    {
+        $action = (string) ($data['action'] ?? '');
+        if (! in_array($action, MapGraphEdit::ACTIONS, true)) {
+            throw new InvalidArgumentException('Choose a change: '.implode(', ', MapGraphEdit::ACTIONS).'.');
+        }
+        $code = fn (string $name): string => trim((string) ($data[$name] ?? ''));
+        $fields = ['action' => $action, 'node_code' => null, 'from_code' => null, 'to_code' => null, 'data' => null];
+
+        if (in_array($action, ['move_node', 'remove_node'], true)) {
+            if ($code('node_code') === '') {
+                throw new InvalidArgumentException('Give the code of the node.');
+            }
+            $fields['node_code'] = $code('node_code');
+            if ($action === 'move_node') {
+                if (! is_numeric($data['x'] ?? null) || ! is_numeric($data['y'] ?? null)) {
+                    throw new InvalidArgumentException('Give the new position as x and y in metres.');
+                }
+                $fields['data'] = ['x' => round((float) $data['x'], 3), 'y' => round((float) $data['y'], 3)];
+            }
+
+            return $fields;
+        }
+
+        if ($code('from_code') === '' || $code('to_code') === '') {
+            throw new InvalidArgumentException('Give the codes of both nodes.');
+        }
+        if ($code('from_code') === $code('to_code')) {
+            throw new InvalidArgumentException('Choose two different nodes.');
+        }
+        $fields['from_code'] = $code('from_code');
+        $fields['to_code'] = $code('to_code');
+        if ($action === 'connect') {
+            $fields['data'] = ['step_free' => (bool) ($data['step_free'] ?? true), 'one_way' => (bool) ($data['one_way'] ?? false)];
+        } elseif ($action === 'edit_edge') {
+            $changes = array_filter([
+                'step_free' => isset($data['step_free']) ? (bool) $data['step_free'] : null,
+                'direction' => in_array($data['direction'] ?? null, ['both', 'forward', 'backward'], true) ? $data['direction'] : null,
+            ], fn (mixed $value): bool => $value !== null);
+            if ($changes === []) {
+                throw new InvalidArgumentException('Say what changes: step-free, or the direction (both, forward, backward).');
+            }
+            $fields['data'] = $changes;
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Apply one change to the graph as it is now. When it does not fit, the
+     * graph stays as it was and the change keeps the reason as its problem.
+     *
      * @param  array{walk: float, standoff: float, link_max: float}  $settings
      */
     private function applyGraphEdit(MapGraphEdit $edit, MallMap $map, array $settings): void
@@ -505,10 +538,12 @@ class MapEditService
             $node = $nodes[$edit->node_code] ?? null;
             if ($node === null) {
                 $problem = "Node {$edit->node_code} is not on this map.";
+            } elseif ($node->map_end_point_id !== null) {
+                $problem = "Node {$edit->node_code} belongs to a point; edit or delete the point instead.";
             } elseif ($edit->action === 'move_node') {
                 $this->moveNode($map, $node, (float) $edit->data['x'], (float) $edit->data['y'], $settings);
             } elseif (($why = $this->nodeHolds($map, (int) $node->id)) !== null) {
-                $problem = "Node {$edit->node_code} {$why}.";
+                $problem = "Node {$edit->node_code} {$why}; remove that first.";
             } else {
                 DB::table('map_nodes')->where('id', $node->id)->delete();
                 $this->removeOrphanHalves($map);
@@ -517,12 +552,12 @@ class MapEditService
             $from = $nodes[$edit->from_code] ?? null;
             $to = $nodes[$edit->to_code] ?? null;
             if ($from === null || $to === null) {
-                $problem = "Node {$edit->from_code} or {$edit->to_code} is not on this map.";
+                $problem = 'Node '.($from === null ? $edit->from_code : $edit->to_code).' is not on this map.';
             } else {
                 $problem = match ($edit->action) {
                     'connect' => $this->connectNodes($map, $from, $to, $edit->data ?? [], $settings),
                     'edit_edge' => $this->changeWalkway($map, $from, $to, $edit->data ?? []),
-                    'remove_edge' => $this->removeWalkway($map, (int) $from->id, (int) $to->id),
+                    'remove_edge' => $this->removeWalkway($map, $from, $to),
                     default => "Unknown change {$edit->action}.",
                 };
             }
@@ -559,7 +594,7 @@ class MapEditService
     private function connectNodes(MallMap $map, object $from, object $to, array $data, array $settings): ?string
     {
         if ($from->floor_code !== $to->floor_code) {
-            return "{$from->node_code} and {$to->node_code} are on different floors.";
+            return "A walkway joins two nodes of the same floor ({$from->node_code} is on floor {$from->floor_code}, {$to->node_code} on floor {$to->floor_code}); floors are joined by lifts, escalators and stairs in the map package.";
         }
         $length = round(max(0.01, hypot($to->x_m - $from->x_m, $to->y_m - $from->y_m)), 3);
         $added = 0;
@@ -579,7 +614,7 @@ class MapEditService
             $added++;
         }
 
-        return $added === 0 ? "{$from->node_code} and {$to->node_code} are already joined." : null;
+        return $added === 0 ? "{$from->node_code} and {$to->node_code} are already joined by a walkway." : null;
     }
 
     /**
@@ -626,11 +661,11 @@ class MapEditService
         return null;
     }
 
-    private function removeWalkway(MallMap $map, int $fromId, int $toId): ?string
+    private function removeWalkway(MallMap $map, object $from, object $to): ?string
     {
-        $edges = $this->edgesBetween($map, $fromId, $toId);
+        $edges = $this->edgesBetween($map, (int) $from->id, (int) $to->id);
         if ($edges === []) {
-            return 'No walkway joins these nodes any more.';
+            return "No walkway joins {$from->node_code} and {$to->node_code}.";
         }
         $this->deleteEdges($map, array_map(fn (object $edge): int => (int) $edge->id, $edges));
 
