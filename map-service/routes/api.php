@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AnnotationController;
+use App\Http\Controllers\Api\CheckpointController;
 use App\Http\Controllers\Api\MapController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,7 @@ Route::prefix('v1')->middleware('throttle:api-key')->name('api.')->group(functio
         Route::get('/maps/{mallMap}', [MapController::class, 'show'])->name('maps.show');
         Route::get('/maps/{mallMap}/annotations', [AnnotationController::class, 'index'])->name('annotations.index');
         Route::get('/maps/{mallMap}/annotations/{code}', [AnnotationController::class, 'show'])->name('annotations.show');
+        Route::get('/checkpoints/{slug}', [CheckpointController::class, 'show'])->where('slug', '[a-z0-9]{1,24}')->name('checkpoints.show');
     });
 
     Route::middleware('api.key:annotations:write')->group(function () {

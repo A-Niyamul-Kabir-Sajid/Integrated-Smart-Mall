@@ -38,4 +38,17 @@ return [
 
     'api_per_minute' => (int) env('MAP_API_PER_MINUTE', 120),
 
+    /*
+    |--------------------------------------------------------------------------
+    | QR checkpoint address
+    |--------------------------------------------------------------------------
+    |
+    | What a printed QR code opens: a page of the Smart Mall app that asks
+    | this service where the code hangs. {mall} is the mall slug and {slug}
+    | the checkpoint's random public slug.
+    |
+    */
+
+    'qr_url' => env('MAP_QR_URL', 'http://127.0.0.1:8000/malls/{mall}/map/qr/{slug}'),
+
 ];

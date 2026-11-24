@@ -17,6 +17,8 @@ class MapPublisher
 
     public const MALL_REF_MESSAGE = 'The mall must be the slug of a Smart Mall app mall: lower-case letters, digits and dashes.';
 
+    public function __construct(private CheckpointRegistry $checkpoints) {}
+
     public function publish(MallMap $map): void
     {
         DB::transaction(function () use ($map): void {
@@ -28,13 +30,24 @@ class MapPublisher
                     ->lockForUpdate()
                     ->update(['status' => 'draft', 'updated_at' => now()]);
             }
-            $map->forceFill(['status' => 'published'])->save();
+            $this->writeStatus($map, 'published');
+            $this->checkpoints->syncFromMap($map);
         });
     }
 
     public function unpublish(MallMap $map): void
     {
-        $map->forceFill(['status' => 'draft'])->save();
+        $this->writeStatus($map, 'draft');
+    }
+
+    /**
+     * Write the status even when the model in memory already shows it: another
+     * publish may have changed the row since the model was loaded.
+     */
+    private function writeStatus(MallMap $map, string $status): void
+    {
+        $map->newQuery()->whereKey($map->getKey())->update(['status' => $status, 'updated_at' => now()]);
+        $map->forceFill(['status' => $status])->syncOriginalAttribute('status');
     }
 
     /**

@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\Annotation;
+use App\Models\Checkpoint;
 use App\Models\MallMap;
+use App\Models\MapCheckpointAnchor;
+use App\Models\MapNode;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
@@ -82,6 +85,40 @@ class PackagePresenter
             'yaw_deg' => $annotation->yaw_deg,
             'created_at' => $annotation->created_at?->toIso8601String(),
             'updated_at' => $annotation->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * A resolved QR checkpoint: the code, where it hangs and where the
+     * visitor stands (the start node of a route).
+     *
+     * @return array<string, mixed>
+     */
+    public function checkpoint(Checkpoint $checkpoint, MapCheckpointAnchor $anchor, MallMap $map): array
+    {
+        return [
+            'slug' => $checkpoint->public_slug,
+            'checkpoint_code' => $checkpoint->checkpoint_code,
+            'label' => $checkpoint->label,
+            'mall_ref' => $checkpoint->mall_ref,
+            'map_id' => $map->id,
+            'floor_code' => $anchor->node->floor_code,
+            'node' => $this->node($anchor->node),
+            'qr' => $anchor->qr,
+            'start' => 'checkpoint:'.$checkpoint->public_slug,
+        ];
+    }
+
+    /**
+     * @return array{node_code: string, floor_code: string, node_type: string, position: array{x: float, y: float, z: float}}
+     */
+    public function node(MapNode $node): array
+    {
+        return [
+            'node_code' => $node->node_code,
+            'floor_code' => $node->floor_code,
+            'node_type' => $node->node_type,
+            'position' => ['x' => $node->x_m, 'y' => $node->y_m, 'z' => $node->z_m],
         ];
     }
 

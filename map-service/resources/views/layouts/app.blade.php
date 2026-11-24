@@ -50,6 +50,7 @@
     <strong>ISM Map Service</strong>
     <nav>
         <a href="{{ route('admin.maps.index') }}" class="{{ request()->routeIs('admin.maps.*') ? 'on' : '' }}">Maps</a>
+        <a href="{{ route('admin.checkpoints.index') }}" class="{{ request()->routeIs('admin.checkpoints.*') ? 'on' : '' }}">QR codes</a>
         <a href="{{ route('admin.api-keys.index') }}" class="{{ request()->routeIs('admin.api-keys.*') ? 'on' : '' }}">API keys</a>
     </nav>
     <span class="muted">{{ auth()->user()->email }}</span>
