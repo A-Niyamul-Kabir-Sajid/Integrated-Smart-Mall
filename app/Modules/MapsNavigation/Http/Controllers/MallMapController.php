@@ -24,13 +24,12 @@ class MallMapController extends Controller
 
     public function show(Request $request, Mall $publicMall): Response
     {
-        $data = $request->validate([
-            'from' => ['nullable', 'string', 'max:200', 'regex:'.self::PLACE],
-            'to' => ['nullable', 'string', 'max:200', 'regex:'.self::PLACE],
-            'step_free' => ['nullable', 'boolean'],
-        ]);
+        $from = $this->place($request->query('from'));
+        $to = $this->place($request->query('to'));
+        $written = array_filter([$request->query('from'), $request->query('to')], fn ($value): bool => $value !== null && $value !== '');
+        $notice = count($written) > count(array_filter([$from, $to])) ? __('That place is not on the map. Choose it from the list.') : null;
 
-        return $this->page($publicMall, $data['from'] ?? null, $data['to'] ?? null, $request->boolean('step_free'));
+        return $this->page($publicMall, $from, $to, $request->boolean('step_free'), $notice);
     }
 
     public function qr(Mall $publicMall, string $slug): Response
@@ -67,6 +66,10 @@ class MallMapController extends Controller
             return $this->unavailable($mall, $error);
         }
 
+        if (! is_string($link['url'] ?? null) || ! str_starts_with($link['url'], 'http')) {
+            return $this->unavailable($mall, new MapServiceUnavailable('The map service answered without an embed link.'));
+        }
+
         return response()->view('customer.maps.show', [
             'mall' => $mall,
             'embedUrl' => $link['url'],
@@ -90,6 +93,14 @@ class MallMapController extends Controller
             'notice' => $noMap ? __('This mall has no indoor map yet.') : __('The map is not available right now. Please try again in a few minutes.'),
             'startLabel' => null,
         ], $noMap ? 404 : 503);
+    }
+
+    /**
+     * A place written kind:value from the address, or null when it is missing or malformed.
+     */
+    private function place(mixed $value): ?string
+    {
+        return is_string($value) && strlen($value) <= 200 && preg_match(self::PLACE, $value) === 1 ? $value : null;
     }
 
     private function origin(string $url): string

@@ -67,13 +67,16 @@ class MallMapPageTest extends TestCase
         Http::assertSent(fn (Request $request): bool => $request['lang'] === 'bn');
     }
 
-    public function test_a_badly_written_place_is_refused(): void
+    public function test_a_badly_written_place_is_dropped_with_a_notice(): void
     {
-        Http::fake();
+        $this->fakeEmbed();
 
-        $this->get(route('maps.show', ['publicMall' => 'demo-mall', 'to' => 'G-101']))->assertSessionHasErrors('to');
-        $this->get(route('maps.show', ['publicMall' => 'demo-mall', 'from' => "unit:\x01"]))->assertSessionHasErrors('from');
-        Http::assertNothingSent();
+        $this->get(route('maps.show', ['publicMall' => 'demo-mall', 'to' => 'G-101', 'from' => "unit:\x01"]))
+            ->assertOk()
+            ->assertSee('That place is not on the map. Choose it from the list.')
+            ->assertSee(e(self::EMBED), false);
+
+        Http::assertSent(fn (Request $request): bool => ! isset($request['to']) && ! isset($request['from']));
     }
 
     public function test_an_unknown_destination_falls_back_to_the_plain_map(): void
@@ -96,6 +99,13 @@ class MallMapPageTest extends TestCase
 
         $this->get(route('maps.show', ['publicMall' => 'demo-mall']))->assertNotFound()->assertSee('This mall has no indoor map yet.')->assertDontSee('<iframe', false);
         $this->get(route('maps.show', ['publicMall' => 'demo-mall']))->assertStatus(503)->assertSee('The map is not available right now.');
+    }
+
+    public function test_an_answer_without_a_link_is_treated_as_unavailable(): void
+    {
+        Http::fake(['map-service.test/api/v1/embed-links' => Http::response(['data' => []], 201)]);
+
+        $this->get(route('maps.show', ['publicMall' => 'demo-mall']))->assertStatus(503)->assertDontSee('<iframe', false);
     }
 
     public function test_a_qr_code_opens_the_map_where_it_hangs(): void
