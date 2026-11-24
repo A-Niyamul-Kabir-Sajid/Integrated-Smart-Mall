@@ -159,6 +159,20 @@ Codes: junctions `<floor>-N0001`; checkpoints keep their QR code; entrances `E-<
 
 Timing uses scene custom properties (Scene properties > Custom Properties): `ism_walk_mps` 1.2, `ism_elevator_wait_s` 30, `ism_elevator_mps` 1.0, `ism_escalator_mps` 0.5, `ism_stairs_vertical_mps` 0.4, plus `ism_link_max_m` 6 and `ism_checkpoint_standoff_m` 0.8. These are defaults for the team to confirm.
 
+## The first real scan with demonstration markers
+
+`tools/blender/work/scans/Scaniverse 2026-11-22 151619.glb` (iPhone LiDAR, Scaniverse, 275k triangles) is one L-shaped corridor, about 1.5 m wide and 16 m long, opening east at its north end into a room about 6 m deep. It is used as floor `G` of the demo mall `niagara-city-mall`, with markers placed by a script instead of by hand: [samples/pilot_ground_markers.py](samples/pilot_ground_markers.py). The places are **demonstration only** (chosen from the plan image and the scanned walls, not from the real building); the unit codes are the demo mall's `G-01` to `G-04`, so "Show on map" works in the Smart Mall app.
+
+```powershell
+$work = "tools/blender/work/real-ground"
+& $blender -b --factory-startup -P tools/blender/ism_map.py -- prepare --blend $work/mall.blend --scan "tools/blender/work/scans/Scaniverse 2026-11-22 151619.glb" --floor G --elevation 0 --name "Ground floor"
+& $blender -b --factory-startup -P tools/blender/ism_map.py -- draft-graph --blend $work/mall.blend --floor G
+& $blender -b $work/mall.blend --factory-startup --python-exit-code 1 -P tools/blender/samples/pilot_ground_markers.py
+& $blender -b --factory-startup -P tools/blender/ism_map.py -- export --blend $work/mall.blend --out $work/package
+```
+
+Result: valid, no warnings; 17 nodes, 32 edges, QR codes `G-C01` (south end, east wall) and `G-C02` (north room, north wall), doors of `G-01` to `G-04`, facilities "Washroom G (demo)" (toilet), "Information desk (demo)" (information) and "South entrance (demo)" (exit). The QR codes sit on walls found by casting rays from the corridor centre in the scan (the east wall at x 3.2 to 3.5 m, the north wall at y 16.3 m); the export warns when a QR code has no wall behind it or the scan blocks a door's link to the graph. The script removes earlier markers, so it can be run again after changing a place. Import it into the map service with `php artisan map:import ../tools/blender/work/real-ground/package --name="Real scan, ground floor (demo markers)" --mall=niagara-city-mall --publish`. Manual check: [guide/TestByYourself/44_real_scan_pilot_map.md](../../guide/TestByYourself/44_real_scan_pilot_map.md).
+
 ## View it in 3D and add signs and advertisements
 
 Import the package into the separate map service ([map-service/README.md](../../map-service/README.md)) and open its 3D editor. You can also look at a package without the service: start the service, open `http://127.0.0.1:8100/viewer/index.html` and choose "Open package folder…".
