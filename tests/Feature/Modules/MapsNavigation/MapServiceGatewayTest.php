@@ -51,7 +51,8 @@ class MapServiceGatewayTest extends TestCase
         $cases = [
             401 => 'refused the API key',
             403 => 'lacks permission',
-            404 => 'no published map with that id',
+            404 => 'detail',
+            410 => 'detail',
             429 => 'Too many requests',
             500 => 'answered HTTP 500',
         ];
@@ -96,5 +97,40 @@ class MapServiceGatewayTest extends TestCase
         $this->artisan('maps:service-check')->expectsOutputToContain('Connected. Published maps:')->expectsOutputToContain('Sample floor')->assertSuccessful();
         $this->artisan('maps:service-check')->expectsOutputToContain('no published maps yet')->assertSuccessful();
         $this->artisan('maps:service-check')->expectsOutputToContain('refused the API key')->assertFailed();
+    }
+
+    public function test_it_reads_a_mall_a_checkpoint_a_route_and_an_embed_link(): void
+    {
+        Http::fake([
+            'map-service.test/api/v1/malls/demo-mall/routes' => Http::response(['data' => ['total' => ['minutes' => 1]]]),
+            'map-service.test/api/v1/malls/demo-mall' => Http::response(['data' => ['id' => 'map-1', 'places' => ['units' => []]]]),
+            'map-service.test/api/v1/checkpoints/k3j9x2m1q8wa' => Http::response(['data' => ['start' => 'checkpoint:k3j9x2m1q8wa']]),
+            'map-service.test/api/v1/embed-links' => Http::response(['data' => ['url' => 'http://map-service.test/embed/maps/map-1?signature=x']], 201),
+        ]);
+        $gateway = app(MapServiceGateway::class);
+
+        $this->assertSame('map-1', $gateway->mall('demo-mall')['id']);
+        $this->assertSame('checkpoint:k3j9x2m1q8wa', $gateway->checkpoint('k3j9x2m1q8wa')['start']);
+        $this->assertSame(1, $gateway->route('demo-mall', 'node:G-C01', ['unit:G-101'], true, 'distance')['total']['minutes']);
+        $this->assertStringContainsString('signature=', $gateway->embedLink('demo-mall', ['to' => ['unit:G-101'], 'lang' => 'bn'])['url']);
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/malls/demo-mall/routes')
+            && $request->method() === 'POST' && $request['to'] === ['unit:G-101'] && $request['step_free'] === true && $request['cost'] === 'distance');
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/embed-links')
+            && $request['mall_ref'] === 'demo-mall' && $request['lang'] === 'bn' && ! isset($request['from']));
+    }
+
+    public function test_the_service_reason_is_kept(): void
+    {
+        Http::fake(['*' => Http::response(['message' => 'This QR code is no longer in use.', 'reason' => 'retired'], 410)]);
+
+        try {
+            app(MapServiceGateway::class)->checkpoint('k3j9x2m1q8wa');
+            $this->fail('A retired code was not reported.');
+        } catch (MapServiceUnavailable $error) {
+            $this->assertSame('retired', $error->reason);
+            $this->assertSame(410, $error->status);
+            $this->assertSame('This QR code is no longer in use.', $error->getMessage());
+        }
     }
 }

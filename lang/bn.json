@@ -545,5 +545,15 @@
     "Facility directory": "সুবিধার তালিকা",
     "Mall guide or policy": "মলের নির্দেশিকা বা নীতি",
     "Product offer": "পণ্যের অফার",
-    "Frequently asked questions": "সচরাচর জিজ্ঞাসা"
+    "Frequently asked questions": "সচরাচর জিজ্ঞাসা",
+    "Show on map": "ম্যাপে দেখুন",
+    "You are at: :place": "আপনি এখানে আছেন: :place",
+    "Scan the QR code nearest to you to start from where you are, or choose your start below.": "যেখানে আছেন সেখান থেকে শুরু করতে সবচেয়ে কাছের কিউআর কোডটি স্ক্যান করুন, অথবা নিচে শুরুর জায়গা বেছে নিন।",
+    "Indoor map of :mall": ":mall-এর ভেতরের ম্যাপ",
+    "Step-free routes use lifts and ramps only. Routes change at once when a walkway or lift is closed.": "সিঁড়ি ছাড়া পথ শুধু লিফট ও র‍্যাম্প ব্যবহার করে। কোনো হাঁটার পথ বা লিফট বন্ধ হলে পথ সঙ্গে সঙ্গে বদলে যায়।",
+    "m": "মিটার",
+    "This QR code is no longer in use. Choose where you are on the map, or scan another code.": "এই কিউআর কোডটি আর ব্যবহার হয় না। ম্যাপে আপনি কোথায় আছেন বেছে নিন, অথবা অন্য একটি কোড স্ক্যান করুন।",
+    "That place is not on the map. Choose it from the list.": "জায়গাটি ম্যাপে নেই। তালিকা থেকে বেছে নিন।",
+    "This mall has no indoor map yet.": "এই মলের ভেতরের ম্যাপ এখনো নেই।",
+    "The map is not available right now. Please try again in a few minutes.": "ম্যাপটি এখন পাওয়া যাচ্ছে না। কয়েক মিনিট পরে আবার চেষ্টা করুন।"
 }

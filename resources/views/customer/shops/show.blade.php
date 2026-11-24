@@ -42,7 +42,11 @@
                         <div>
                             <dt class="font-medium">{{ __('Location') }}</dt>
                             @forelse ($units as $unit)
-                                <dd class="text-slate-600">{{ __($unit->floor->name) }} · {{ __('Unit :code', ['code' => $unit->unit_code]) }}</dd>
+                                <dd class="text-slate-600">{{ __($unit->floor->name) }} · {{ __('Unit :code', ['code' => $unit->unit_code]) }}
+                                    @if (Route::has('maps.show'))
+                                        · <a href="{{ route('maps.show', ['publicMall' => $mall->slug, 'to' => 'unit:'.$unit->unit_code]) }}" class="font-medium text-brand-700 hover:underline">{{ __('Show on map') }}</a>
+                                    @endif
+                                </dd>
                             @empty
                                 <dd class="text-slate-600">{{ __('Location not published') }}</dd>
                             @endforelse

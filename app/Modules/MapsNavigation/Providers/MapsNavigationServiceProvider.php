@@ -6,10 +6,14 @@ use App\Core\Modules\ModuleServiceProvider;
 use App\Modules\MapsNavigation\Adapters\HttpMapServiceGateway;
 use App\Modules\MapsNavigation\Console\CheckMapService;
 use App\Modules\MapsNavigation\Contracts\MapServiceGateway;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
- * Registers MapsNavigation. For now it connects to the separate map service
- * (decision D-020); the module's own tables come with ISM-59.
+ * Registers MapsNavigation: the client of the separate map service, which
+ * owns maps, the navigation graph, QR checkpoints and routes (decisions
+ * D-020 and D-021), and the visitor's map pages. The module has no tables.
  */
 class MapsNavigationServiceProvider extends ModuleServiceProvider
 {
@@ -23,5 +27,9 @@ class MapsNavigationServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         $this->commands([CheckMapService::class]);
+
+        // Each map page view asks the map service for a new embed link.
+        RateLimiter::for('maps', fn (Request $request): Limit => Limit::perMinute(30)
+            ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
     }
 }

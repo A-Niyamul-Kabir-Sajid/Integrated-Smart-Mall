@@ -24,6 +24,8 @@ class RouteProtectionTest extends TestCase
         'malls/{publicMall}/assistant/go/{type}/{id}',
         'malls/{publicMall}/assistant/messages',
         'malls/{publicMall}/facilities',
+        'malls/{publicMall}/map',
+        'malls/{publicMall}/map/qr/{slug}',
         'malls/{publicMall}/shops',
         'malls/{publicMall}/shops/{publicShop}',
         'malls/{publicMall}/shops/{publicShop}/reviews',
