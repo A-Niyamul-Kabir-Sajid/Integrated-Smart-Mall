@@ -145,6 +145,7 @@ class PackagePresenter
                     'checkpoint_code' => $anchor->checkpoint_code,
                     'label' => $anchor->label,
                     'floor_code' => $anchor->node->floor_code,
+                    'node_code' => $anchor->node->node_code,
                     'place' => 'checkpoint:'.$checkpoints[$anchor->checkpoint_code],
                 ])->values()->all(),
         ];

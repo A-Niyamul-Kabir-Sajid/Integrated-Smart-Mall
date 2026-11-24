@@ -81,7 +81,8 @@ class RouteApiTest extends TestCase
             ->assertJsonPath('data.places.units.0', ['unit_code' => '1-205', 'floor_code' => '1', 'entrances' => 1, 'place' => 'unit:1-205'])
             ->assertJsonPath('data.places.units.1.entrances', 2)
             ->assertJsonPath('data.places.facility_types.1', ['type' => 'toilet', 'count' => 2, 'place' => 'facility-type:toilet'])
-            ->assertJsonPath('data.places.checkpoints.0.place', "checkpoint:{$slug}");
+            ->assertJsonPath('data.places.checkpoints.0.place', "checkpoint:{$slug}")
+            ->assertJsonPath('data.places.checkpoints.0.node_code', '1-C01');
     }
 
     public function test_closures_through_the_api_need_graph_write_and_change_routes(): void

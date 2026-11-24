@@ -34,6 +34,6 @@
     </div>
 </div>
 <script type="application/json" id="embed-config">@json($config)</script>
-<script src="{{ asset('embed/embed.js') }}?v=1" defer></script>
+<script src="{{ asset('embed/embed.js') }}?v=3" defer></script>
 </body>
 </html>

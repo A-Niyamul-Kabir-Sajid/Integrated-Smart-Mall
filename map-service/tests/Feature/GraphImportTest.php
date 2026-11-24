@@ -251,7 +251,8 @@ class GraphImportTest extends TestCase
         $this->assertSame('published', $map->status);
         $this->assertSame('draft', $old->refresh()->status);
 
-        $this->actingAs($admin)->patch(route('admin.maps.mall', $map), ['mall_ref' => 'Not A Slug'])->assertSessionHasErrors('mall_ref');
+        $this->actingAs($admin)->patch(route('admin.maps.mall', $map), ['mall_ref' => 'Not A Slug'])
+            ->assertSessionHasErrors(['mall_ref' => MapPublisher::MALL_REF_MESSAGE]);
         $this->patch(route('admin.maps.mall', $map), ['mall_ref' => ''])->assertRedirect();
         $this->assertNull($map->refresh()->mall_ref);
     }

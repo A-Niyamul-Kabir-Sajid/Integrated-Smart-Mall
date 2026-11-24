@@ -320,6 +320,14 @@
             if (label) element('text', { x: node.x + 0.6, y: -node.y + 0.3, class: 'label' }, layer).textContent = label;
         });
 
+        if (!route) {
+            const start = startNode();
+            if (start && start.floor === code) {
+                element('circle', { cx: start.x, cy: -start.y, r: 0.8, class: 'marker-start' }, layer);
+                element('text', { x: start.x + 1, y: -start.y - 0.8, class: 'label' }, layer).textContent = t('youAreHere');
+            }
+        }
+
         if (route) {
             const first = route.path[0];
             const last = route.path[route.path.length - 1];
@@ -401,6 +409,24 @@
         $('zoom-fit').addEventListener('click', fit);
     }
 
+    // The floor of the start place, so a scanned QR code opens where the visitor stands.
+    function startFloor() {
+        const places = state.data.places;
+        const from = config.from || '';
+        const match = [...places.checkpoints, ...places.units, ...places.facilities].find((item) => item.place === from);
+        if (match) return match.floor_code;
+        if (from.startsWith('node:')) return state.nodes.get(from.slice(5))?.floor ?? null;
+        return null;
+    }
+
+    // The node of the chosen start when it is a QR code or a graph node.
+    function startNode() {
+        const from = $('from').value || '';
+        if (from.startsWith('node:')) return state.nodes.get(from.slice(5)) ?? null;
+        const checkpoint = state.data.places.checkpoints.find((item) => item.place === from);
+        return checkpoint ? state.nodes.get(checkpoint.node_code) ?? null : null;
+    }
+
     // ---- start ------------------------------------------------------------
     async function start() {
         translateChrome();
@@ -417,9 +443,10 @@
         state.data.labels = state.data.labels || {};
         fillForm();
         bindPanZoom();
-        setFloor(state.data.floors[0].floor_code, false);
+        setFloor(startFloor() ?? state.data.floors[0].floor_code, false);
         render();
         $('ask').addEventListener('submit', (event) => { event.preventDefault(); askRoute(); });
+        $('from').addEventListener('change', () => { if (!state.route) render(); });
         $('app').setAttribute('aria-busy', 'false');
         post('ready', { floors: state.data.floors.map((floor) => floor.floor_code), name: state.data.map.name });
         if ($('from').value && $('to').value) askRoute();

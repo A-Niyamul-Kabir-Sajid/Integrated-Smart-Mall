@@ -46,7 +46,7 @@ class MapController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'mall_ref' => ['nullable', 'string', 'max:100', 'regex:'.MapPublisher::MALL_REF_PATTERN],
             'publish' => ['nullable', 'boolean'],
-        ]);
+        ], ['mall_ref.regex' => MapPublisher::MALL_REF_MESSAGE]);
 
         try {
             $map = $this->importer->import($this->importer->resolveFromImportRoot($data['folder']), $data['name'], (bool) ($data['publish'] ?? false), $data['mall_ref'] ?? null);
@@ -96,7 +96,10 @@ class MapController extends Controller
      */
     public function mall(Request $request, MallMap $mallMap): RedirectResponse
     {
-        $data = $request->validate(['mall_ref' => ['nullable', 'string', 'max:100', 'regex:'.MapPublisher::MALL_REF_PATTERN]]);
+        $data = $request->validate(
+            ['mall_ref' => ['nullable', 'string', 'max:100', 'regex:'.MapPublisher::MALL_REF_PATTERN]],
+            ['mall_ref.regex' => MapPublisher::MALL_REF_MESSAGE],
+        );
         $this->publisher->assignMall($mallMap, $data['mall_ref'] ?? null);
 
         return back()->with('status', $mallMap->mall_ref === null ? "“{$mallMap->name}” belongs to no mall." : "“{$mallMap->name}” belongs to mall {$mallMap->mall_ref}.");
