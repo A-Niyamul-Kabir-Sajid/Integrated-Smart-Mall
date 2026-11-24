@@ -232,6 +232,19 @@ Evidence: map-service `php artisan test` 104 passed (graph import and refusals 2
 
 Limitations: route steps are English only (the embedded map's labels are English or Bangla); the embedded map is 2D, the 3D view and Android WebXR guidance stay with ISM-63/64/65 and alignment accuracy is still unmeasured (C-07); no real mall has QR codes, shop doors or facilities placed yet (the first real scan has only a corridor line); routes are not stored (ROUTE_SESSION off); the turn, fold, link, session, refresh and rate-limit values are defaults to confirm; the main app's pages are wider than a 390 px phone screen (an existing layout issue seen in the screenshots, not changed here); ISM-94 (facilities on map nodes), ISM-97 (return navigation to the parking spot) and ISM-113 to ISM-115 (map and QR administration in the mall app) can now use these APIs and are not done. Your own map-service database needs `php artisan migrate` and `php artisan map:rebuild-graph`, and its maps need a mall before they get QR codes.
 
+## 2026-11-24: EPIC-05 first real scan as the demo mall's ground floor (ISM-57)
+
+Branch `feature/ISM-57-pilot-scan` (from `feature/epic-05-maps-navigation`, because it uses the graph import and `--mall`). No Blender MCP server was connected, so Blender 5.3 ran from the command line with `tools/blender/ism_map.py`.
+
+- `tools/blender/work/scans/Scaniverse 2026-11-22 151619.glb` prepared again as floor G at 0 m (279 fragments removed, rotation -0.41 degrees, 231,275 triangles) and drafted (3 vertices over 26.9 m2 walkable) in the git-ignored `tools/blender/work/real-ground/`.
+- `tools/blender/samples/pilot_ground_markers.py` places demonstration markers with `ism_map.add_marker`: QR codes `G-C01` and `G-C02`, doors of the demo mall's units `G-01` to `G-04`, and three facilities (toilet, information, exit). The first export warned that both QR codes had no wall behind them and a door's link crossed the scan; walls were measured by casting rays in the scan (east wall x 3.2 to 3.5 m, north wall y 16.3 m), the markers moved, and the final export is valid with no warning: 17 nodes, 32 edges.
+- Imported into the map service for `niagara-city-mall` and published (replacing the two-floor test mall in the throwaway demo database; the QR codes `G-C01` and `G-C02` kept their addresses because the mall and codes were the same).
+- `tools/blender/README.md` section "The first real scan with demonstration markers"; manual check guide 44.
+
+Evidence: export report `ok`, no warnings. Routes through the API and the Smart Mall Map page in headless Edge: QR G-C01 to G-04 17 m and 1 minute (Walk 12 m, Bear right 3 m, Turn right 2 m), QR G-C02 to G-02 9 m, nearest toilet 11 m, step-free identical (no stairs on this floor); Fresh Mart's "Show on map" opens the map with G-02; the map service viewer shows the scan in 3D with its photo colours and the markers, in perspective and top view.
+
+Limitations: the marker places and the link of unit codes to doors are invented for the demonstration and must be replaced by the real QR positions, doors and unit codes; one floor only, so no lifts or escalators; the scan has holes in its walls, so some places cannot hold a QR code; the scan and package are not in git, so this data has no automated test.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.
