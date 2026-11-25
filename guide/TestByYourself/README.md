@@ -54,6 +54,7 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 | [43_mall_map_embed_and_docs](43_mall_map_embed_and_docs.md) | The Map page and QR landing page in the Smart Mall app: embedded map, routes, Bangla, closures reaching an open map, signed links and allowed sites, `/docs` | EPIC-05 |
 | [44_real_scan_pilot_map](44_real_scan_pilot_map.md) | The first real iPhone scan as the demo mall's ground floor: prepare, demo markers by script, export without warnings, import, 2D routes and Show on map, the scan in 3D | EPIC-05 |
 | [45_map_editor](45_map_editor.md) | Map editor: points (node, shop entrance, facility, QR code) with keys and heights, paths with snapping and merging, changes to the navigation graph with undo, routes in the Smart Mall app, new versions keep everything | EPIC-11 |
+| [46_ar_directions](46_ar_directions.md) | AR directions on an Android phone: View in AR, finding the floor, lining up at a QR code by camera or by touch, arrows to the shop, the lift and the next floor, off the route, arriving, the preview on a computer, QR signs printed at real size, accuracy record | EPIC-05 |
 
 ## Helpers
 
@@ -61,6 +62,7 @@ Every account password is `password`. The app runs at <http://127.0.0.1:8000>.
 |---|---|---|
 | [scripts/show-links.php](scripts/show-links.php) | `php artisan tinker guide/TestByYourself/scripts/show-links.php` | Prints every full URL and id (shops, workspaces, CSV import, listings, products, moderation desk, assistant pages, existing reviews). Read-only. |
 | [scripts/issue-purchase-code.php](scripts/issue-purchase-code.php) | `PRODUCT` and `OPTION` (or `LISTING_ID`) set, then `php artisan tinker guide/TestByYourself/scripts/issue-purchase-code.php` | Plays the seller: records a sale and prints a one-time purchase code, until the sales screen exists |
+| [scripts/ar-preview-link.php](scripts/ar-preview-link.php) | In `map-service`: `php artisan tinker ..\guide\TestByYourself\scripts\ar-preview-link.php` (optional `MALL`, `FROM_CODE`, `TO`, `LINK_LANG`) | Prints a signed link (15 minutes) to the AR directions page with `#preview`, for checking it on a computer. Read-only. |
 
 CSV test files: [samples/good.csv](samples/good.csv), [samples/bad.csv](samples/bad.csv), [samples/wrongheader.csv](samples/wrongheader.csv).
 

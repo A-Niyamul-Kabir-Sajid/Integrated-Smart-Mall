@@ -283,6 +283,44 @@ Same branch `feature/ISM-114-map-end-points`. Decision D-022 (extended).
 
 Evidence: map-service `php artisan test` 143 passed (graph changes 16, five new: edit a move, edit a connection and replay a later change, refused edits leave the graph as it was, fix a change that no longer applies, JSON and page form with a change of another map refused), the viewer tests 8 passed. Live in headless Edge on the real scan: a new move of G-N0003 edited with Edit, Pick the new place and Save change (same key, node at x 2.70, y 4.23), a node code `NOPE-1` refused with "Node NOPE-1 is not on this map." and nothing changed, Pick filled the Node box with G-N0004, the page form saved x 2.20 ("— saved."), then Undo; the two graph changes already in the demo list were the same before and after. The guide's new steps were checked on the Blender test mall in a rolled-back transaction. Manual check: guide 45 (steps 4.6, 4.7, 5.4 to 5.6 and two refusals added).
 
+## 2026-11-25: AR directions on Android phones (ISM-65), advertisements wait for production (ISM-188)
+
+Branch `feature/ISM-65-webar-guidance`, started from `feature/ISM-114-map-end-points`. Decisions D-023 and D-024.
+
+- The user chose Android only for AR (WebXR, no paid SDK for iPhone). They also chose to build advertisements and their on-time tracking when moving to production; that is recorded as D-024 and on ISM-188 with the label `production`.
+- **Map service, the AR page** `/embed/maps/{map}/ar` (`resources/views/embed/ar.blade.php`, `public/ar/ar.js`, `code-scanner.js`, `ar-math.js`, `ar.css`). It does:
+  - finding the floor;
+  - lining up at any QR code, by camera or by touch. The camera uses raw camera access and `BarcodeDetector`; the code's pose is fitted to its four corners and averaged over six sightings;
+  - arrows on the floor, a destination pin, turn and lift signs, and steps with distances;
+  - the lift and the next floor, a new route when off the route, and arrival;
+  - **Details** for the accuracy record, Bangla, and `#preview` for computers.
+- **Map service, the rest:**
+  - `GET /embed/maps/{map}/ar-link` gives a signed link to an open embed only.
+  - The map data gives each active QR code's pose and the node heights.
+  - The embedded map shows **View in AR** only where AR works.
+  - The QR codes page has **Print signs at real size**: one per A4 page at the code's width.
+  - `/docs` has a section **AR directions**.
+- **Smart Mall app:** the Map page's iframe allows `xr-spatial-tracking`.
+
+Evidence:
+- **Tests:** map-service `php artisan test` 151 passed (8 new in `ArDirectionsTest`). `node --test tests/js/ar.test.mjs` 13 passed; the viewer tests 8 passed. The Smart Mall app's map tests 19 passed.
+- **Pose estimate against corner noise:** on a 720-pixel picture with ±1 pixel noise, a code seen straight on gave single sightings within 1.4, 3.2 and 6.8 degrees at 0.4, 0.6 and 0.8 m. Averages of five were within 0.5, 1.3 and 1.8 degrees. Beyond about 1.5 m single sightings could take the mirrored answer; the ambiguity check removes them, hence the 1.2 m limit.
+- **Headless Edge** (the page had to be made visible: background throttling off):
+  - the embed hides the button on a computer and shows it where AR is reported;
+  - a tap opens the AR page in a new tab; without a tap a link appears;
+  - the AR page's intro and its refusal text, in English and Bangla;
+  - the preview from G-C01 to Shop 1-105: turns, the lift banner, the first floor, the off-route banner, a new route from node 1-N0009, and arrival;
+  - the QR signs printed to PDF with the code 18 cm wide, one per A4 page;
+  - no page errors.
+  - These checks ran on a copy of the scratch database served on port 8101, so the demo map on port 8100 was not changed.
+- **Not checked here:** a real AR session, since there is no Android phone here. Raw camera access, the picture's row order and the line-up accuracy need the phone: manual check 46 part B, with its accuracy table for C-07.
+
+Limitations:
+- One line-up per code, with no continuous localization (D-019); after a lift the visitor lines up again.
+- Routes do not refresh by themselves during AR: a closure needs **New route from here** or a new line-up.
+- No shop signs or advertisements in AR yet (D-024).
+- Route steps are English only.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.

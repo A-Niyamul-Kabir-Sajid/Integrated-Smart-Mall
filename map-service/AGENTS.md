@@ -6,6 +6,7 @@ What is different here:
 
 - It is its own Laravel 13 app with its own `vendor/`, `.env` and SQLite database. Run commands from this folder.
 - Code uses the default Laravel layout (`app/Models`, `app/Services`, `app/Http/...`), not the main app's `app/Modules`.
-- Tests: `php artisan test --compact` and `node --test tests/js/annotations.test.mjs`.
+- Tests: `php artisan test --compact`, `node --test tests/js/annotations.test.mjs` and `node --test tests/js/ar.test.mjs` (one file per run; `node --test tests/js/` does not work here).
+- The AR directions page is plain JavaScript in `public/ar/` (WebXR, three.js from the same pinned CDN); its maths lives in `public/ar/ar-math.js` so Node can test it.
 - The 3D viewer is plain JavaScript in `public/viewer/` (three.js from the jsDelivr CDN, pinned to 0.170.0); there is no npm build.
 - The API contract is described in `README.md`; change it only together with the main app's client (`../app/Modules/MapsNavigation`).
