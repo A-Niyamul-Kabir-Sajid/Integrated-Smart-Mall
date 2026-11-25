@@ -20,7 +20,7 @@
 
         @if ($embedUrl)
             <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                <iframe id="mall-map" src="{{ $embedUrl }}" title="{{ __('Indoor map of :mall', ['mall' => $mall->name]) }}" class="block w-full border-0" style="height:72vh;min-height:520px" allow="fullscreen" referrerpolicy="no-referrer"></iframe>
+                <iframe id="mall-map" src="{{ $embedUrl }}" title="{{ __('Indoor map of :mall', ['mall' => $mall->name]) }}" class="block w-full border-0" style="height:72vh;min-height:520px" allow="fullscreen; xr-spatial-tracking" referrerpolicy="no-referrer"></iframe>
             </div>
             <p class="text-sm text-slate-500">{{ __('Step-free routes use lifts and ramps only. Routes change at once when a walkway or lift is closed.') }}</p>
             <script>

@@ -43,6 +43,7 @@ class MallMapPageTest extends TestCase
         $this->get(route('maps.show', ['publicMall' => 'demo-mall', 'to' => 'unit:G-101', 'step_free' => 1]))
             ->assertOk()
             ->assertSee('<iframe id="mall-map" src="'.e(self::EMBED).'"', false)
+            ->assertSee('allow="fullscreen; xr-spatial-tracking"', false)
             ->assertSee('"http:\/\/map-service.test"', false)
             ->assertDontSee(self::KEY);
 
