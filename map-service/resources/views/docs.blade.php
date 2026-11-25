@@ -15,7 +15,7 @@
 </style>
 <div class="docs">
 <h1>ISM Map Service API</h1>
-<p class="lead">Indoor maps of the malls, routes between shops and facilities, QR start points and an embeddable map window. The Smart Mall app is the first client. Base address: <code>{{ $base }}</code></p>
+<p class="lead">Indoor maps of the malls, routes between shops and facilities, QR start points, an embeddable map window and AR directions on Android phones. The Smart Mall app is the first client. Base address: <code>{{ $base }}</code></p>
 
 <nav class="toc card" aria-label="Contents">
     <a href="#start">Getting started</a>
@@ -26,6 +26,7 @@
     <a href="#checkpoints">QR checkpoints</a>
     <a href="#embed">Embedded map</a>
     <a href="#messages">Embed messages</a>
+    <a href="#ar">AR directions</a>
     <a href="#closures">Closures</a>
     <a href="#errors">Errors and limits</a>
     <a href="#frame">Coordinates</a>
@@ -137,7 +138,7 @@ Authorization: Bearer ism_...
     <li>The key needs at least one allowed origin; otherwise the answer is 422 with reason <code>no_origins</code>.</li>
 </ul>
 <h3>2. Your page shows it</h3>
-<pre><code>&lt;iframe src="(the url)" title="Mall map" style="width:100%;height:600px;border:0" allow="fullscreen"&gt;&lt;/iframe&gt;</code></pre>
+<pre><code>&lt;iframe src="(the url)" title="Mall map" style="width:100%;height:600px;border:0" allow="fullscreen; xr-spatial-tracking"&gt;&lt;/iframe&gt;</code></pre>
 <p>Only the key's allowed origins may frame the page (<code>Content-Security-Policy: frame-ancestors</code>). Revoking the key or unpublishing the map ends every open embed: its next request answers "This map has expired. Reload the page." A tampered or expired link answers 403.</p>
 
 <h2 id="messages">Embed messages</h2>
@@ -160,6 +161,16 @@ window.addEventListener('message', (event) => {
   if (event.origin !== '{{ url('/') }}' || event.data?.source !== 'ism-map') return;
   if (event.data.type === 'ism-map:route') console.log(event.data.total.minutes + ' min');
 });</code></pre>
+
+<h2 id="ar">AR directions</h2>
+<p>On phones that can show AR (Chrome on Android with Google Play Services for AR), the embedded map shows <b>View in AR</b> once a route is shown. It opens this service's AR page in a new tab; your page needs nothing more than <code>xr-spatial-tracking</code> in the iframe's <code>allow</code> list, so the map can ask the browser whether AR works (without it, the button shows on every Android phone and the AR page checks). iPhones and computers keep the 2D map.</p>
+<ul>
+    <li>The visitor moves the phone over the floor until a ring appears, then lines it up with any QR code of the mall: the camera reads the code from about half a metre (Chrome's camera access and barcode reader), or the phone is held flat against the code and <b>Align</b> tapped. The route then starts at that code.</li>
+    <li>Arrows on the floor, a pin at the destination, the next step with its distance, and the distance and time left. After a lift, escalator or stairs the visitor lines up again at a code of the new floor. More than 4 m off the route for a few seconds offers a new route from where the visitor stands.</li>
+    <li>QR codes must be printed at their real size (18 cm unless the map package says otherwise): the phone measures its distance to a code by the code's size. Administrators print them from the QR codes page with <b>Print signs at real size</b>.</li>
+    <li>WebXR needs a secure page: the service must be reached over https (or as <code>localhost</code> / <code>127.0.0.1</code>, for example through <code>adb reverse</code> while testing).</li>
+</ul>
+<p>The AR page cannot be framed (<code>frame-ancestors 'none'</code>); its link is signed, valid {{ $linkMinutes }} minutes, and asked for by the open embedded map with its own session, so your server does nothing extra.</p>
 
 <h2 id="closures">Closures</h2>
 <p>A walkway, lift or escalator can be closed for a while; routes avoid it at once. Administrators use the Closures page of a map; another system can use the API with <code>graph:write</code>:</p>

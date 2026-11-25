@@ -212,7 +212,7 @@ class MapEditService
                 'z_m' => round($elevation + $height, 3),
                 'yaw_deg' => round(fmod(fmod((float) ($data['qr_yaw'] ?? 0), 360.0) + 360.0, 360.0), 1),
                 'marker_height_m' => round($height, 2),
-                'physical_width_m' => 0.18,
+                'physical_width_m' => PackagePresenter::QR_PRINT_WIDTH_M,
             ];
         }
 

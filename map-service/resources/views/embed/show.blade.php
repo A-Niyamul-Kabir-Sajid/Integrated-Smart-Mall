@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title>{{ $map->name }}</title>
-    <link rel="stylesheet" href="{{ asset('embed/embed.css') }}?v=3">
+    <link rel="stylesheet" href="{{ asset('embed/embed.css') }}?v=4">
 </head>
 <body>
 <div id="app" class="app" aria-busy="true">
@@ -18,6 +18,7 @@
         </label>
         <label class="check"><input type="checkbox" id="step-free"> <span data-t="stepFree">Step-free</span></label>
         <button type="submit" id="go" class="go" data-t="go">Show route</button>
+        <button type="button" id="ar" class="ar" hidden data-t="ar">View in AR</button>
     </form>
     <div id="summary" class="summary" role="status" aria-live="polite"></div>
     <div class="body">
@@ -34,6 +35,6 @@
     </div>
 </div>
 <script type="application/json" id="embed-config">@json($config)</script>
-<script src="{{ asset('embed/embed.js') }}?v=5" defer></script>
+<script src="{{ asset('embed/embed.js') }}?v=6" defer></script>
 </body>
 </html>

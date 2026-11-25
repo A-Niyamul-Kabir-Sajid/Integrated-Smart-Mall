@@ -68,7 +68,10 @@ Route::get('/docs', DocsController::class)->name('docs');
 // The embedded map: the page opens from a signed link created through POST /api/v1/embed-links;
 // its JSON calls carry the page's session token.
 Route::get('/embed/maps/{mallMap}', [EmbedController::class, 'show'])->middleware('signed')->name('embed.show');
+// The AR directions page (ISM-65), opened in its own tab from a signed link an open embed asks for.
+Route::get('/embed/maps/{mallMap}/ar', [EmbedController::class, 'ar'])->middleware('signed')->name('embed.ar');
 Route::middleware(['embed.session', 'throttle:embed'])->group(function () {
     Route::get('/embed/maps/{mallMap}/data', [EmbedController::class, 'data'])->name('embed.data');
     Route::get('/embed/maps/{mallMap}/route', [EmbedController::class, 'route'])->name('embed.route');
+    Route::get('/embed/maps/{mallMap}/ar-link', [EmbedController::class, 'arLink'])->name('embed.ar-link');
 });

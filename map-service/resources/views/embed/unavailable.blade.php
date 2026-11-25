@@ -7,6 +7,6 @@
     <link rel="stylesheet" href="{{ asset('embed/embed.css') }}?v=2">
 </head>
 <body>
-<div class="unavailable"><p>{{ $message }}</p><p>Reload the page to get a new map.</p></div>
+<div class="unavailable"><p>{{ $message }}</p><p>{{ $hint ?? 'Reload the page to get a new map.' }}</p></div>
 </body>
 </html>

@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Checkpoint;
 use App\Models\MallMap;
 use App\Services\CheckpointRegistry;
+use App\Services\PackagePresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
  * QR checkpoints of every mall: the printable codes, whether each is on the
- * mall's published map, and retiring, reactivating or replacing a code.
+ * mall's published map, and retiring, reactivating or replacing a code. The
+ * signs print at the width the map gives each code, because the AR page
+ * measures its distance to a code by the code's size (ISM-65).
  */
 class CheckpointController extends Controller
 {
@@ -31,6 +34,8 @@ class CheckpointController extends Controller
                     'floor_code' => $anchor?->node->floor_code,
                     'on_map' => $anchor !== null,
                     'url' => $this->registry->qrUrl($checkpoint),
+                    'width_m' => (float) ($anchor->qr['physical_width_m'] ?? PackagePresenter::QR_PRINT_WIDTH_M),
+                    'height_m' => isset($anchor->qr['marker_height_m']) ? (float) $anchor->qr['marker_height_m'] : null,
                 ];
             });
 

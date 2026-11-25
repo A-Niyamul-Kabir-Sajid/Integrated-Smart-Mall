@@ -11,7 +11,7 @@
 
     const TEXT = {
         en: {
-            from: 'From', to: 'To', stepFree: 'Step-free', go: 'Show route', fit: 'Fit',
+            from: 'From', to: 'To', stepFree: 'Step-free', go: 'Show route', fit: 'Fit', ar: 'View in AR', openAr: 'Open AR in a new tab',
             chooseStart: 'Where are you?', chooseDest: 'Where to?', qr: 'QR codes', shops: 'Shops', facilities: 'Facilities', nearest: 'Nearest', points: 'Places',
             shop: 'Shop', min: 'min', m: 'm', s: 's', loading: 'Loading the map…', failed: 'Something went wrong. Try again.',
             expired: 'This map has expired. Reload the page.', pick: 'Choose where you are and where to go.', updated: 'Route updated: a walkway changed.',
@@ -19,7 +19,7 @@
             types: { toilet: 'Toilet', prayer_room: 'Prayer room', atm: 'ATM', exit: 'Exit', information: 'Information desk', baby_care: 'Baby care', first_aid: 'First aid', parking: 'Parking' },
         },
         bn: {
-            from: 'কোথা থেকে', to: 'কোথায়', stepFree: 'সিঁড়ি ছাড়া', go: 'পথ দেখাও', fit: 'পুরো ম্যাপ',
+            from: 'কোথা থেকে', to: 'কোথায়', stepFree: 'সিঁড়ি ছাড়া', go: 'পথ দেখাও', fit: 'পুরো ম্যাপ', ar: 'এআর-এ দেখুন', openAr: 'নতুন ট্যাবে এআর খুলুন',
             chooseStart: 'আপনি কোথায় আছেন?', chooseDest: 'কোথায় যাবেন?', qr: 'কিউআর কোড', shops: 'দোকান', facilities: 'সুবিধা', nearest: 'সবচেয়ে কাছের', points: 'স্থান',
             shop: 'দোকান', min: 'মিনিট', m: 'মিটার', s: 'সেকেন্ড', loading: 'ম্যাপ লোড হচ্ছে…', failed: 'কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।',
             expired: 'এই ম্যাপের মেয়াদ শেষ। পাতাটি আবার লোড করুন।', pick: 'আপনি কোথায় আছেন এবং কোথায় যাবেন তা বেছে নিন।', updated: 'পথ বদলেছে: একটি হাঁটার পথ বন্ধ বা খোলা হয়েছে।',
@@ -31,7 +31,7 @@
     const t = (key) => words[key] ?? TEXT.en[key] ?? key;
     const typeName = (type) => words.types[type] ?? TEXT.en.types[type] ?? type.replace(/_/g, ' ');
 
-    const state = { data: null, nodes: new Map(), floor: null, route: null, view: null, drag: null, pointers: new Map(), refresh: null };
+    const state = { data: null, nodes: new Map(), floor: null, route: null, view: null, drag: null, pointers: new Map(), refresh: null, ar: false };
 
     // ---- host page messages ------------------------------------------------
     function post(type, payload = {}) {
@@ -159,17 +159,64 @@
             if (!options.quiet) setFloor(route.path[0].floor_code, false);
             render();
             showRoute(changed);
+            showArButton();
             post('route', { total: route.total, floors: route.floors, from: route.from, to: route.to, step_free: route.step_free });
             scheduleRefresh();
         } catch (error) {
             if (options.quiet && error.reason !== 'unreachable' && error.reason !== 'session') return;
             state.route = null;
+            showArButton();
             render();
             showSummary(error.message, true);
             $('steps').innerHTML = '';
             post('error', { reason: error.reason, message: error.message });
         } finally {
             $('go').disabled = false;
+        }
+    }
+
+    // ---- AR directions (ISM-65) ---------------------------------------------
+    // WebXR AR runs in Chrome on Android only, and not inside a frame of
+    // another site, so the AR page opens in its own tab from a signed link.
+    async function checkAr() {
+        if (!window.isSecureContext || !navigator.xr) return false;
+        try {
+            return await navigator.xr.isSessionSupported('immersive-ar');
+        } catch (error) {
+            // The host page did not allow xr-spatial-tracking for this frame: the AR page checks again.
+            return /Android/i.test(navigator.userAgent);
+        }
+    }
+
+    function showArButton() {
+        $('ar').hidden = !(state.ar && state.route && $('to').value);
+    }
+
+    async function openAr() {
+        const to = $('to').value;
+        if (!to) return;
+        // Open the tab during the tap, so it is not taken for a pop-up, then send it to the link.
+        const tab = window.open('', '_blank');
+        $('ar').disabled = true;
+        try {
+            const link = await call(config.arLinkUrl, { to, from: $('from').value, step_free: $('step-free').checked ? 1 : 0, cost: config.cost, lang: config.lang });
+            if (tab) {
+                tab.location.href = link.url;
+            } else {
+                const summary = $('summary');
+                summary.textContent = '';
+                const anchor = document.createElement('a');
+                anchor.href = link.url;
+                anchor.target = '_blank';
+                anchor.rel = 'noopener';
+                anchor.textContent = t('openAr');
+                summary.appendChild(anchor);
+            }
+        } catch (error) {
+            if (tab) tab.close();
+            showSummary(error.message, true);
+        } finally {
+            $('ar').disabled = false;
         }
     }
 
@@ -452,6 +499,9 @@
         render();
         $('ask').addEventListener('submit', (event) => { event.preventDefault(); askRoute(); });
         $('from').addEventListener('change', () => { if (!state.route) render(); });
+        $('to').addEventListener('change', showArButton);
+        $('ar').addEventListener('click', openAr);
+        checkAr().then((supported) => { state.ar = supported; showArButton(); });
         $('app').setAttribute('aria-busy', 'false');
         post('ready', { floors: state.data.floors.map((floor) => floor.floor_code), name: state.data.map.name });
         if ($('from').value && $('to').value) askRoute();

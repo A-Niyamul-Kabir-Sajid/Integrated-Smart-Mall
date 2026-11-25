@@ -16,8 +16,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The embedded map page (opened from a signed link) and the two JSON calls
- * it makes: the map data and routes.
+ * The embedded map page (opened from a signed link) and the JSON calls it
+ * makes: the map data, routes and a link to the AR directions page; and the
+ * AR directions page itself (ISM-65), which uses the same data and routes.
  */
 class EmbedController extends Controller
 {
@@ -44,6 +45,7 @@ class EmbedController extends Controller
             'token' => $this->embeds->token($key, $mallMap),
             'dataUrl' => route('embed.data', $mallMap),
             'routeUrl' => route('embed.route', $mallMap),
+            'arLinkUrl' => route('embed.ar-link', $mallMap),
             'from' => is_string($request->query('from')) ? $request->query('from') : null,
             'to' => array_values(array_filter((array) $request->query('to', []), 'is_string')),
             'stepFree' => $request->boolean('step_free'),
@@ -97,12 +99,85 @@ class EmbedController extends Controller
                 'plan' => isset($floor['plan']['url']) ? array_intersect_key($floor['plan'], array_flip(['url', 'width_px', 'height_px', 'metres_per_pixel', 'world_origin_x_m', 'world_origin_y_m'])) : null,
             ], $package['floors']),
             'nodes' => DB::table('map_nodes')->where('mall_map_id', $mallMap->id)->orderBy('node_code')->get()
-                ->map(fn (object $node): array => ['code' => $node->node_code, 'floor' => $node->floor_code, 'type' => $node->node_type, 'x' => (float) $node->x_m, 'y' => (float) $node->y_m])->values(),
+                ->map(fn (object $node): array => ['code' => $node->node_code, 'floor' => $node->floor_code, 'type' => $node->node_type, 'x' => (float) $node->x_m, 'y' => (float) $node->y_m, 'z' => (float) $node->z_m])->values(),
             'edges' => array_values($edges),
             'places' => $this->presenter->places($mallMap),
+            'qr_codes' => $this->presenter->qrCodes($mallMap),
             'signs' => (object) $signs->all(),
             'labels' => (object) $labels,
         ]]);
+    }
+
+    /**
+     * A signed link to the AR directions page for the embedded map's own key
+     * and map, so the page can open in its own tab (WebXR does not run in a
+     * frame of another site).
+     */
+    public function arLink(Request $request, MallMap $mallMap): JsonResponse
+    {
+        $data = $request->validate([
+            'to' => ['required', 'string', 'max:200'],
+            'from' => ['nullable', 'string', 'max:200'],
+            'step_free' => ['nullable', 'boolean'],
+            'cost' => ['nullable', 'in:time,distance'],
+            'lang' => ['nullable', 'in:'.implode(',', EmbedService::LANGUAGES)],
+        ]);
+        try {
+            $this->embeds->assertPlaceSyntax($data['from'] ?? null, 'from');
+            $this->embeds->assertPlaceSyntax($data['to'], 'to');
+        } catch (RouteNotPossible $error) {
+            return response()->json(['message' => $error->getMessage(), 'reason' => $error->reason, 'errors' => [$error->field => [$error->getMessage()]]], 422);
+        }
+
+        /** @var array{key: ApiKey, map: MallMap} $session */
+        $session = $request->attributes->get('embed');
+
+        return response()->json(['data' => $this->embeds->arLink($session['key'], $mallMap, [
+            'to' => $data['to'],
+            'from' => $data['from'] ?? null,
+            'step_free' => $request->boolean('step_free'),
+            'cost' => $data['cost'] ?? 'time',
+            'lang' => $data['lang'] ?? 'en',
+        ])]);
+    }
+
+    /**
+     * The AR directions page (ISM-65): WebXR in Chrome on Android, opened in
+     * its own tab from a link an open embedded map asked for. It reads the
+     * map and routes like the embedded map, with its own session token, and
+     * may never be framed.
+     */
+    public function ar(Request $request, MallMap $mallMap): Response
+    {
+        $policy = $this->embeds->arContentSecurityPolicy();
+        $key = ApiKey::query()->find($request->query('key'));
+        if ($key === null || ! $key->isActive() || ! $key->can('maps:read')) {
+            return response()->view('embed.unavailable', ['message' => 'This AR link is no longer valid.', 'hint' => 'Go back to the map and tap View in AR again.'], 403)
+                ->header('Content-Security-Policy', $policy);
+        }
+        if (! $mallMap->isPublished()) {
+            return response()->view('embed.unavailable', ['message' => 'This map is not available right now.', 'hint' => 'Go back to the map and try again later.'], 404)
+                ->header('Content-Security-Policy', $policy);
+        }
+
+        $lang = in_array($request->query('lang'), EmbedService::LANGUAGES, true) ? (string) $request->query('lang') : 'en';
+        $config = [
+            'mapId' => $mallMap->id,
+            'token' => $this->embeds->token($key, $mallMap),
+            'dataUrl' => route('embed.data', $mallMap),
+            'routeUrl' => route('embed.route', $mallMap),
+            'from' => is_string($request->query('from')) ? $request->query('from') : null,
+            'to' => is_string($request->query('to')) ? $request->query('to') : null,
+            'stepFree' => $request->boolean('step_free'),
+            'cost' => $request->query('cost') === 'distance' ? 'distance' : 'time',
+            'lang' => $lang,
+        ];
+
+        return response()
+            ->view('embed.ar', ['config' => $config, 'lang' => $lang, 'map' => $mallMap])
+            ->header('Content-Security-Policy', $policy)
+            ->header('Referrer-Policy', 'no-referrer')
+            ->header('Cache-Control', 'no-store');
     }
 
     public function route(RouteRequest $request, MallMap $mallMap): JsonResponse

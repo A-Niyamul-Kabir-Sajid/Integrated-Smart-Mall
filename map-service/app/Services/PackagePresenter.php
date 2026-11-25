@@ -18,6 +18,9 @@ use Illuminate\Support\Str;
  */
 class PackagePresenter
 {
+    /** Width in metres of a printed QR code (the code itself, without its white margin) when the package names none. */
+    public const QR_PRINT_WIDTH_M = 0.18;
+
     /**
      * @return array<string, mixed>
      */
@@ -158,6 +161,36 @@ class PackagePresenter
                     'place' => 'checkpoint:'.$checkpoints[$anchor->checkpoint_code],
                 ])->values()->all(),
         ];
+    }
+
+    /**
+     * The mall's active QR codes on this map and where each hangs: the AR
+     * directions page lines the camera up with them (ISM-65). A code without
+     * a printed width in its package is taken as the default print size.
+     *
+     * @return list<array{slug: string, checkpoint_code: string, label: string|null, floor_code: string, node_code: string, qr: array{x: float, y: float, z: float, yaw: float, height: float|null, width: float}}>
+     */
+    public function qrCodes(MallMap $map): array
+    {
+        $slugs = $map->mall_ref === null ? collect() : Checkpoint::query()->where('mall_ref', $map->mall_ref)->where('status', 'active')->pluck('public_slug', 'checkpoint_code');
+
+        return $map->checkpointAnchors()->with('node')->orderBy('checkpoint_code')->get()
+            ->filter(fn (MapCheckpointAnchor $anchor): bool => isset($slugs[$anchor->checkpoint_code]))
+            ->map(fn (MapCheckpointAnchor $anchor): array => [
+                'slug' => $slugs[$anchor->checkpoint_code],
+                'checkpoint_code' => $anchor->checkpoint_code,
+                'label' => $anchor->label,
+                'floor_code' => $anchor->node->floor_code,
+                'node_code' => $anchor->node->node_code,
+                'qr' => [
+                    'x' => (float) $anchor->qr['x_m'],
+                    'y' => (float) $anchor->qr['y_m'],
+                    'z' => (float) $anchor->qr['z_m'],
+                    'yaw' => (float) $anchor->qr['yaw_deg'],
+                    'height' => isset($anchor->qr['marker_height_m']) ? (float) $anchor->qr['marker_height_m'] : null,
+                    'width' => (float) ($anchor->qr['physical_width_m'] ?? self::QR_PRINT_WIDTH_M),
+                ],
+            ])->values()->all();
     }
 
     /**

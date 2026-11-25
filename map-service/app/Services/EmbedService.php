@@ -16,7 +16,8 @@ use InvalidArgumentException;
  * link with its API key and puts it in an iframe; the key never reaches the
  * browser. The page then talks to this service with an encrypted session
  * token that names the map and the key, so revoking the key or unpublishing
- * the map ends every open embed.
+ * the map ends every open embed. An open embed can ask for a link to the AR
+ * directions page (ISM-65) of the same key and map.
  */
 class EmbedService
 {
@@ -47,6 +48,32 @@ class EmbedService
 
         return [
             'url' => URL::temporarySignedRoute('embed.show', $expiresAt, $parameters),
+            'expires_at' => $expiresAt->toIso8601String(),
+        ];
+    }
+
+    /**
+     * A short-lived signed link to the AR directions page (ISM-65) for the
+     * key and map of an open embedded map. The page opens in its own tab.
+     *
+     * @param  array{to: string, from?: string|null, step_free?: bool, cost?: string, lang?: string}  $options
+     * @return array{url: string, expires_at: string}
+     */
+    public function arLink(ApiKey $key, MallMap $map, array $options): array
+    {
+        $expiresAt = now()->addMinutes(max(1, min(60, (int) config('mapservice.embed_link_minutes', 15))));
+        $parameters = array_filter([
+            'mallMap' => $map->id,
+            'key' => $key->id,
+            'to' => $options['to'],
+            'from' => $options['from'] ?? null,
+            'step_free' => ! empty($options['step_free']) ? 1 : null,
+            'cost' => ($options['cost'] ?? 'time') === 'distance' ? 'distance' : null,
+            'lang' => in_array($options['lang'] ?? 'en', self::LANGUAGES, true) ? ($options['lang'] ?? 'en') : 'en',
+        ], fn ($value): bool => $value !== null && $value !== '');
+
+        return [
+            'url' => URL::temporarySignedRoute('embed.ar', $expiresAt, $parameters),
             'expires_at' => $expiresAt->toIso8601String(),
         ];
     }
@@ -101,6 +128,15 @@ class EmbedService
     public function contentSecurityPolicy(ApiKey $key): string
     {
         return "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors ".implode(' ', $key->origins());
+    }
+
+    /**
+     * The Content-Security-Policy of the AR page: three.js from the pinned CDN,
+     * and never inside a frame (WebXR runs in the page's own tab).
+     */
+    public function arContentSecurityPolicy(): string
+    {
+        return "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net; connect-src 'self'; frame-ancestors 'none'";
     }
 
     /**
