@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ISM Map Viewer</title>
+    <style>
+        :root {
+            --bg: #0f141c;
+            --panel: #161d29;
+            --panel-2: #1d2635;
+            --line: #2a3546;
+            --text: #e6ebf2;
+            --muted: #93a0b4;
+            --accent: #4f8cff;
+            --accent-2: #2f6fe8;
+            --danger: #e5484d;
+            --ok: #30a46c;
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        #app { display: grid; grid-template-columns: 340px 1fr; height: 100%; }
+        aside { background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+        main { position: relative; overflow: hidden; }
+        #canvas-host, canvas { width: 100%; height: 100%; display: block; }
+        h1 { font-size: 16px; margin: 0; letter-spacing: .2px; }
+        h2 { font-size: 12px; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+        section { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+        .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+        label.check { flex-direction: row; align-items: center; gap: 8px; color: var(--text); font-size: 13px; }
+        input[type=text], input[type=number], select { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; font: inherit; }
+        input[type=range] { width: 100%; }
+        input[type=color] { width: 100%; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+        button { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font: inherit; cursor: pointer; }
+        button:hover { border-color: var(--accent); }
+        button.primary { background: var(--accent-2); border-color: var(--accent-2); }
+        button.primary:hover { background: var(--accent); }
+        button.active { background: var(--accent); border-color: var(--accent); }
+        button.danger { color: #ffb4b6; border-color: #5a2a2d; }
+        button.danger:hover { border-color: var(--danger); }
+        button:disabled { opacity: .45; cursor: default; }
+        .muted { color: var(--muted); font-size: 12px; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .stat { background: var(--bg); border-radius: 6px; padding: 6px; text-align: center; }
+        .stat b { display: block; font-size: 16px; }
+        .stat span { color: var(--muted); font-size: 11px; }
+        #list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+        #list li { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; background: var(--bg); cursor: pointer; border: 1px solid transparent; }
+        #list li.selected { border-color: var(--accent); }
+        #list .swatch { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid #0006; }
+        #list .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #status { position: absolute; left: 12px; bottom: 12px; background: #0f141ccc; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: var(--muted); pointer-events: none; max-width: calc(100% - 24px); }
+        #points, #paths, #graph-edits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+        #points li, #paths li, #graph-edits li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 8px; border-radius: 6px; background: var(--bg); cursor: pointer; }
+        #points .key, #paths .key, #graph-edits .key, .point-new .key { font: 600 14px ui-monospace, SFMono-Regular, Consolas, monospace; color: #f0abfc; letter-spacing: .04em; user-select: all; }
+        #points .actions, #paths .actions, #graph-edits .actions { grid-row: span 2; display: flex; gap: 4px; align-items: center; }
+        #points .actions button, #paths .actions button, #graph-edits .actions button { padding: 3px 7px; font-size: 12px; }
+        .warn { color: #ffcf8a; }
+        .edit-form { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--accent); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+        .edit-form [hidden] { display: none; }
+        .edit-error { background: #3a1719; border: 1px solid #5a2a2d; color: #ffd0d1; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+        .point-new { display: flex; flex-direction: column; gap: 2px; }
+        h3.sub { font-size: 12px; margin: 10px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+        .point-new { border: 1px dashed #d946ef; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+        .point-new .key { font-size: 20px; display: block; margin: 2px 0; }
+        #hint { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: var(--accent-2); color: white; border-radius: 999px; padding: 6px 14px; font-size: 13px; display: none; }
+        #views { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; }
+        #overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 5; padding: 24px; }
+        #overlay .card { max-width: 560px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+        #overlay code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: 12px; word-break: break-all; }
+        #messages:empty { display: none; }
+        #messages { color: #ffcf8a; font-size: 12px; white-space: pre-wrap; }
+        @media (max-width: 800px) {
+            #app { grid-template-columns: 1fr; grid-template-rows: 55% 45%; }
+            aside { order: 2; border-right: 0; border-top: 1px solid var(--line); }
+        }
+    </style>
+    <script>
+        if (location.protocol === 'file:') {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('overlay-text').innerHTML =
+                    'This page must be served over http. Start the map service (in map-service: <code>php artisan serve --port=8100</code>) and open<br><code>http://127.0.0.1:8100/viewer/index.html</code>';
+            });
+        }
+    </script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+<div id="app">
+    <aside>
+        <div>
+            <h1>ISM Map Viewer</h1>
+            <div class="muted" id="package-name">No map package loaded</div>
+        </div>
+
+        <section>
+            <h2>Map package</h2>
+            <div class="row">
+                <button id="open-folder" class="primary">Open package folder…</button>
+                <input id="folder-input" type="file" webkitdirectory multiple hidden>
+            </div>
+            <div class="stats" id="stats" style="margin-top:10px"></div>
+        </section>
+
+        <section>
+            <h2>View</h2>
+            <label>Floor
+                <select id="floor-select"></select>
+            </label>
+            <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px">
+                <label class="check"><input type="checkbox" id="show-graph" checked> Navigation graph</label>
+                <label class="check"><input type="checkbox" id="show-checkpoints" checked> QR checkpoints</label>
+                <label class="check"><input type="checkbox" id="show-annotations" checked> Signs and advertisements</label>
+                <label class="check"><input type="checkbox" id="unlit" checked> True scan colours (no lighting)</label>
+            </div>
+        </section>
+
+        <section>
+            <h2>Add in 3D</h2>
+            <div class="row">
+                <button id="add-sign">＋ Shop sign</button>
+                <button id="add-ad">＋ Advertisement</button>
+            </div>
+            <div class="row" style="margin-top:6px">
+                <button id="add-point" hidden>＋ Point</button>
+                <button id="add-qr" hidden>＋ QR code</button>
+                <button id="add-path" hidden>＋ Path</button>
+                <button id="edit-graph" hidden>✎ Graph</button>
+            </div>
+            <p class="muted" style="margin:8px 0 0">Signs and advertisements: click a wall (flat on it) or the floor (on a stand). Point: click the floor, then say what it is. QR code: click the wall it hangs on. Path: click each corner on the floor, then Finish path. Graph: click a node or a walkway of the navigation graph to move, connect, change or remove it; every change is listed under Graph changes with Edit and Undo.</p>
+        </section>
+
+        <section id="edits-section" hidden>
+            <h2>Points and paths</h2>
+            <div id="edit-error" class="edit-error" hidden></div>
+            <div id="edit-form" class="edit-form" hidden></div>
+            <div id="point-new" class="point-new" hidden></div>
+            <h3 class="sub">Points <span id="points-count" class="muted"></span></h3>
+            <ul id="points"></ul>
+            <h3 class="sub">Paths <span id="paths-count" class="muted"></span></h3>
+            <ul id="paths"></ul>
+            <h3 class="sub">Graph changes <span id="graph-count" class="muted"></span></h3>
+            <ul id="graph-edits"></ul>
+            <p class="muted" style="margin:8px 0 0">Every point and path has a unique key; apps route to a point with <code>point:&lt;key&gt;</code>. <a id="points-page" href="#">Points and paths page</a></p>
+        </section>
+
+        <section id="editor" hidden>
+            <h2>Selected</h2>
+            <div style="display:flex; flex-direction:column; gap:8px">
+                <div class="grid2">
+                    <label>Kind
+                        <select id="f-kind">
+                            <option value="shop_sign">Shop sign</option>
+                            <option value="advertisement">Advertisement</option>
+                        </select>
+                    </label>
+                    <label>Mount
+                        <select id="f-mount">
+                            <option value="wall">On a wall</option>
+                            <option value="floor">Standing on the floor</option>
+                        </select>
+                    </label>
+                </div>
+                <label>Text <input type="text" id="f-text" maxlength="60"></label>
+                <label>Second line <input type="text" id="f-subtitle" maxlength="80"></label>
+                <label>Shop unit code (optional) <input type="text" id="f-unit" maxlength="40" placeholder="e.g. G-101"></label>
+                <div class="grid2">
+                    <label>Background <input type="color" id="f-background"></label>
+                    <label>Text colour <input type="color" id="f-color"></label>
+                </div>
+                <label>Width <span id="v-width" class="muted"></span><input type="range" id="f-width" min="0.2" max="6" step="0.05"></label>
+                <label>Height <span id="v-lift" class="muted"></span><input type="range" id="f-lift" min="-2" max="4" step="0.05"></label>
+                <label>Facing (yaw) <span id="v-yaw" class="muted"></span><input type="range" id="f-yaw" min="0" max="359" step="1"></label>
+                <div class="row">
+                    <button id="face-camera">Face me</button>
+                    <button id="move">Move…</button>
+                    <button id="pick-image">Image…</button>
+                    <button id="clear-image">No image</button>
+                    <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+                </div>
+                <div class="row">
+                    <button id="duplicate">Duplicate</button>
+                    <button id="delete" class="danger">Delete</button>
+                </div>
+                <div class="muted" id="f-where"></div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Signs and advertisements <span id="count" class="muted"></span></h2>
+            <ul id="list"></ul>
+            <div class="row" style="margin-top:10px">
+                <button id="save">Save annotations…</button>
+                <button id="load">Open annotations…</button>
+                <input id="annotations-input" type="file" accept="application/json,.json" hidden>
+            </div>
+            <p class="muted" style="margin:8px 0 0" id="save-note">Changes are also kept in this browser automatically.</p>
+            <div id="messages"></div>
+        </section>
+    </aside>
+
+    <main>
+        <div id="canvas-host"></div>
+        <div id="views">
+            <button id="view-3d">3D</button>
+            <button id="view-top">Top</button>
+            <button id="view-fit">Fit</button>
+        </div>
+        <div id="hint"></div>
+        <div id="status">Drag to orbit · right-drag to pan · scroll to zoom</div>
+        <div id="overlay">
+            <div class="card">
+                <h1 style="margin-bottom:10px">ISM Map Viewer</h1>
+                <p id="overlay-text" class="muted">Loading…</p>
+            </div>
+        </div>
+    </main>
+</div>
+<script type="module" src="./viewer.js?v=2"></script>
+</body>
+</html>

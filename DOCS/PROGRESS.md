@@ -194,6 +194,133 @@ Evidence: `php artisan test --compact` 1169 tests (1166 passed, 3 skipped for Po
 
 Limitations: the automatic tests use a faked Gemini API only; one manual call on 2026-11-19 with a real key (model `gemini-3.5-flash-lite`) answered a parking question in English and in Bangla, citing its source and passing the answer check, and the key appeared in no log; retrieval is lexical (no embeddings), so a question needs words of the source or of a fixed synonym list, and Bangla questions outside that list match only Bangla text; with the template driver a source is quoted in the language it was written in; directions open the shop page or the facility finder until MapsNavigation exists; the scores of the evaluation come from a small fixed set on demonstration data and say nothing about real visitors; the knowledge screens and the administrators' assistant are English only; nothing was checked visually in a browser (pages were checked as HTML); thresholds, retention, rate limits and the default model listed in D-018 are defaults to confirm.
 
+## 2026-11-21: EPIC-05 map preparation pipeline (ISM-57, ISM-58)
+
+Branch `feature/ISM-57-map-authoring-pipeline`. Decision D-019 (partly resolves C-07: WebXR AR on Android Chrome, 2D map for iPhone and other browsers).
+
+- `tools/blender/ism_map.py`: offline pipeline in Blender (command line, sidebar tab "ISM Map", or add-on). `prepare` imports a LiDAR mesh per floor (GLB, glTF, OBJ, USD/USDZ, PLY, STL, FBX), merges vertices, removes floating fragments, finds the floor level, squares the walls to the axes, cuts the ceiling, places the floor at its elevation and reduces triangles. `draft-graph` traces the walkable area's centre lines and cleans them (corner branches and spikes removed, doorway branches kept, junctions centred, lines straightened). Markers cover QR checkpoints (yaw from the arrow), shop entrances, connector stops and facilities. `validate` and `export` write `map_package.json`, `report.json` and per-floor plan PNG, graph preview PNG and Y-up GLB. `make-test-scan` writes a synthetic two-floor scan with a known layout.
+- `tools/blender/README.md` (workflow, package format mapped to the ERD tables, limits) and `tools/blender/SCANNING.md` (iPhone 17 Pro scanning, joining sections, lining up floors, measurements). Sample package `tools/blender/samples/pilot_map_package.json`. `tools/blender/work/` is git-ignored for scans and .blend files.
+- Blender 5.3.0 installed on the development machine with winget (0.92 GB).
+
+Evidence: `tests/Blender/test_ism_map.py` 65 checks passed inside Blender 5.3.0 (about 11 s): rotation recovered within 0.01 degrees, floor level within 1 mm, pillar faces within 6 cm of the layout, the T-junction found, doorway branches kept, no graph point inside pillars or wall gaps, six validation refusals, QR yaw 270 and 0 degrees, escalator one way, routes across floors via the lift, plan pixels for floor, pillar and outside. `tests/Unit/MapsNavigation/MapPackageContractTest.php` 8 tests (927 assertions) check the sample against the ERD rules; three deliberately broken samples (a walking edge across floors, a reversed escalator, two primary entrances) each made it fail. The command-line validate and export (also with Draco) and the sidebar operators were run headless, and every expected message in manual check 40 was reproduced by a script.
+
+Limitations: only synthetic scans so far (no real mall scan yet); nothing was checked in the Blender window by a person; the draft graph needs a human check; tilted scans, ramps inside a floor and automatic alignment between floors are not handled; glass fronts scan poorly; timing and clearance values are defaults to confirm. Next: ISM-59 migrations, models and an import command for this package, then ISM-60/61/62 checkpoints and routing, and ISM-63/64/65 map UI and the Android WebXR prototype with measured alignment error.
+
+## 2026-11-22: EPIC-05 first real scan, 3D viewer and separate map service (ISM-57, ISM-63)
+
+Same branch. Decision D-020.
+
+- First real iPhone 17 Pro LiDAR scan (Scaniverse GLB, 275k triangles, 8 by 17 m L-shaped corridor) went through prepare (279 fragments removed, rotation -0.41 degrees, floor found), draft-graph (one corridor line) and export. Fixed: export with a relative `--out` folder silently wrote no plan or preview images; paths are now absolute and a missing image stops the export (new Blender check, 66 in total).
+- `map-service/`: separate Laravel 13.43 app (own SQLite database). Administrators sign in, import packages from `tools/blender/work` (or `php artisan map:import`), publish or unpublish them, and place shop signs and advertisements in the 3D editor (`public/viewer`, three.js 0.170.0 from jsDelivr) with automatic save. API keys are created on a page or with `php artisan api-key:create`, shown once, stored as SHA-256 hashes, and can be limited to `maps:read` and/or `annotations:write`, given an expiry, revoked and rate-limited. API `/api/v1` lists maps and returns the package and the signs and advertisements; files come behind 120-minute signed links.
+- Main app: `MapsNavigation` registered with `MapServiceGateway` (HTTP adapter with the bearer key and clear errors), configuration `services.map_service` (`MAP_SERVICE_URL`, `MAP_SERVICE_KEY` in `.env.example`) and `php artisan maps:service-check`.
+
+Evidence: map-service `php artisan test` 33 passed (keys, ordering of key check before map lookup, published-only, signed links including tampered, expired and outside-package, import rollback, annotation images, admin flows); `node --test tests/js/annotations.test.mjs` 8 passed (it caught a heading that could round to 360 degrees and be refused; fixed). Main app `tests/Feature/Modules/MapsNavigation` 5 passed. Live run: the service on port 8100 with the real scan; headless Edge signed in, opened the 3D editor, placed a wall sign and an advertisement that were saved, survived a reload and were read back by the main app's key through the API; `maps:service-check` listed the map; requests without a key (401), with an unknown key (401) and a read-only key writing (403) were refused.
+
+Limitations: the 3D editor was checked in headless Edge with software WebGL, not on a phone; three.js loads from a CDN, so the editor needs internet; the map service has one kind of user (every account is an administrator); images are limited to 1 MB; Laravel Boost was not installed in map-service. Next: ISM-59 import into the main app's own tables or a decision to keep maps only in the service, then the map UI and Android WebXR page reading signs and advertisements through the gateway.
+
+## 2026-11-24: EPIC-05 navigation graph, QR checkpoints, routes and embedded map (ISM-58, ISM-59, ISM-61, ISM-62, ISM-64)
+
+Branch `feature/epic-05-maps-navigation` (from `main` after merging `feature/ISM-57-map-authoring-pipeline`). Decision D-021 (the map service owns the graph, checkpoints and routes; approves the D-019 graph conventions for ISM-58).
+
+- Main before the branch: the generated map-service files committed in `85f9f63` (installed packages, caches, the local SQLite database, an imported map) stopped being tracked and are ignored; they stay on disk. The map branch was renumbered (its D-018 and D-019 became D-019 and D-020, its manual checks 37 and 38 became 40 and 41) and merged into `main`.
+- ISM-59 (map-service): `map_floors`, `map_nodes`, `map_edges`, `map_connectors`, `map_connector_stops`, `map_shop_entrances`, `map_facility_anchors`, `map_checkpoint_anchors` with composite foreign keys; `GraphBuilder` checks the graph (unknown or duplicate nodes, self-loops, non-positive costs, floor changes outside connector stops, two-way escalators, one-floor connectors, two primary doors, missing QR poses) and writes it in the import transaction; `mall_ref` links a map to a Smart Mall mall; `MapPublisher` keeps one published map per mall (partial unique index); `map:import --mall`, `map:rebuild-graph`; a two-floor pilot fixture (`MallMapFactory::pilotPackage()`).
+- ISM-61: `checkpoints` with random public slugs kept across map versions; `CheckpointRegistry` (sync on publish, resolve, retire, reactivate, new address); `GET /api/v1/checkpoints/{slug}`; admin page **QR codes** with printable codes (qrcode-generator 1.4.4 from jsDelivr in the browser, no new Composer or npm dependency).
+- ISM-62: `RouteGraph` (Dijkstra, node-code tie-breaking), `PlaceResolver` (`checkpoint:`, `node:`, `unit:`, `facility:`, `facility-type:`), `RoutePlanner` (stops in order, step-free, time or distance, totals, steps with turns, connectors, stops and arrival); `GET|POST /api/v1/malls/{mall}/routes` and `/maps/{id}/routes`, `GET /api/v1/malls/{mall}` (map and places), `/maps/{id}/places`, `/maps/{id}/closures`, `PATCH /maps/{id}/edges` (new ability `graph:write`); admin **Closures** page per map. A live run on a Blender export showed one-metre steps and "Escalator Up up"; fixed (pieces under 2 m folded, turns measured across them, direction not repeated).
+- ISM-64: `POST /api/v1/embed-links`; API keys get allowed origins (admin page, `api-key:create --origin`); the embedded map page `/embed/maps/{id}` (signed link, CSP `frame-ancestors`, encrypted session token, `public/embed/embed.js` and `embed.css`, no build) with its data and route calls, a one-minute route refresh and `postMessage` events; public documentation `/docs`. Smart Mall app: `MallMapController` with `/malls/{mall}/map` and `/malls/{mall}/map/qr/{slug}`, `MapServiceGateway::mall()`, `checkpoint()`, `route()`, `embedLink()` and the service's refusal `reason`; **Map** in the mall menu, **Show on map** per shop unit, Bangla strings.
+
+Evidence: map-service `php artisan test` 104 passed (graph import and refusals 25, checkpoints 9, route engine 19, route API and closures 7, embed and docs 12, earlier suites 32) and `node --test tests/js/annotations.test.mjs` 8 passed; the step-folding test was mutation-checked (fails with folding switched off). Main app `php artisan test` 1195 tests (1192 passed, 3 skipped for PostgreSQL only, none failed), including `tests/Feature/Modules/MapsNavigation` 18 and the route protection test with the two new public pages. Blender `tests/Blender/test_ism_map.py` 66 passed. Live run: the Blender test package (`--keep`) imported into a throwaway map-service database for mall `niagara-city-mall`, both apps served on 8100 and 8000; QR page → signed iframe link (no key in the page) → CSP `frame-ancestors http://127.0.0.1:8000 http://localhost:8000` → data (38 nodes, 37 walkways, labels) → routes: QR G-C01 to shop 1-105 72 m and 67 s by the escalator, step-free 46 m and 69 s by the lift, escalator closed → lift, lift also closed → 422 unreachable, first floor to G-101 down by the lift; headless Edge screenshots at 1280 and 390 px showed the plan, route, floor hop, steps and the host page's summary from `postMessage`, and found a collapsed iframe (new Tailwind classes not in the built CSS; fixed with an inline height), a cramped form at phone width (fixed) and a first-floor QR opening on the ground floor without a start marker (fixed). Manual checks: guides 42 and 43.
+
+Limitations: route steps are English only (the embedded map's labels are English or Bangla); the embedded map is 2D, the 3D view and Android WebXR guidance stay with ISM-63/64/65 and alignment accuracy is still unmeasured (C-07); no real mall has QR codes, shop doors or facilities placed yet (the first real scan has only a corridor line); routes are not stored (ROUTE_SESSION off); the turn, fold, link, session, refresh and rate-limit values are defaults to confirm; the main app's pages are wider than a 390 px phone screen (an existing layout issue seen in the screenshots, not changed here); ISM-94 (facilities on map nodes), ISM-97 (return navigation to the parking spot) and ISM-113 to ISM-115 (map and QR administration in the mall app) can now use these APIs and are not done. Your own map-service database needs `php artisan migrate` and `php artisan map:rebuild-graph`, and its maps need a mall before they get QR codes.
+
+## 2026-11-24: EPIC-05 first real scan as the demo mall's ground floor (ISM-57)
+
+Branch `feature/ISM-57-pilot-scan` (from `feature/epic-05-maps-navigation`, because it uses the graph import and `--mall`). No Blender MCP server was connected, so Blender 5.3 ran from the command line with `tools/blender/ism_map.py`.
+
+- `tools/blender/work/scans/Scaniverse 2026-11-22 151619.glb` prepared again as floor G at 0 m (279 fragments removed, rotation -0.41 degrees, 231,275 triangles) and drafted (3 vertices over 26.9 m2 walkable) in the git-ignored `tools/blender/work/real-ground/`.
+- `tools/blender/samples/pilot_ground_markers.py` places demonstration markers with `ism_map.add_marker`: QR codes `G-C01` and `G-C02`, doors of the demo mall's units `G-01` to `G-04`, and three facilities (toilet, information, exit). The first export warned that both QR codes had no wall behind them and a door's link crossed the scan; walls were measured by casting rays in the scan (east wall x 3.2 to 3.5 m, north wall y 16.3 m), the markers moved, and the final export is valid with no warning: 17 nodes, 32 edges.
+- Imported into the map service for `niagara-city-mall` and published (replacing the two-floor test mall in the throwaway demo database; the QR codes `G-C01` and `G-C02` kept their addresses because the mall and codes were the same).
+- `tools/blender/README.md` section "The first real scan with demonstration markers"; manual check guide 44.
+
+Evidence: export report `ok`, no warnings. Routes through the API and the Smart Mall Map page in headless Edge: QR G-C01 to G-04 17 m and 1 minute (Walk 12 m, Bear right 3 m, Turn right 2 m), QR G-C02 to G-02 9 m, nearest toilet 11 m, step-free identical (no stairs on this floor); Fresh Mart's "Show on map" opens the map with G-02; the map service viewer shows the scan in 3D with its photo colours and the markers, in perspective and top view.
+
+Limitations: the marker places and the link of unit codes to doors are invented for the demonstration and must be replaced by the real QR positions, doors and unit codes; one floor only, so no lifts or escalators; the scan has holes in its walls, so some places cannot hold a QR code; the scan and package are not in git, so this data has no automated test.
+
+## 2026-11-24: map end points with keys (ISM-114)
+
+Branch `feature/ISM-114-map-end-points` (from `feature/ISM-57-pilot-scan`). Decision D-022.
+
+- Map service: `map_end_points` (key, name, floor, position, node, link distance) and the columns `map_nodes.map_end_point_id`, `map_edges.map_end_point_id` and `map_edges.parent_edge_id`; `EndPointService` (create, rename, delete, link to the nearest walkway through a junction or a walkway end within 0.25 m, unlink, relink after `map:rebuild-graph`, copy into a new map version of the same mall with the same keys); `RouteGraph` treats an added half edge as closed when its parent walkway is; places `point:<key>` and `end_points`; embed labels and **To** list; admin **End points** page per map (add by floor and x/y, rename, copy key, delete, link into the Smart Mall app) and JSON for the 3D editor, whose **＋ End point** tool adds one by clicking the floor and shows its key, a purple pin and the link to the graph. `/docs` and README updated.
+- Smart Mall app: the Map page accepts `point:<key>` as start or destination.
+
+Evidence: map-service `php artisan test` 115 passed (end points 11) and `node --test tests/js/annotations.test.mjs` 8 passed; main app `tests/Feature/Modules/MapsNavigation` 19 passed. Live: in headless Edge the 3D editor on the real scan, **Top**, **＋ End point**, a click at x 2.40 y 5.00 and the name "Kiosk (demo)" gave key `4xyv7cvadu`, a pin and the panel with the key; the End points page showed it "on the map, 0.3 m from the walkway"; the Smart Mall Map page routed from the north QR code to `point:4xyv7cvadu` (12 m, "Arrive at Kiosk (demo)"). On the two-floor test mall a point at x 20 y 16 linked 4.9 m from the walkway and was reached from the first floor by the lift; x 200 y 200 was refused. Manual check: guide 45.
+
+Limitations: end points belong to one map version and are copied to new versions of the same mall (unlinked when no walkway is within 6 m); they can be added, renamed and deleted but not moved (delete and add again); the 3D editor asks for the name with the browser's prompt box; the 6 m and 0.25 m values are defaults to confirm.
+
+## 2026-11-24: map editor for administrators (ISM-114, ISM-115)
+
+Same branch `feature/ISM-114-map-end-points`. Decision D-022 (rewritten).
+
+- The end points of the morning became a map editor. The first version asked for a point's name with the browser's prompt box; the user reported that adding was not possible, and the service log showed that no request ever arrived (the prompt box failed silently). The 3D editor now uses forms in its panel and shows errors in red.
+- Points: node, shop entrance, facility or QR code, each with a unique key and a height (1.5 m, QR 1.4 m, editable); edit, move (click), delete. QR codes are placed by clicking a wall (facing from the wall) and join the mall's QR codes.
+- Paths: drawn corner by corner, corners snap to nodes and path ends (yellow in the editor), step-free and one way, redraw, merge two paths that meet at an end.
+- The navigation graph itself: move or remove a node, connect two nodes, one way or not step-free, remove a walkway (with the halves added on it); every change listed with Undo. `MapEditService` now rebuilds the package's graph and replays all edits in order after every change, rebuild and new version, keeping closures by node codes; `GraphBuilder` writes only the package's graph.
+- Pages: **Points and paths** with edit forms, a merge form and a graph change form; the 3D editor draws the live graph from `/admin/maps/{id}/graph` and has a **✎ Graph** tool.
+
+Evidence: map-service `php artisan test` 138 passed (map editor 23, graph changes 11) and the viewer tests 8 passed. Live in headless Edge on the real scan: a shop entrance for G-05, a QR code on the east wall (182°, 1.40 m, then 1.60 m by Edit), a path into the north room and a seating node reached through it from the new QR code (18 m), Juice Corner's Show on map routed to the new G-05 door; the graph tool selected node G-N0005, moved it, made the walkway G-N0001 – G-N0002 one way (dashed with an arrow) and undid it. The run found two bugs, both fixed: editing a point that was not a QR code failed, and new map versions did not copy graph changes. The guide's numbers were checked on the Blender test mall in a rolled-back transaction. Manual check: guide 45 (rewritten).
+
+Mistake recorded: while testing, `php artisan migrate --env=testing` in `map-service` ran against the user's own map-service database (there is no `.env.testing`), adding the new tables and columns as batch 2. Only additive changes; the user's map, signs, key and administrator were checked unchanged. `php artisan migrate:rollback` in `map-service` undoes it if wanted.
+
+Limitations: graph changes name nodes by code, so they need the same codes in a re-drafted package; lifts, escalators and stairs come only from the package; points cannot be dragged (Move is click-to-place); the heights are used by the 3D views, not by routing.
+
+## 2026-11-24: graph changes can be edited (ISM-114)
+
+Same branch `feature/ISM-114-map-end-points`. Decision D-022 (extended).
+
+- The user reported that the list of graph changes had no Edit option (points and paths had one; changes to the navigation graph only had Undo). Each change now has **Edit**, on the Points and paths page (a form with the change's own fields: node, new x and y; from and to nodes; one way and step-free; direction) and in the 3D editor (the same form in the panel, with **Pick** to take a node by clicking it and **Pick the new place** for a move). What a change does (move, remove, connect …) stays; to make another kind of change, undo it and make the new one.
+- `PATCH /admin/maps/{map}/graph/{change}` (`MapEditService::updateGraphEdit`) keeps the change's key and its place in the order of edits, writes the package's graph again and replays every edit. An edit that does not fit is refused with the reason and nothing changes. Later changes that no longer fit are kept and shown as "not applied", as after a new import, and can be edited too.
+- The checks of a change now live in one place, where it is applied, so adding and editing refuse the same things with the same words; moving a node that belongs to a point is also refused when a change is replayed.
+- The 3D editor's number boxes (x, y, height, facing) are dark like its other boxes.
+
+Evidence: map-service `php artisan test` 143 passed (graph changes 16, five new: edit a move, edit a connection and replay a later change, refused edits leave the graph as it was, fix a change that no longer applies, JSON and page form with a change of another map refused), the viewer tests 8 passed. Live in headless Edge on the real scan: a new move of G-N0003 edited with Edit, Pick the new place and Save change (same key, node at x 2.70, y 4.23), a node code `NOPE-1` refused with "Node NOPE-1 is not on this map." and nothing changed, Pick filled the Node box with G-N0004, the page form saved x 2.20 ("— saved."), then Undo; the two graph changes already in the demo list were the same before and after. The guide's new steps were checked on the Blender test mall in a rolled-back transaction. Manual check: guide 45 (steps 4.6, 4.7, 5.4 to 5.6 and two refusals added).
+
+## 2026-11-25: AR directions on Android phones (ISM-65), advertisements wait for production (ISM-188)
+
+Branch `feature/ISM-65-webar-guidance`, started from `feature/ISM-114-map-end-points`. Decisions D-023 and D-024.
+
+- The user chose Android only for AR (WebXR, no paid SDK for iPhone). They also chose to build advertisements and their on-time tracking when moving to production; that is recorded as D-024 and on ISM-188 with the label `production`.
+- **Map service, the AR page** `/embed/maps/{map}/ar` (`resources/views/embed/ar.blade.php`, `public/ar/ar.js`, `code-scanner.js`, `ar-math.js`, `ar.css`). It does:
+  - finding the floor;
+  - lining up at any QR code, by camera or by touch. The camera uses raw camera access and `BarcodeDetector`; the code's pose is fitted to its four corners and averaged over six sightings;
+  - arrows on the floor, a destination pin, turn and lift signs, and steps with distances;
+  - the lift and the next floor, a new route when off the route, and arrival;
+  - **Details** for the accuracy record, Bangla, and `#preview` for computers.
+- **Map service, the rest:**
+  - `GET /embed/maps/{map}/ar-link` gives a signed link to an open embed only.
+  - The map data gives each active QR code's pose and the node heights.
+  - The embedded map shows **View in AR** only where AR works.
+  - The QR codes page has **Print signs at real size**: one per A4 page at the code's width.
+  - `/docs` has a section **AR directions**.
+- **Smart Mall app:** the Map page's iframe allows `xr-spatial-tracking`.
+
+Evidence:
+- **Tests:** map-service `php artisan test` 151 passed (8 new in `ArDirectionsTest`). `node --test tests/js/ar.test.mjs` 13 passed; the viewer tests 8 passed. The Smart Mall app's map tests 19 passed.
+- **Pose estimate against corner noise:** on a 720-pixel picture with ±1 pixel noise, a code seen straight on gave single sightings within 1.4, 3.2 and 6.8 degrees at 0.4, 0.6 and 0.8 m. Averages of five were within 0.5, 1.3 and 1.8 degrees. Beyond about 1.5 m single sightings could take the mirrored answer; the ambiguity check removes them, hence the 1.2 m limit.
+- **Headless Edge** (the page had to be made visible: background throttling off):
+  - the embed hides the button on a computer and shows it where AR is reported;
+  - a tap opens the AR page in a new tab; without a tap a link appears;
+  - the AR page's intro and its refusal text, in English and Bangla;
+  - the preview from G-C01 to Shop 1-105: turns, the lift banner, the first floor, the off-route banner, a new route from node 1-N0009, and arrival;
+  - the QR signs printed to PDF with the code 18 cm wide, one per A4 page;
+  - no page errors.
+  - These checks ran on a copy of the scratch database served on port 8101, so the demo map on port 8100 was not changed.
+- **Not checked here:** a real AR session, since there is no Android phone here. Raw camera access, the picture's row order and the line-up accuracy need the phone: manual check 46 part B, with its accuracy table for C-07.
+
+Limitations:
+- One line-up per code, with no continuous localization (D-019); after a lift the visitor lines up again.
+- Routes do not refresh by themselves during AR: a closure needs **New route from here** or a new line-up.
+- No shop signs or advertisements in AR yet (D-024).
+- Route steps are English only.
+
 ## Next implementation handoff
 
 Select a requested vertical slice using [build order](10_BUILD_ORDER.md), resolve its relevant [open questions](CONFLICTS.md), and complete [the checklist](IMPLEMENTATION_CHECKLIST.md). No feature is automatically authorized by its presence in the catalogue.

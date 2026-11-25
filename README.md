@@ -56,6 +56,12 @@ vendor/bin/pint --test    # code style
 composer audit            # dependency advisories
 ```
 
+The indoor map pipeline runs in Blender, outside the app: see [tools/blender/README.md](tools/blender/README.md). Its own test is `blender -b --factory-startup --python-exit-code 1 -P tests/Blender/test_ism_map.py`.
+
+## Map service
+
+Maps, their navigation graph, QR codes, routes and the shop signs and advertisements placed on them in 3D live in a separate Laravel app in [map-service/](map-service/README.md) on port 8100 (API documentation at <http://127.0.0.1:8100/docs>). This app uses it with an API key: create the key on the map service's API keys page with `http://127.0.0.1:8000` as an allowed site, set `MAP_SERVICE_URL` and `MAP_SERVICE_KEY` in `.env`, and check the connection with `php artisan maps:service-check`. Visitors see the map at `/malls/{mall}/map`; printed QR codes open `/malls/{mall}/map/qr/{slug}`.
+
 ## Troubleshooting
 
 - `Undefined array key "url"` from Composer: an older global Composer is running under PHP 8.5. Use the Composer installed by php.new (`%USERPROFILE%\.config\herd-lite\bin\composer`) or update Composer.
